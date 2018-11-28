@@ -1,9 +1,19 @@
+cmake_minimum_required(VERSION 3.5)
+
 project(CANUSBFDISO C CXX ASM)
+
+#set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
+#set(CMAKE_C_COMPILER arm-none-eabi-gcc)
+#set(CMAKE_CXX_COMPILER arm-none-eabi-g++)
+
+set(CMAKE_ASM_COMPILER /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.1.0/ARMTools/bin/arm-atollic-eabi-gcc)
+set(CMAKE_C_COMPILER /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.1.0/ARMTools/bin/arm-atollic-eabi-gcc)
+set(CMAKE_CXX_COMPILER /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.1.0/ARMTools/bin/arm-atollic-eabi-g++)
 
 set(CXX_STANDARD 11)
 set(C_STANDARD 99)
 
-add_definition(STM32H750xx)
+add_definitions(-DSTM32H750xx)
 
 set(CMAKE_ASM_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -Wa,--warn -x assembler-with-cpp")
 set(CMAKE_ASM_FLAGS_DEBUG "-O0 -ggdb")
@@ -17,6 +27,25 @@ set(CMAKE_CXX_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os")
 
-add_executable(canusbfdiso
+set(CMAKE_EXE_LINKER_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -T\"../stm32h7_flash.ld\" -specs=nosys.specs -static -Wl,-cref,-u,Reset_Handler \"-Wl,-Map=canusbfdiso.map\" -Wl,--gc-sections -Wl,--defsym=malloc_getpagesize_P=0x1000 -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group")
 
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}/STM32Cube_FW_H7_V1.3.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include/
+	${CMAKE_CURRENT_SOURCE_DIR}/STM32Cube_FW_H7_V1.3.0/Drivers/CMSIS/Include/
+)
+
+add_executable(canusbfdiso
+	src/main.cpp
+	src/startup_stm32h750xx.s
+	src/stm32h7xx_hal_conf.h
+	src/syscalls.c
+	src/system_stm32h7xx.c
+	src/tiny_printf.c
+)
+
+target_link_libraries(canusbfdiso
+	c
+	m
+	stdc++
+	supc++
 )
