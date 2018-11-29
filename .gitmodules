@@ -1,0 +1,3 @@
+[submodule "stm32cube_fw_h7_v1_3_0"]
+	path = stm32cube_fw_h7_v1_3_0
+	url = git@bitbucket.org:suburbanmarine/stm32cube_fw_h7_v1_3_0.git
