@@ -53,4 +53,8 @@ target_link_libraries(canusbfdiso
 	stm32h7xx_hal
 	stm32h7xx_ll
 	stm32h750xx_cmsis
+
+	freertos_v9
+	freertos_v9_heap4
+	freertos_v9_cmsis
 )
