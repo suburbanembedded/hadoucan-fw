@@ -99,29 +99,37 @@ void Error_Handler()
 
 int main()
 {
-	SCB_EnableICache();
-	SCB_EnableDCache();
+	// SCB_EnableICache();
+	// SCB_EnableDCache();
 
-	HAL_Init();
+	// HAL_Init();
 
-	SystemClock_Config();
+ //  __HAL_RCC_SYSCFG_CLK_ENABLE();
+ //  HAL_NVIC_SetPriority(PendSV_IRQn, 15, 0);
+ //  HAL_SYSCFG_DisableVREFBUF();
+ //  HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_ENABLE);
 
-	__HAL_RCC_CRC_CLK_ENABLE();
-	__HAL_RCC_HASH_CLK_ENABLE();
+	//SystemClock_Config();
+  
 
-	__HAL_RCC_FDCAN_CLK_ENABLE();
-	__HAL_RCC_USART1_CLK_ENABLE();
 
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-	__HAL_RCC_GPIOD_CLK_ENABLE();
+	// __HAL_RCC_CRC_CLK_ENABLE();
+	// __HAL_RCC_HASH_CLK_ENABLE();
+
+	// __HAL_RCC_FDCAN_CLK_ENABLE();
+	// __HAL_RCC_USART1_CLK_ENABLE();
+
 	__HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
 
 	//USART1 - PA9 / PA10
+  if(0)
 	{
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
@@ -132,29 +140,32 @@ int main()
 
 
 	//FDCAN1 - PD0 / PD1
+  if(0)
 	{
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-	GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
-	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 	}
 
 	//ULPI_CLK_EN_Pin, ULPI_nRESET_Pin
+  //if(0)
 	{
-	HAL_GPIO_WritePin(GPIOB, ULPI_CLK_EN_Pin|ULPI_nRESET_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin|ULPI_nRESET_Pin, GPIO_PIN_RESET);
 
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Pin = ULPI_CLK_EN_Pin|ULPI_nRESET_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 	}
 
 	//CAN_SILENT_Pin, CAN_STDBY_Pin 
+  if(0)
 	{
 	HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_RESET);
 
@@ -167,6 +178,7 @@ int main()
 	}
 
 	//RED1_Pin GREEN1_Pin RED2_Pin GREEN2_Pin
+  //if(0)
 	{
 	HAL_GPIO_WritePin(GPIOD, RED1_Pin|GREEN1_Pin|RED2_Pin|GREEN2_Pin, GPIO_PIN_RESET);
 	
@@ -179,12 +191,39 @@ int main()
 	}
 
 	//Start ULPI CLK
-	HAL_GPIO_WritePin(GPIOB, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
 
 	for(;;)
 	{
+    HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
+    for(volatile uint32_t i = 0; i < 100000U; i++)
+    {
 
-	}
+    }
+    HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
+
+    HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
+    for(volatile uint32_t i = 0; i < 100000U; i++)
+    {
+
+    }
+    HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
+
+    HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
+    for(volatile uint32_t i = 0; i < 100000U; i++)
+    {
+
+    }
+    HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
+    
+    HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
+    for(volatile uint32_t i = 0; i < 100000U; i++)
+    {
+
+    }
+    HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
+  }
 
 	return 0;
 }

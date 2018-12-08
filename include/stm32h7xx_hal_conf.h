@@ -53,7 +53,7 @@
 #define HAL_FLASH_MODULE_ENABLED
 #define HAL_GPIO_MODULE_ENABLED
 #define HAL_HASH_MODULE_ENABLED
-#define HAL_IWDG_MODULE_ENABLED
+//#define HAL_IWDG_MODULE_ENABLED
 #define HAL_MODULE_ENABLED
 #define HAL_PWR_MODULE_ENABLED
 #define HAL_RCC_MODULE_ENABLED
@@ -63,7 +63,7 @@
 #define HAL_TIM_MODULE_ENABLED
 #define HAL_UART_MODULE_ENABLED
 #define HAL_USART_MODULE_ENABLED
-#define HAL_WWDG_MODULE_ENABLED
+//#define HAL_WWDG_MODULE_ENABLED
 
 /* ########################## Module Selection ############################## */
 /**
