@@ -48,6 +48,7 @@ add_executable(canusbfdiso
 	#src/system_stm32h7xx.c
 	src/tiny_printf.c
 	src/stm32h7xx_it.c
+	src/stm32h7xx_hal_timebase_tim.c
 )
 
 target_link_libraries(canusbfdiso

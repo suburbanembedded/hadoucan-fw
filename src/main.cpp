@@ -99,17 +99,24 @@ void Error_Handler()
 
 int main()
 {
-	// SCB_EnableICache();
-	// SCB_EnableDCache();
+	SCB_EnableICache();
+	SCB_EnableDCache();
 
-	// HAL_Init();
+	HAL_Init();
 
- //  __HAL_RCC_SYSCFG_CLK_ENABLE();
- //  HAL_NVIC_SetPriority(PendSV_IRQn, 15, 0);
- //  HAL_SYSCFG_DisableVREFBUF();
- //  HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_ENABLE);
+  __HAL_RCC_SYSCFG_CLK_ENABLE();
 
-	//SystemClock_Config();
+  /* System interrupt init*/
+  /* PendSV_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(PendSV_IRQn, 15, 0);
+
+  /* Disable the Internal Voltage Reference buffer */
+  HAL_SYSCFG_DisableVREFBUF();
+
+  /* Configure the internal voltage reference buffer high impedance mode */
+  HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_ENABLE);
+
+	SystemClock_Config();
   
 
 
@@ -197,33 +204,42 @@ int main()
 	for(;;)
 	{
     HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
-    for(volatile uint32_t i = 0; i < 100000U; i++)
-    {
-
-    }
+    HAL_Delay(500);
     HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
 
     HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
-    for(volatile uint32_t i = 0; i < 100000U; i++)
-    {
-
-    }
+    HAL_Delay(500);
     HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
 
     HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
-    for(volatile uint32_t i = 0; i < 100000U; i++)
-    {
-
-    }
+    HAL_Delay(500);
     HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
     
     HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
-    for(volatile uint32_t i = 0; i < 100000U; i++)
-    {
-
-    }
+    HAL_Delay(500);
     HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
   }
 
 	return 0;
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM17 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM17) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
 }
