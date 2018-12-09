@@ -43,13 +43,17 @@ include_directories(
 add_subdirectory(stm32cube_fw_h7_v1_3_0)
 
 add_executable(canusbfdiso
-	src/main.cpp
 	#src/startup_stm32h750xx.s
 	src/syscalls.c
 	#src/system_stm32h7xx.c
 	src/tiny_printf.c
 	src/stm32h7xx_it.c
 	src/stm32h7xx_hal_timebase_tim.c
+
+	src/main.cpp
+	src/FreeRTOS_static_task.cpp
+	src/FreeRTOS_task_base.cpp
+	src/FreeRTOS_task.cpp
 )
 
 target_link_libraries(canusbfdiso

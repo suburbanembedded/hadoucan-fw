@@ -1,4 +1,7 @@
 
+#include "FreeRTOS_task.hpp"
+#include "FreeRTOS_static_task.hpp"
+
 #include "stm32h7xx.h"
 #include "stm32h7xx_hal.h"
 //#include "stm32h7xx_hal_def.h"
@@ -106,56 +109,93 @@ void Error_Handler()
 #define GREEN2_Pin GPIO_PIN_15
 #define GREEN2_GPIO_Port GPIOD
 
-void task1(void* ctx)
+class task1 : public FreeRTOS_task
 {
-  for(;;)
+public:
+
+  void work() override
   {
-    HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
+    for(;;)
+    {
+      HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
+      vTaskDelay(pdMS_TO_TICKS(500));
+      HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
 
-    HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
+      HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
+      vTaskDelay(pdMS_TO_TICKS(500));
+      HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
+    }
   }
-}
+};
+task1 task1_instance __attribute__(( section(".ram_d1_noload_area") ));
 
-void task2(void* ctx)
+class task2 : public FreeRTOS_static_task<1024>
 {
-  for(;;)
+public:
+
+  void work() override
   {
-    HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
-    
-    HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
+    for(;;)
+    {
+      HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
+      vTaskDelay(pdMS_TO_TICKS(500));
+      HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
+      
+      HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
+      vTaskDelay(pdMS_TO_TICKS(500));
+      HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
+    }
   }
-}
+};
+task2 task2_instance __attribute__(( section(".ram_d1_noload_area") ));
 
 extern "C"
 {
-void vApplicationIdleHook( void )
-{
-  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-}
 
-void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
-{
-  for(;;)
+  uint8_t ucHeap[ configTOTAL_HEAP_SIZE ] __attribute__(( section(".ram_d1_noload_area") ));
+  uint8_t ucHeap2[ 128U * 1024U ]         __attribute__(( section(".ram_d2_noload_area") ));
+  uint8_t ucHeap3[ 64U * 1024U ]          __attribute__(( section(".ram_d3_noload_area") ));
+
+  StaticTask_t xIdleTaskTCB;
+  StackType_t  uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+
+void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
+                                    StackType_t **ppxIdleTaskStackBuffer,
+                                    uint32_t *pulIdleTaskStackSize )
   {
+    /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
+    state will be stored. */
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
 
+    /* Pass out the array that will be used as the Idle task's stack. */
+    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+
+    /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
   }
-}
 
-void vApplicationMallocFailedHook(void)
-{
-  for(;;)
+  void vApplicationIdleHook( void )
   {
-    
+    HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
   }
-}
+
+  void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+  {
+    for(;;)
+    {
+
+    }
+  }
+
+  void vApplicationMallocFailedHook(void)
+  {
+    for(;;)
+    {
+      
+    }
+  }
 }
 
 void read_des(std::array<uint32_t, 3>* const out_uid)
@@ -173,6 +213,8 @@ void read_des(uint32_t* const out_flash_size)
 
 int main()
 {
+  ucHeap2[0] = 0;
+  ucHeap3[0] = 0;
 	SCB_EnableICache();
 	SCB_EnableDCache();
 
@@ -280,11 +322,8 @@ int main()
   HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
   HAL_Delay(1);
 
-  TaskHandle_t t1_handle = nullptr;
-  BaseType_t ret1 = xTaskCreate(task1, "task1", 1024, nullptr, 1, &t1_handle);
-
-  TaskHandle_t t2_handle = nullptr;
-  BaseType_t ret2 = xTaskCreate(task2, "task2", 1024, nullptr, 1, &t2_handle);
+  task1_instance.launch("task1", 1024, 1);
+  task2_instance.launch("task2", 1);
 
   vTaskStartScheduler();
 
