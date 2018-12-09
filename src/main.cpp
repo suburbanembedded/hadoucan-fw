@@ -3,6 +3,13 @@
 #include "stm32h7xx_hal.h"
 //#include "stm32h7xx_hal_def.h"
 //#include "stm32h7xx_hal_pwr.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include <array>
+#include <algorithm>
+
 void Error_Handler();
 void SystemClock_Config();
 
@@ -84,10 +91,12 @@ void Error_Handler()
 #define ULPI_CLK_EN_GPIO_Port GPIOA
 #define ULPI_nRESET_Pin GPIO_PIN_2
 #define ULPI_nRESET_GPIO_Port GPIOA
+
 #define CAN_SILENT_Pin GPIO_PIN_14
 #define CAN_SILENT_GPIO_Port GPIOB
 #define CAN_STDBY_Pin GPIO_PIN_15
 #define CAN_STDBY_GPIO_Port GPIOB
+
 #define RED1_Pin GPIO_PIN_12
 #define RED1_GPIO_Port GPIOD
 #define GREEN1_Pin GPIO_PIN_13
@@ -96,6 +105,71 @@ void Error_Handler()
 #define RED2_GPIO_Port GPIOD
 #define GREEN2_Pin GPIO_PIN_15
 #define GREEN2_GPIO_Port GPIOD
+
+void task1(void* ctx)
+{
+  for(;;)
+  {
+    HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
+
+    HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
+  }
+}
+
+void task2(void* ctx)
+{
+  for(;;)
+  {
+    HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
+    
+    HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
+  }
+}
+
+extern "C"
+{
+void vApplicationIdleHook( void )
+{
+  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+}
+
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+{
+  for(;;)
+  {
+
+  }
+}
+
+void vApplicationMallocFailedHook(void)
+{
+  for(;;)
+  {
+    
+  }
+}
+}
+
+void read_des(std::array<uint32_t, 3>* const out_uid)
+{
+  const uint32_t* uid_base = reinterpret_cast<const uint32_t*>(0x1FF1E800);
+  std::copy_n(uid_base, 3, out_uid->data());
+}
+
+void read_des(uint32_t* const out_flash_size)
+{
+  const uint32_t* flash_size_base = reinterpret_cast<const uint32_t*>(0x1FF1E880);
+
+  *out_flash_size = *flash_size_base;
+}
 
 int main()
 {
@@ -116,22 +190,25 @@ int main()
   /* Configure the internal voltage reference buffer high impedance mode */
   HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_ENABLE);
 
+  //Configure flash for 100MHz AXI / Vcore VOS3
+  //Could be reduced to 1 at VOS2 or VOS1
+  //WRHIGHFREQ defaults to 0b11
+  //FLASH_SetLatency(FLASH_LATENCY_2);
+
 	SystemClock_Config();
-  
+  SystemCoreClock = 200000000U;
 
+	__HAL_RCC_CRC_CLK_ENABLE();
+	__HAL_RCC_HASH_CLK_ENABLE();
 
-	// __HAL_RCC_CRC_CLK_ENABLE();
-	// __HAL_RCC_HASH_CLK_ENABLE();
+	__HAL_RCC_FDCAN_CLK_ENABLE();
+	__HAL_RCC_USART1_CLK_ENABLE();
 
-	// __HAL_RCC_FDCAN_CLK_ENABLE();
-	// __HAL_RCC_USART1_CLK_ENABLE();
-
-	__HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-
+	__HAL_RCC_GPIOH_CLK_ENABLE();
 
 	//USART1 - PA9 / PA10
   if(0)
@@ -146,16 +223,16 @@ int main()
 	}
 
 
-	//FDCAN1 - PD0 / PD1
+	//FDCAN1 - PA11 / PA12
   if(0)
 	{
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+    GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
     GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
-    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 	}
 
 	//ULPI_CLK_EN_Pin, ULPI_nRESET_Pin
@@ -199,26 +276,17 @@ int main()
 
 	//Start ULPI CLK
 	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
+  HAL_Delay(1);
   HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
+  HAL_Delay(1);
 
-	for(;;)
-	{
-    HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
-    HAL_Delay(500);
-    HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
+  TaskHandle_t t1_handle = nullptr;
+  BaseType_t ret1 = xTaskCreate(task1, "task1", 1024, nullptr, 1, &t1_handle);
 
-    HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
-    HAL_Delay(500);
-    HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
+  TaskHandle_t t2_handle = nullptr;
+  BaseType_t ret2 = xTaskCreate(task2, "task2", 1024, nullptr, 1, &t2_handle);
 
-    HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
-    HAL_Delay(500);
-    HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
-    
-    HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
-    HAL_Delay(500);
-    HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
-  }
+  vTaskStartScheduler();
 
 	return 0;
 }
@@ -238,6 +306,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM17) {
     HAL_IncTick();
+    // xPortSysTickHandler();
   }
   /* USER CODE BEGIN Callback 1 */
 

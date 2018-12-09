@@ -65,3 +65,31 @@ target_link_libraries(canusbfdiso
 	freertos_v9_heap4
 	freertos_v9_cmsis
 )
+
+# Generate intel hex image
+add_custom_command(
+	OUTPUT canusbfdiso.hex
+	COMMAND arm-none-eabi-objcopy -Oihex canusbfdiso canusbfdiso.hex
+	DEPENDS canusbfdiso
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	VERBATIM	
+)
+
+add_custom_target(canusbfdiso_hex
+	ALL
+	DEPENDS canusbfdiso.hex
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Print the image size
+add_custom_target(canusbfdiso_size
+	ALL
+	COMMAND arm-none-eabi-size --format=sysv canusbfdiso
+	DEPENDS canusbfdiso
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	VERBATIM
+)
+
+add_dependencies(canusbfdiso_size
+	canusbfdiso
+)
