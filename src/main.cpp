@@ -254,14 +254,75 @@ void read_flash_size(uint32_t* const out_flash_size)
   *out_flash_size = *flash_size_base;
 }
 
+void set_gpio_low_power(GPIO_TypeDef* const gpio)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_All;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  // GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(gpio, &GPIO_InitStruct);
+}
+
+void set_gpio_low_power()
+{
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOI_CLK_ENABLE();
+  __HAL_RCC_GPIOJ_CLK_ENABLE();
+  __HAL_RCC_GPIOK_CLK_ENABLE();
+  
+  set_gpio_low_power(GPIOA);
+  set_gpio_low_power(GPIOB);
+  set_gpio_low_power(GPIOC);
+  set_gpio_low_power(GPIOD);
+  set_gpio_low_power(GPIOE);
+  set_gpio_low_power(GPIOF);
+  set_gpio_low_power(GPIOG);
+  set_gpio_low_power(GPIOH);
+  set_gpio_low_power(GPIOI);
+  set_gpio_low_power(GPIOJ);
+  set_gpio_low_power(GPIOK);
+
+  __HAL_RCC_GPIOA_CLK_DISABLE();
+  __HAL_RCC_GPIOB_CLK_DISABLE();
+  __HAL_RCC_GPIOC_CLK_DISABLE();
+  __HAL_RCC_GPIOD_CLK_DISABLE();
+  __HAL_RCC_GPIOE_CLK_DISABLE();
+  __HAL_RCC_GPIOF_CLK_DISABLE();
+  __HAL_RCC_GPIOG_CLK_DISABLE();
+  __HAL_RCC_GPIOH_CLK_DISABLE();
+  __HAL_RCC_GPIOI_CLK_DISABLE();
+  __HAL_RCC_GPIOJ_CLK_DISABLE();
+  __HAL_RCC_GPIOK_CLK_DISABLE();
+}
+
 int main()
 {
+  ucHeap[0]  = 0;
   ucHeap2[0] = 0;
   ucHeap3[0] = 0;
+
 	SCB_EnableICache();
 	SCB_EnableDCache();
 
 	HAL_Init();
+
+  //set_gpio_low_power();
+
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
 
   __HAL_RCC_SYSCFG_CLK_ENABLE();
 
@@ -290,11 +351,11 @@ int main()
 	__HAL_RCC_FDCAN_CLK_ENABLE();
 	__HAL_RCC_USART1_CLK_ENABLE();
 
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-	__HAL_RCC_GPIOH_CLK_ENABLE();
+  //disconnect internal analog switches
+  MODIFY_REG(SYSCFG->PMCR, 
+    SYSCFG_PMCR_PA0SO_Msk | SYSCFG_PMCR_PA1SO_Msk | SYSCFG_PMCR_PC2SO_Msk | SYSCFG_PMCR_PC3SO_Msk, 
+    SYSCFG_PMCR_PA0SO | SYSCFG_PMCR_PA1SO | SYSCFG_PMCR_PC2SO | SYSCFG_PMCR_PC3SO
+  );
 
 	//USART1 - PA9 / PA10
   // if(0)
@@ -325,11 +386,6 @@ int main()
   //if(0)
 	{
 	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin|ULPI_nRESET_Pin, GPIO_PIN_RESET);
-
-  MODIFY_REG(SYSCFG->PMCR, 
-    SYSCFG_PMCR_PA0SO_Msk | SYSCFG_PMCR_PA1SO_Msk | SYSCFG_PMCR_PC2SO_Msk | SYSCFG_PMCR_PC3SO_Msk, 
-    SYSCFG_PMCR_PA0SO | SYSCFG_PMCR_PA1SO | SYSCFG_PMCR_PC2SO | SYSCFG_PMCR_PC3SO
-  );
 
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Pin = ULPI_CLK_EN_Pin|ULPI_nRESET_Pin;
