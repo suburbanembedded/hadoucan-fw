@@ -6,9 +6,11 @@ set(CMAKE_SYSTEM_PROCESSOR arm-none-eabi)
 
 project(CANUSBFDISO C CXX ASM)
 
-set(CMAKE_ASM_COMPILER /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.2.0/ARMTools/bin/arm-atollic-eabi-gcc)
-set(CMAKE_C_COMPILER   /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.2.0/ARMTools/bin/arm-atollic-eabi-gcc)
-set(CMAKE_CXX_COMPILER /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.2.0/ARMTools/bin/arm-atollic-eabi-g++)
+set(ATOLLIC_PATH "/opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.2.0/ARMTools/bin")
+
+set(CMAKE_ASM_COMPILER ${ATOLLIC_PATH}/arm-atollic-eabi-gcc)
+set(CMAKE_C_COMPILER   ${ATOLLIC_PATH}/arm-atollic-eabi-gcc)
+set(CMAKE_CXX_COMPILER ${ATOLLIC_PATH}/arm-atollic-eabi-g++)
 
 set(CXX_STANDARD 11)
 set(C_STANDARD 11)
@@ -74,7 +76,7 @@ target_link_libraries(canusbfdiso
 # Generate intel hex image
 add_custom_command(
 	OUTPUT canusbfdiso.hex
-	COMMAND arm-none-eabi-objcopy -Oihex canusbfdiso canusbfdiso.hex
+	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -Oihex canusbfdiso canusbfdiso.hex
 	DEPENDS canusbfdiso
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM	
@@ -89,7 +91,7 @@ add_custom_target(canusbfdiso_hex
 # Print the image size
 add_custom_target(canusbfdiso_size
 	ALL
-	COMMAND arm-none-eabi-size --format=sysv canusbfdiso
+	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-size --format=sysv canusbfdiso
 	DEPENDS canusbfdiso
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM
