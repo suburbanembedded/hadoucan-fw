@@ -90,9 +90,9 @@ void Error_Handler()
 
 }
 
-#define ULPI_CLK_EN_Pin GPIO_PIN_1
+#define ULPI_CLK_EN_Pin GPIO_PIN_0
 #define ULPI_CLK_EN_GPIO_Port GPIOA
-#define ULPI_nRESET_Pin GPIO_PIN_2
+#define ULPI_nRESET_Pin GPIO_PIN_1
 #define ULPI_nRESET_GPIO_Port GPIOA
 
 #define CAN_SILENT_Pin GPIO_PIN_14
@@ -149,6 +149,48 @@ public:
 };
 task2 task2_instance __attribute__(( section(".ram_d1_noload_area") ));
 
+class task3 : public FreeRTOS_static_task<1024>
+{
+public:
+
+  task3()
+  {
+    m_uart = UART_HandleTypeDef();
+  }
+
+  void work() override
+  {
+    m_uart.Instance        = USART1;
+    m_uart.Init.BaudRate   = 115200;
+    m_uart.Init.WordLength = UART_WORDLENGTH_8B;
+    m_uart.Init.StopBits   = UART_STOPBITS_1;
+    m_uart.Init.Parity     = UART_PARITY_NONE;
+    m_uart.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+    m_uart.Init.Mode       = UART_MODE_TX_RX;
+
+    if(HAL_UART_Init(&m_uart) != HAL_OK)
+    {
+      for(;;)
+      {
+        vTaskDelay(pdMS_TO_TICKS(500));
+      }
+    }
+
+    const char msg[] = "Hi Stephanie!\r\n";
+    size_t msg_len = sizeof(msg);
+
+    for(;;)
+    {
+
+      HAL_UART_Transmit(&m_uart, (uint8_t*)msg, msg_len, HAL_MAX_DELAY);
+      vTaskDelay(pdMS_TO_TICKS(500));
+    }
+  }
+protected:
+  UART_HandleTypeDef m_uart;
+};
+task3 task3_instance __attribute__(( section(".ram_d1_noload_area") ));
+
 extern "C"
 {
 
@@ -204,7 +246,7 @@ void read_des(std::array<uint32_t, 3>* const out_uid)
   std::copy_n(uid_base, 3, out_uid->data());
 }
 
-void read_des(uint32_t* const out_flash_size)
+void read_flash_size(uint32_t* const out_flash_size)
 {
   const uint32_t* flash_size_base = reinterpret_cast<const uint32_t*>(0x1FF1E880);
 
@@ -253,13 +295,13 @@ int main()
 	__HAL_RCC_GPIOH_CLK_ENABLE();
 
 	//USART1 - PA9 / PA10
-  if(0)
+  // if(0)
 	{
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);		
 	}
@@ -282,18 +324,22 @@ int main()
 	{
 	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin|ULPI_nRESET_Pin, GPIO_PIN_RESET);
 
+  MODIFY_REG(SYSCFG->PMCR, 
+    SYSCFG_PMCR_PA0SO_Msk | SYSCFG_PMCR_PA1SO_Msk | SYSCFG_PMCR_PC2SO_Msk | SYSCFG_PMCR_PC3SO_Msk, 
+    SYSCFG_PMCR_PA0SO | SYSCFG_PMCR_PA1SO | SYSCFG_PMCR_PC2SO | SYSCFG_PMCR_PC3SO
+  );
+
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Pin = ULPI_CLK_EN_Pin|ULPI_nRESET_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 	}
 
 	//CAN_SILENT_Pin, CAN_STDBY_Pin 
-  if(0)
 	{
-	HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_SET);
 
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Pin = CAN_SILENT_Pin|CAN_STDBY_Pin;
@@ -319,11 +365,19 @@ int main()
 	//Start ULPI CLK
 	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
   HAL_Delay(1);
+  //Start ULPI CLK
   HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
+  HAL_Delay(1);
+
+  //Enable CAN
+  HAL_GPIO_WritePin(GPIOB, CAN_STDBY_Pin, GPIO_PIN_RESET);
+  HAL_Delay(1);
+  HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin, GPIO_PIN_RESET);
   HAL_Delay(1);
 
   task1_instance.launch("task1", 1024, 1);
   task2_instance.launch("task2", 1);
+  task3_instance.launch("task3", 1);
 
   vTaskStartScheduler();
 
