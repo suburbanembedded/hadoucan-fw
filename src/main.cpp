@@ -4,6 +4,7 @@
 
 #include "stm32h7xx.h"
 #include "stm32h7xx_hal.h"
+#include "stm32h7xx_hal_flash_ex.h"
 //#include "stm32h7xx_hal_def.h"
 //#include "stm32h7xx_hal_pwr.h"
 
@@ -276,8 +277,9 @@ int main()
 
   //Configure flash for 100MHz AXI / Vcore VOS3
   //Could be reduced to 1 at VOS2 or VOS1
+  // __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
   //WRHIGHFREQ defaults to 0b11
-  //FLASH_SetLatency(FLASH_LATENCY_2);
+  __HAL_FLASH_SET_LATENCY(FLASH_LATENCY_2);
 
 	SystemClock_Config();
   SystemCoreClock = 200000000U;
