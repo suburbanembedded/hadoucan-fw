@@ -65,7 +65,8 @@ void SystemClock_Config()
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  // if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -192,6 +193,119 @@ protected:
 };
 task3 task3_instance __attribute__(( section(".ram_d1_noload_area") ));
 
+class task4 : public FreeRTOS_static_task<1024>
+{
+public:
+
+  task4()
+  {
+    m_fdcan = FDCAN_HandleTypeDef();
+  }
+
+  void work() override
+  {
+    m_fdcan.Instance        = FDCAN1;
+    // m_fdcan.ttcan
+    m_fdcan.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+    m_fdcan.Init.Mode = FDCAN_MODE_NORMAL;
+    m_fdcan.Init.AutoRetransmission = DISABLE;
+    m_fdcan.Init.TransmitPause = DISABLE;
+    m_fdcan.Init.ProtocolException = DISABLE;
+    m_fdcan.Init.NominalPrescaler = 1;
+    m_fdcan.Init.NominalSyncJumpWidth = 0x8;
+    m_fdcan.Init.NominalTimeSeg1 = 0x1F;
+    m_fdcan.Init.NominalTimeSeg2 = 0x8;
+    m_fdcan.Init.DataPrescaler = 1;
+    m_fdcan.Init.DataSyncJumpWidth = 0x4;
+    m_fdcan.Init.DataTimeSeg1 = 0x5;
+    m_fdcan.Init.DataTimeSeg2 = 0x4;
+    m_fdcan.Init.MessageRAMOffset = 0;
+    m_fdcan.Init.StdFiltersNbr = 1;
+    m_fdcan.Init.ExtFiltersNbr = 0;
+    m_fdcan.Init.RxFifo0ElmtsNbr = 2;
+    m_fdcan.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
+    m_fdcan.Init.RxFifo1ElmtsNbr = 0;
+    m_fdcan.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
+    m_fdcan.Init.RxBuffersNbr = 0;
+    m_fdcan.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
+    m_fdcan.Init.TxEventsNbr = 0;
+    m_fdcan.Init.TxBuffersNbr = 0;
+    m_fdcan.Init.TxFifoQueueElmtsNbr = 2;
+    m_fdcan.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+    m_fdcan.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
+
+	//0x4000AC00
+	//0x4000D3FF
+	//0x0000 - 0x27FF = 10240 bytes = 2560 words
+	//regions must be 4b aligned
+    //m_fdcan.msgRam.StandardFilterSA = 0;//11 bit filter, 0 - 128 elements / 0 - 512 byte
+    //m_fdcan.msgRam.ExtendedFilterSA = 0;//29 bit filter, 0 - 64 elements / 0 - 512 byte
+    //m_fdcan.msgRam.RxFIFO0SA = 0;//rx fifo 0, 0 - 64 elements / 0 - 4608 byte
+    //m_fdcan.msgRam.RxFIFO1SA = 0;//rx fifo 0, 0 - 64 elements / 0 - 4608 byte
+    //m_fdcan.msgRam.RxBufferSA = 0;//rx buffer, 0 - 64 elements / 0 - 4608 byte
+    //m_fdcan.msgRam.TxEventFIFOSA = 0;//tx event fifo, 0 - 32 elements / 0 - 256 byte
+    //m_fdcan.msgRam.TxBufferSA = 0;//tx buffer, 0 - 32 elements / 0 - 2304 byte
+    //m_fdcan.msgRam.TxFIFOQSA = 0;//tx fifo queue start address
+    //m_fdcan.msgRam.TTMemorySA = 0;//trigger memory, 0 - 64 elements / 0 - 512 byte
+    //m_fdcan.msgRam.EndAddress = 0;//msg ram end address
+
+    m_fdcan.ErrorCode = 0;
+    // m_fdcan.msgRam
+    // m_fdcan.State
+
+	if(HAL_FDCAN_Init(&m_fdcan) != HAL_OK)
+	{
+        for(;;)
+        {
+          vTaskDelay(pdMS_TO_TICKS(500));
+        }
+	}
+
+	//rx filter, all in rxfifo0
+    m_std_filt.IdType = FDCAN_STANDARD_ID;
+    m_std_filt.FilterIndex = 0;
+    m_std_filt.FilterType = FDCAN_FILTER_MASK;
+    m_std_filt.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+    m_std_filt.FilterID1 = 0x000;
+    m_std_filt.FilterID2 = 0x000; /* For acceptance, MessageID and FilterID1 must match exactly */
+    HAL_FDCAN_ConfigFilter(&m_fdcan, &m_std_filt);
+
+    //set watermark
+	HAL_FDCAN_ConfigFifoWatermark(&m_fdcan, FDCAN_CFG_RX_FIFO0, 2);
+
+	//enable watermark notification
+	HAL_FDCAN_ActivateNotification(&m_fdcan, FDCAN_IT_RX_FIFO0_WATERMARK, 0);
+
+	HAL_FDCAN_Start(&m_fdcan);
+
+    for(;;)
+    {
+		FDCAN_TxHeaderTypeDef tx_header;
+
+        tx_header.Identifier = 0x111;
+        tx_header.IdType = FDCAN_STANDARD_ID;
+        tx_header.TxFrameType = FDCAN_DATA_FRAME;
+        tx_header.DataLength = FDCAN_DLC_BYTES_8;
+        tx_header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+        tx_header.BitRateSwitch = FDCAN_BRS_OFF;
+        tx_header.FDFormat = FDCAN_CLASSIC_CAN;
+        // tx_header.FDFormat = FDCAN_FD_CAN;
+        tx_header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+        tx_header.MessageMarker = 0;
+
+        std::array<uint8_t, 8> tx_data = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+
+		HAL_FDCAN_AddMessageToTxFifoQ(&m_fdcan, &tx_header, tx_data.data());
+
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+  }
+protected:
+  FDCAN_HandleTypeDef m_fdcan;
+  FDCAN_FilterTypeDef m_std_filt;
+};
+task4 task4_instance __attribute__(( section(".ram_d1_noload_area") ));
+
 extern "C"
 {
 
@@ -310,10 +424,10 @@ int main()
   ucHeap2[0] = 0;
   ucHeap3[0] = 0;
 
-	SCB_EnableICache();
-	SCB_EnableDCache();
+  SCB_EnableICache();
+  SCB_EnableDCache();
 
-	HAL_Init();
+  HAL_Init();
 
   //set_gpio_low_power();
 
@@ -343,14 +457,14 @@ int main()
   //WRHIGHFREQ defaults to 0b11
   // __HAL_FLASH_SET_LATENCY(FLASH_LATENCY_2);
 
-	SystemClock_Config();
+  SystemClock_Config();
   SystemCoreClock = 200000000U;
 
-	__HAL_RCC_CRC_CLK_ENABLE();
-	__HAL_RCC_HASH_CLK_ENABLE();
+  __HAL_RCC_CRC_CLK_ENABLE();
+  __HAL_RCC_HASH_CLK_ENABLE();
 
-	__HAL_RCC_FDCAN_CLK_ENABLE();
-	__HAL_RCC_USART1_CLK_ENABLE();
+  __HAL_RCC_USART1_CLK_ENABLE();
+  __HAL_RCC_FDCAN_CLK_ENABLE();
 
   //disconnect internal analog switches
   MODIFY_REG(SYSCFG->PMCR, 
@@ -358,22 +472,22 @@ int main()
     SYSCFG_PMCR_PA0SO | SYSCFG_PMCR_PA1SO | SYSCFG_PMCR_PC2SO | SYSCFG_PMCR_PC3SO
   );
 
-	//USART1 - PA9 / PA10
+  //USART1 - PA9 / PA10
   // if(0)
-	{
+  {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);		
-	}
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);    
+  }
 
 
-	//FDCAN1 - PA11 / PA12
+  //FDCAN1 - PA11 / PA12
   if(0)
-	{
+  {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -381,48 +495,48 @@ int main()
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
     GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-	}
+  }
 
-	//ULPI_CLK_EN_Pin, ULPI_nRESET_Pin
+  //ULPI_CLK_EN_Pin, ULPI_nRESET_Pin
   //if(0)
-	{
-	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin|ULPI_nRESET_Pin, GPIO_PIN_RESET);
+  {
+  HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin|ULPI_nRESET_Pin, GPIO_PIN_RESET);
 
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = ULPI_CLK_EN_Pin|ULPI_nRESET_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-	}
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = ULPI_CLK_EN_Pin|ULPI_nRESET_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  }
 
-	//CAN_SILENT_Pin, CAN_STDBY_Pin 
-	{
-	HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_SET);
+  //CAN_SILENT_Pin, CAN_STDBY_Pin 
+  {
+  HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_SET);
 
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = CAN_SILENT_Pin|CAN_STDBY_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	}
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = CAN_SILENT_Pin|CAN_STDBY_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  }
 
-	//RED1_Pin GREEN1_Pin RED2_Pin GREEN2_Pin
+  //RED1_Pin GREEN1_Pin RED2_Pin GREEN2_Pin
   //if(0)
-	{
-	HAL_GPIO_WritePin(GPIOD, RED1_Pin|GREEN1_Pin|RED2_Pin|GREEN2_Pin, GPIO_PIN_RESET);
-	
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = RED1_Pin|GREEN1_Pin|RED2_Pin|GREEN2_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-	}
+  {
+  HAL_GPIO_WritePin(GPIOD, RED1_Pin|GREEN1_Pin|RED2_Pin|GREEN2_Pin, GPIO_PIN_RESET);
+  
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = RED1_Pin|GREEN1_Pin|RED2_Pin|GREEN2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  }
 
-	//Start ULPI CLK
-	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
+  //Start ULPI CLK
+  HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
   HAL_Delay(1);
   //Start ULPI CLK
   HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
@@ -440,7 +554,7 @@ int main()
 
   vTaskStartScheduler();
 
-	return 0;
+  return 0;
 }
 
 /**
