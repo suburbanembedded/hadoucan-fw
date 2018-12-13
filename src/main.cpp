@@ -2,6 +2,7 @@
 #include "freertos_util/Task_heap.hpp"
 #include "freertos_util/Task_static.hpp"
 #include "freertos_util/Queue_static.hpp"
+#include "freertos_util/Queue_static_pod.hpp"
 #include "freertos_util/object_pool/Object_pool.hpp"
 
 #include "stm32h7xx.h"
@@ -120,13 +121,20 @@ public:
   void work() override
   {
 
-    Queue_static<int, 10> q;
+    Queue_static_pod<int, 10> q;
 
     Object_pool<int, 10> op;
 
     int* a = op.allocate(5);
+    *a = 5;
+    volatile int b = *a;
+    *a = b+1;
     op.deallocate(a);
     a = nullptr;
+
+    {
+      Object_pool<int, 10>::unique_node_ptr b = op.allocate_unique(6);
+    }
 
     for(;;)
     {

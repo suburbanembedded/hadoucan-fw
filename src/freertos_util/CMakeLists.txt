@@ -1,6 +1,8 @@
 add_library(freertos_util
 	src/Queue_base.cpp
 	src/Queue_static.cpp
+	src/Queue_static_pod.cpp
+
 	src/Task_base.cpp
 	src/Task_heap.cpp
 	src/Task_static.cpp

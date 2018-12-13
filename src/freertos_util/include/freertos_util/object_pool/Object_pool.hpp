@@ -1,6 +1,6 @@
 #pragma once
 
-#include "freertos_util/Queue_static.hpp"
+#include "freertos_util/Queue_static_pod.hpp"
 
 #include "freertos_util/object_pool/Object_pool_node.hpp"
 
@@ -10,8 +10,10 @@
 template< typename T>
 class Object_pool_base
 {
-
 public:
+
+	typedef std::aligned_storage_t<sizeof(T), alignof(T)> Aligned_T;
+	typedef Object_pool_node<T> Node_T;
 
 	Object_pool_base() = default;
 	virtual ~Object_pool_base()
@@ -19,12 +21,11 @@ public:
 
 	}
 
+	virtual void deallocate(T* const ptr) = 0;
+	virtual void deallocate(Node_T* const node) = 0;
 
 protected:
 
-	typedef std::aligned_storage_t<sizeof(T), alignof(T)> Aligned_T;
-
-	typedef Object_pool_node<T> Node_T;
 };
 
 template< typename T, size_t LEN >
@@ -32,6 +33,9 @@ class Object_pool : public Object_pool_base<T>
 {
 
 public:
+
+	using typename Object_pool_base<T>::Aligned_T;
+	using typename Object_pool_base<T>::Node_T;
 
 	Object_pool()
 	{
@@ -67,7 +71,7 @@ public:
 		return node->allocate(std::forward<Args>(args)...);
 	}
 
-	void deallocate(T* const ptr)
+	void deallocate(T* const ptr) override
 	{
 		Node_T* node = Node_T::get_this_from_val(ptr);
 		node->deallocate();
@@ -79,13 +83,51 @@ public:
 		}
 	}
 
-protected:
+	void deallocate(Node_T* const node) override
+	{
+		node->deallocate();
 
-	using typename Object_pool_base<T>::Aligned_T;
-	using typename Object_pool_base<T>::Node_T;
+		if(!m_free_nodes.push_back(node))
+		{
+			//this should never fail
+			//very bad if this fails
+		}
+	}
+
+	class Node_T_deleter
+	{
+	public:
+		void operator()(T* ptr) const
+		{
+			Node_T* node = Node_T::get_this_from_val(ptr);
+			Object_pool_base<T>* pool = node->get_pool();
+
+			pool->deallocate(node);
+		}
+	};
+
+	typedef std::unique_ptr<T, Node_T_deleter> unique_node_ptr;
+
+	template<typename... Args>
+	unique_node_ptr allocate_unique(const TickType_t xTicksToWait, Args... args)
+	{
+		T* val = allocate(xTicksToWait, std::forward<Args>(args)...);
+
+		return unique_node_ptr(val);
+	}
+
+	template<typename... Args>
+	unique_node_ptr allocate_unique(Args... args)
+	{
+		T* val = allocate(std::forward<Args>(args)...);
+
+		return unique_node_ptr(val);
+	}
+
+protected:
 
 	std::array<Aligned_T, LEN> m_mem_pool;
 	std::array<Node_T,    LEN> m_node_pool;
 
-	Queue_static<Node_T*, LEN> m_free_nodes;
+	Queue_static_pod<Node_T*, LEN> m_free_nodes;
 };

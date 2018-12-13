@@ -43,21 +43,25 @@ public:
 	template<typename... Args>
 	T* allocate(Args... args)
 	{
-		if(m_val == nullptr)
+		T* const val_ptr = get_val();
+
+		if(val_ptr == nullptr)
 		{
 			return nullptr;
 		}
 
-		::new(m_val) T(std::forward<Args>(args)...);
+		::new(val_ptr) T(std::forward<Args>(args)...);
 
-		return m_val;
+		return val_ptr;
 	}
 
 	void deallocate()
 	{
-		if(m_val != nullptr)
+		T* const val_ptr = get_val();
+
+		if(val_ptr != nullptr)
 		{
-			get_val()->~T();
+			val_ptr->~T();
 		}
 	}
 
@@ -71,7 +75,11 @@ public:
 	{
 		return static_cast< T* >(m_ptr_pack[2]);
 	}
-
+	Object_pool_base<T>* get_pool() const
+	{
+		return static_cast< Object_pool_base<T>* >(m_ptr_pack[0]);
+	}
+	
 protected:
 
 	void set_pool(Object_pool_base<T>* pool)
@@ -87,22 +95,14 @@ protected:
 		m_ptr_pack[2] = val;
 	}
 
-	Object_pool_base<T>* get_pool() const
-	{
-		return static_cast< Object_pool_base<T>* >(m_ptr_pack[0]);
-	}
 	Object_pool_node<T>* get_this() const
 	{
 		return static_cast< Object_pool_node<T>* >(m_ptr_pack[1]);
 	}
 
-	Object_pool_node<T>* m_this;
-	T* m_val;
-
-	//Object_pool_base<T>* m_pool;
-	//Object_pool_node<T>* m_this;
-	//T* m_val;
-
+	//0 - Object_pool_base<T>* m_pool;
+	//1 - Object_pool_node<T>* m_this;
+	//2 - T* m_val;
 	std::array<void*, 3> m_ptr_pack;
 };
 
