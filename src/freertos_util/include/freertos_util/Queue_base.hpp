@@ -35,6 +35,17 @@ protected:
 template <typename T>
 class Queue_template_base : public Queue_base
 {
+public:
+	bool pop_front(T* const item)
+	{
+		return pop_front(item, 0);
+	}
+
+	bool pop_front(T* const item, const TickType_t xTicksToWait)
+	{
+		return xQueueReceive(m_queue, item, xTicksToWait) == pdTRUE;
+	}
+
 	bool push_back(const T& item)
 	{
 		return push_back(item, 0);

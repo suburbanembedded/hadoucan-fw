@@ -2,6 +2,7 @@
 #include "freertos_util/Task_heap.hpp"
 #include "freertos_util/Task_static.hpp"
 #include "freertos_util/Queue_static.hpp"
+#include "freertos_util/object_pool/Object_pool.hpp"
 
 #include "stm32h7xx.h"
 #include "stm32h7xx_hal.h"
@@ -120,6 +121,12 @@ public:
   {
 
     Queue_static<int, 10> q;
+
+    Object_pool<int, 10> op;
+
+    int* a = op.allocate(5);
+    op.deallocate(a);
+    a = nullptr;
 
     for(;;)
     {

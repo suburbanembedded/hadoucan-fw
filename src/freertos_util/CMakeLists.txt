@@ -5,6 +5,8 @@ add_library(freertos_util
 	src/Task_heap.cpp
 	src/Task_static.cpp
 
+	src/object_pool/Object_pool.cpp
+	src/object_pool/Object_pool_node.cpp
 )
 
 
