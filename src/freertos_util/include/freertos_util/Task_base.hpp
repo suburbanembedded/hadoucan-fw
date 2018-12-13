@@ -3,19 +3,17 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-class FreeRTOS_task_base;
-
 extern "C"
 {
 	void FreeRTOS_task_dispatch(void* ctx);
 }
 
-class FreeRTOS_task_base
+class Task_base
 {
 public:
 
-	FreeRTOS_task_base();
-	virtual ~FreeRTOS_task_base();
+	Task_base();
+	virtual ~Task_base();
 
 	virtual void work();
 

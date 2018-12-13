@@ -1,21 +1,21 @@
-#include "FreeRTOS_task_base.hpp"
+#include "freertos_util/Task_base.hpp"
 
 extern "C"
 {
 	void FreeRTOS_task_dispatch(void* ctx)
 	{
-		FreeRTOS_task_base* inst = static_cast<FreeRTOS_task_base*>(ctx);
+		Task_base* inst = static_cast<Task_base*>(ctx);
 
 		inst->work();
 	}
 }
 
-FreeRTOS_task_base::FreeRTOS_task_base()
+Task_base::Task_base()
 {
 	m_handle = nullptr;
 }
 
-FreeRTOS_task_base::~FreeRTOS_task_base()
+Task_base::~Task_base()
 {
 	if(m_handle)
 	{
@@ -24,7 +24,7 @@ FreeRTOS_task_base::~FreeRTOS_task_base()
 	}
 }
 
-void FreeRTOS_task_base::work()
+void Task_base::work()
 {
 	for(;;)
 	{

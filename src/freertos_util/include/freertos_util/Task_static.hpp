@@ -1,20 +1,20 @@
 #pragma once
 
-#include "FreeRTOS_task_base.hpp"
+#include "freertos_util/Task_base.hpp"
 
 #include <cstring>
 
 template<size_t StackDepth>
-class FreeRTOS_static_task : public FreeRTOS_task_base
+class Task_static : public Task_base
 {
 public:
 
-	FreeRTOS_static_task()
+	Task_static()
 	{
-		memset(&m_tcb, 0, sizeof(m_tcb));
+		m_tcb = {0};
 	}
 
-	~FreeRTOS_static_task() override
+	~Task_static() override
 	{
 
 	}
@@ -27,7 +27,11 @@ public:
 
 protected:
 
+#if portSTACK_GROWTH < 0
+	StackType_t m_stack[StackDepth];
+	StaticTask_t m_tcb;
+#else
 	StaticTask_t m_tcb;
 	StackType_t m_stack[StackDepth];
-
+#endif
 };

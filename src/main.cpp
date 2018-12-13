@@ -1,6 +1,7 @@
 
-#include "FreeRTOS_task.hpp"
-#include "FreeRTOS_static_task.hpp"
+#include "freertos_util/Task_heap.hpp"
+#include "freertos_util/Task_static.hpp"
+#include "freertos_util/Queue_static.hpp"
 
 #include "stm32h7xx.h"
 #include "stm32h7xx_hal.h"
@@ -111,12 +112,15 @@ void Error_Handler()
 #define GREEN2_Pin GPIO_PIN_15
 #define GREEN2_GPIO_Port GPIOD
 
-class task1 : public FreeRTOS_task
+class task1 : public Task_heap
 {
 public:
 
   void work() override
   {
+
+    Queue_static<int, 10> q;
+
     for(;;)
     {
       HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
@@ -131,7 +135,7 @@ public:
 };
 task1 task1_instance __attribute__(( section(".ram_d1_noload_area") ));
 
-class task2 : public FreeRTOS_static_task<1024>
+class task2 : public Task_static<1024>
 {
 public:
 
@@ -151,7 +155,7 @@ public:
 };
 task2 task2_instance __attribute__(( section(".ram_d1_noload_area") ));
 
-class task3 : public FreeRTOS_static_task<1024>
+class task3 : public Task_static<1024>
 {
 public:
 
@@ -193,7 +197,7 @@ protected:
 };
 task3 task3_instance __attribute__(( section(".ram_d1_noload_area") ));
 
-class task4 : public FreeRTOS_static_task<1024>
+class task4 : public Task_static<1024>
 {
 public:
 
