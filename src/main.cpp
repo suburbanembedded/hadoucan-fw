@@ -16,6 +16,10 @@
 
 #include <array>
 #include <algorithm>
+#include <cstdio>
+#include <cstdarg>
+#include <cstdarg>
+#include <algorithm>
 
 void Error_Handler();
 void SystemClock_Config();
@@ -114,6 +118,35 @@ void Error_Handler()
 #define GREEN2_Pin GPIO_PIN_15
 #define GREEN2_GPIO_Port GPIOD
 
+UART_HandleTypeDef console_uart;
+
+template<size_t LEN>
+size_t console_print(const char* fmt, ...)
+{
+	std::array<char, LEN> buf;
+
+	va_list args;
+	va_start (args, fmt);
+	int ret = vsnprintf(buf.data(), buf.size(), fmt, args);
+	va_end (args);
+
+	if(ret < 0)
+	{
+		//error
+		return 0;
+	}
+	else if(size_t(ret) >= buf.size())
+	{
+		//output was truncated
+	}
+
+	const size_t num_to_write = std::min<size_t>(buf.size() - 1, ret);
+
+	HAL_UART_Transmit(&console_uart, (uint8_t*)buf.data(), num_to_write, HAL_MAX_DELAY);
+
+	return num_to_write;
+}
+
 class task1 : public Task_heap
 {
 public:
@@ -121,6 +154,7 @@ public:
   void work() override
   {
 
+#if 0
     Queue_static_pod<int, 10> q;
 
     Object_pool<int, 10> op;
@@ -135,7 +169,7 @@ public:
     {
       Object_pool<int, 10>::unique_node_ptr b = op.allocate_unique(6);
     }
-
+#endif
     for(;;)
     {
       HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
@@ -223,21 +257,24 @@ public:
 
   void work() override
   {
+  	console_print<64>("CAN init startup\r\n");
+
     m_fdcan.Instance        = FDCAN1;
     // m_fdcan.ttcan
     m_fdcan.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
     m_fdcan.Init.Mode = FDCAN_MODE_NORMAL;
-    m_fdcan.Init.AutoRetransmission = DISABLE;
+    // m_fdcan.Init.AutoRetransmission = DISABLE;
+    m_fdcan.Init.AutoRetransmission = ENABLE;
     m_fdcan.Init.TransmitPause = DISABLE;
     m_fdcan.Init.ProtocolException = DISABLE;
-    m_fdcan.Init.NominalPrescaler = 1;
-    m_fdcan.Init.NominalSyncJumpWidth = 0x8;
-    m_fdcan.Init.NominalTimeSeg1 = 0x1F;
-    m_fdcan.Init.NominalTimeSeg2 = 0x8;
-    m_fdcan.Init.DataPrescaler = 1;
-    m_fdcan.Init.DataSyncJumpWidth = 0x4;
-    m_fdcan.Init.DataTimeSeg1 = 0x5;
-    m_fdcan.Init.DataTimeSeg2 = 0x4;
+    m_fdcan.Init.NominalPrescaler = 24;
+    m_fdcan.Init.NominalSyncJumpWidth = 1;
+    m_fdcan.Init.NominalTimeSeg1 = 13;
+    m_fdcan.Init.NominalTimeSeg2 = 3;
+    m_fdcan.Init.DataPrescaler = 24;
+    m_fdcan.Init.DataSyncJumpWidth = 1;
+    m_fdcan.Init.DataTimeSeg1 = 13;
+    m_fdcan.Init.DataTimeSeg2 = 3;
     m_fdcan.Init.MessageRAMOffset = 0;
     m_fdcan.Init.StdFiltersNbr = 1;
     m_fdcan.Init.ExtFiltersNbr = 0;
@@ -274,6 +311,7 @@ public:
 
 	if(HAL_FDCAN_Init(&m_fdcan) != HAL_OK)
 	{
+		console_print<64>("HAL_FDCAN_Init failed\r\n");
         for(;;)
         {
           vTaskDelay(pdMS_TO_TICKS(500));
@@ -295,14 +333,23 @@ public:
 	//enable watermark notification
 	HAL_FDCAN_ActivateNotification(&m_fdcan, FDCAN_IT_RX_FIFO0_WATERMARK, 0);
 
-	HAL_FDCAN_Start(&m_fdcan);
+	if(HAL_FDCAN_Start(&m_fdcan) != HAL_OK)
+	{
+		console_print<64>("HAL_FDCAN_Start failed\r\n");
+        for(;;)
+        {
+          vTaskDelay(pdMS_TO_TICKS(500));
+        }
+	}
 
     for(;;)
     {
 		FDCAN_TxHeaderTypeDef tx_header;
 
-        tx_header.Identifier = 0x111;
-        tx_header.IdType = FDCAN_STANDARD_ID;
+        // tx_header.Identifier = 0x111;
+        // tx_header.IdType = FDCAN_STANDARD_ID;
+        tx_header.Identifier = 0xAB111;
+        tx_header.IdType = FDCAN_EXTENDED_ID;
         tx_header.TxFrameType = FDCAN_DATA_FRAME;
         tx_header.DataLength = FDCAN_DLC_BYTES_8;
         tx_header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
@@ -314,7 +361,19 @@ public:
 
         std::array<uint8_t, 8> tx_data = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 
-		HAL_FDCAN_AddMessageToTxFifoQ(&m_fdcan, &tx_header, tx_data.data());
+		if(HAL_FDCAN_AddMessageToTxFifoQ(&m_fdcan, &tx_header, tx_data.data()) == HAL_OK)
+		{
+			console_print<128>("HAL_FDCAN_AddMessageToTxFifoQ ok\r\n");
+		}
+		else
+		{
+			console_print<128>("HAL_FDCAN_AddMessageToTxFifoQ failed\r\n");
+	        for(;;)
+	        {
+	          vTaskDelay(pdMS_TO_TICKS(500));
+	        }
+		}
+
 
         vTaskDelay(pdMS_TO_TICKS(500));
     }
@@ -505,7 +564,7 @@ int main()
 
 
   //FDCAN1 - PA11 / PA12
-  if(0)
+  // if(0)
   {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
@@ -567,9 +626,30 @@ int main()
   HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin, GPIO_PIN_RESET);
   HAL_Delay(1);
 
+console_uart = UART_HandleTypeDef();
+console_uart.Instance        = USART1;
+console_uart.Init.BaudRate   = 115200;
+console_uart.Init.WordLength = UART_WORDLENGTH_8B;
+console_uart.Init.StopBits   = UART_STOPBITS_1;
+console_uart.Init.Parity     = UART_PARITY_NONE;
+console_uart.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+console_uart.Init.Mode       = UART_MODE_TX_RX;
+
+	if(HAL_UART_Init(&console_uart) != HAL_OK)
+	{
+	  for(;;)
+	  {
+	    HAL_Delay(pdMS_TO_TICKS(500));
+	  }
+	}
+
+	console_print<64>("Startup\r\n");
+
+
   task1_instance.launch("task1", 1024, 1);
   task2_instance.launch("task2", 1);
-  task3_instance.launch("task3", 1);
+  // task3_instance.launch("task3", 1);
+  task4_instance.launch("task4", 1);
 
   vTaskStartScheduler();
 
