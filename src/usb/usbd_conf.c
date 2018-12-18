@@ -94,10 +94,6 @@ void SystemClock_Config(void);
 
 void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
 {
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_15, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET);
-  
-
   GPIO_InitTypeDef GPIO_InitStruct;
   if(pcdHandle->Instance==USB_OTG_HS)
   {

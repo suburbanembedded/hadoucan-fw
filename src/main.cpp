@@ -23,22 +23,12 @@
 #include <cstdarg>
 #include <algorithm>
 
-void SystemClock_Config();
-
 extern "C"
 {
-	void Error_Handler();
-	
-	void Error_Handler(void)
-	{
-		for(;;)
-		{
-			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
-			HAL_Delay(500);
-		}
-	}
+  void Error_Handler();
 }
 
+void SystemClock_Config();
 void SystemClock_Config()
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -230,7 +220,7 @@ public:
 	vTaskDelay(pdMS_TO_TICKS(10));
 	// //Release ULPI from RESET
 	HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
-	vTaskDelay(pdMS_TO_TICKS(1));
+	vTaskDelay(pdMS_TO_TICKS(5));
 
     MX_USB_DEVICE_Init();
     
@@ -238,6 +228,7 @@ public:
 
     for(;;)
     {
+      HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
       vTaskDelay(pdMS_TO_TICKS(500));
     }
   }
@@ -669,4 +660,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 1 */
 
   /* USER CODE END Callback 1 */
+}
+
+extern "C"
+{
+  void Error_Handler();
+  
+  void Error_Handler(void)
+  {
+    for(;;)
+    {
+      HAL_GPIO_TogglePin(RED1_GPIO_Port, RED1_Pin);
+      HAL_Delay(500);
+    }
+  }
 }
