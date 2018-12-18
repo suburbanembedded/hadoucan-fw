@@ -52,6 +52,12 @@ add_executable(canusbfdiso
 	src/stm32h7xx_hal_timebase_tim.c
 
 	src/main.cpp
+
+	src/usb/usbd_cdc_if.c
+	src/usb/usbd_conf.c
+	src/usb/usbd_desc.c
+	src/usb/usb_device.c
+
 )
 
 target_link_libraries(canusbfdiso
@@ -63,6 +69,9 @@ target_link_libraries(canusbfdiso
 	stm32h7xx_hal
 	stm32h7xx_ll
 	stm32h750xx_cmsis
+
+	stm32_usb_lib_core
+	stm32_usb_lib_cdc
 
 	freertos_v9
 	freertos_v9_heap4

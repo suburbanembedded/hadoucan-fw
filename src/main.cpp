@@ -1,4 +1,6 @@
 
+#include "usb_device.h"
+
 #include "freertos_util/Task_heap.hpp"
 #include "freertos_util/Task_static.hpp"
 #include "freertos_util/Queue_static.hpp"
@@ -21,8 +23,21 @@
 #include <cstdarg>
 #include <algorithm>
 
-void Error_Handler();
 void SystemClock_Config();
+
+extern "C"
+{
+	void Error_Handler();
+	
+	void Error_Handler(void)
+	{
+		for(;;)
+		{
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+			HAL_Delay(500);
+		}
+	}
+}
 
 void SystemClock_Config()
 {
@@ -92,11 +107,6 @@ void SystemClock_Config()
   {
     Error_Handler();
   }
-}
-
-void Error_Handler()
-{
-
 }
 
 #define ULPI_CLK_EN_Pin GPIO_PIN_0
@@ -210,34 +220,24 @@ public:
 
   task3()
   {
-    m_uart = UART_HandleTypeDef();
+    
   }
 
   void work() override
   {
-    m_uart.Instance        = USART1;
-    m_uart.Init.BaudRate   = 115200;
-    m_uart.Init.WordLength = UART_WORDLENGTH_8B;
-    m_uart.Init.StopBits   = UART_STOPBITS_1;
-    m_uart.Init.Parity     = UART_PARITY_NONE;
-    m_uart.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-    m_uart.Init.Mode       = UART_MODE_TX_RX;
+	//Start ULPI CLK
+	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
+	vTaskDelay(pdMS_TO_TICKS(10));
+	// //Release ULPI from RESET
+	HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
+	vTaskDelay(pdMS_TO_TICKS(1));
 
-    if(HAL_UART_Init(&m_uart) != HAL_OK)
-    {
-      for(;;)
-      {
-        vTaskDelay(pdMS_TO_TICKS(500));
-      }
-    }
-
-    const char msg[] = "Hi Stephanie!\r\n";
-    size_t msg_len = sizeof(msg);
+    MX_USB_DEVICE_Init();
+    
+  	HAL_PWREx_EnableUSBVoltageDetector();
 
     for(;;)
     {
-
-      HAL_UART_Transmit(&m_uart, (uint8_t*)msg, msg_len, HAL_MAX_DELAY);
       vTaskDelay(pdMS_TO_TICKS(500));
     }
   }
@@ -613,13 +613,6 @@ int main()
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
   }
 
-  //Start ULPI CLK
-  HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
-  HAL_Delay(1);
-  //Start ULPI CLK
-  HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
-  HAL_Delay(1);
-
   //Enable CAN
   HAL_GPIO_WritePin(GPIOB, CAN_STDBY_Pin, GPIO_PIN_RESET);
   HAL_Delay(1);
@@ -646,9 +639,9 @@ console_uart.Init.Mode       = UART_MODE_TX_RX;
 	console_print<64>("Startup\r\n");
 
 
-  task1_instance.launch("task1", 1024, 1);
-  task2_instance.launch("task2", 1);
-  // task3_instance.launch("task3", 1);
+  // task1_instance.launch("task1", 1024, 1);
+  // task2_instance.launch("task2", 1);
+  task3_instance.launch("task3", 2);
   task4_instance.launch("task4", 1);
 
   vTaskStartScheduler();
