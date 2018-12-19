@@ -97,8 +97,8 @@
 #define configMAX_PRIORITIES              (7)
 
 #define configMINIMAL_STACK_SIZE          ((uint16_t)128U)
-#define configTOTAL_HEAP_SIZE             ((size_t)(128U * 1024U))
-#define configAPPLICATION_ALLOCATED_HEAP  1
+#define configTOTAL_HEAP_SIZE             ((size_t)(16U * 1024U))
+#define configAPPLICATION_ALLOCATED_HEAP  0
 #define configSUPPORT_STATIC_ALLOCATION   1
 
 #define configMAX_TASK_NAME_LEN           (16)

@@ -1,35 +1,208 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
+  *
+  * Copyright (c) 2018 STMicroelectronics International N.V. 
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without 
+  * modification, are permitted, provided that the following conditions are met:
+  *
+  * 1. Redistribution of source code must retain the above copyright notice, 
+  *    this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  *    this list of conditions and the following disclaimer in the documentation
+  *    and/or other materials provided with the distribution.
+  * 3. Neither the name of STMicroelectronics nor the names of other 
+  *    contributors to this software may be used to endorse or promote products 
+  *    derived from this software without specific written permission.
+  * 4. This software, including modifications and/or derivative works of this 
+  *    software, must execute solely and exclusively on microcontroller or
+  *    microprocessor devices manufactured by or for STMicroelectronics.
+  * 5. Redistribution and use of this software other than as permitted under 
+  *    this license is void and will automatically terminate your rights under 
+  *    this license. 
+  *
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
 
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "cmsis_os.h"
 #include "usb_device.h"
 
-#include "freertos_util/Task_heap.hpp"
-#include "freertos_util/Task_static.hpp"
-#include "freertos_util/Queue_static.hpp"
-#include "freertos_util/Queue_static_pod.hpp"
-#include "freertos_util/object_pool/Object_pool.hpp"
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 
-#include "stm32h7xx.h"
-#include "stm32h7xx_hal.h"
-#include "stm32h7xx_hal_flash_ex.h"
-//#include "stm32h7xx_hal_def.h"
-//#include "stm32h7xx_hal_pwr.h"
+/* USER CODE END Includes */
 
-#include "FreeRTOS.h"
-#include "task.h"
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
 
-#include <array>
-#include <algorithm>
-#include <cstdio>
-#include <cstdarg>
-#include <cstdarg>
-#include <algorithm>
+/* USER CODE END PTD */
 
-extern "C"
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+CRC_HandleTypeDef hcrc;
+
+FDCAN_HandleTypeDef hfdcan1;
+
+HASH_HandleTypeDef hhash;
+
+RNG_HandleTypeDef hrng;
+
+RTC_HandleTypeDef hrtc;
+
+UART_HandleTypeDef huart1;
+
+osThreadId defaultTaskHandle;
+/* USER CODE BEGIN PV */
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_FDCAN1_Init(void);
+static void MX_CRC_Init(void);
+static void MX_HASH_Init(void);
+static void MX_RTC_Init(void);
+static void MX_RNG_Init(void);
+void StartDefaultTask(void const * argument);
+
+/* USER CODE BEGIN PFP */
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
 {
-  void Error_Handler();
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
+  /* Enable D-Cache---------------------------------------------------------*/
+  SCB_EnableDCache();
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART1_UART_Init();
+  MX_FDCAN1_Init();
+  MX_CRC_Init();
+  MX_HASH_Init();
+  MX_RTC_Init();
+  MX_RNG_Init();
+  /* USER CODE BEGIN 2 */
+
+  /* USER CODE END 2 */
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* Create the thread(s) */
+  /* definition and creation of defaultTask */
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+ 
+
+  /* Start scheduler */
+  osKernelStart();
+  
+  /* We should never get here as control is now taken by the scheduler */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
 }
 
-void SystemClock_Config();
-void SystemClock_Config()
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -104,547 +277,329 @@ void SystemClock_Config()
   }
 }
 
-#define ULPI_CLK_EN_Pin GPIO_PIN_0
-#define ULPI_CLK_EN_GPIO_Port GPIOA
-#define ULPI_nRESET_Pin GPIO_PIN_1
-#define ULPI_nRESET_GPIO_Port GPIOA
-
-#define CAN_SILENT_Pin GPIO_PIN_14
-#define CAN_SILENT_GPIO_Port GPIOB
-#define CAN_STDBY_Pin GPIO_PIN_15
-#define CAN_STDBY_GPIO_Port GPIOB
-
-#define RED1_Pin GPIO_PIN_12
-#define RED1_GPIO_Port GPIOD
-#define GREEN1_Pin GPIO_PIN_13
-#define GREEN1_GPIO_Port GPIOD
-#define RED2_Pin GPIO_PIN_14
-#define RED2_GPIO_Port GPIOD
-#define GREEN2_Pin GPIO_PIN_15
-#define GREEN2_GPIO_Port GPIOD
-
-UART_HandleTypeDef console_uart;
-
-template<size_t LEN>
-size_t console_print(const char* fmt, ...)
+/**
+  * @brief CRC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CRC_Init(void)
 {
-	std::array<char, LEN> buf;
 
-	va_list args;
-	va_start (args, fmt);
-	int ret = vsnprintf(buf.data(), buf.size(), fmt, args);
-	va_end (args);
+  /* USER CODE BEGIN CRC_Init 0 */
 
-	if(ret < 0)
-	{
-		//error
-		return 0;
-	}
-	else if(size_t(ret) >= buf.size())
-	{
-		//output was truncated
-	}
+  /* USER CODE END CRC_Init 0 */
 
-	const size_t num_to_write = std::min<size_t>(buf.size() - 1, ret);
+  /* USER CODE BEGIN CRC_Init 1 */
 
-	HAL_UART_Transmit(&console_uart, (uint8_t*)buf.data(), num_to_write, HAL_MAX_DELAY);
+  /* USER CODE END CRC_Init 1 */
+  hcrc.Instance = CRC;
+  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
+  hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_ENABLE;
+  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_NONE;
+  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
+  hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CRC_Init 2 */
 
-	return num_to_write;
+  /* USER CODE END CRC_Init 2 */
+
 }
 
-class task1 : public Task_heap
+/**
+  * @brief FDCAN1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_FDCAN1_Init(void)
 {
-public:
 
-  void work() override
+  /* USER CODE BEGIN FDCAN1_Init 0 */
+
+  /* USER CODE END FDCAN1_Init 0 */
+
+  /* USER CODE BEGIN FDCAN1_Init 1 */
+
+  /* USER CODE END FDCAN1_Init 1 */
+  hfdcan1.Instance = FDCAN1;
+  hfdcan1.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+  hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
+  hfdcan1.Init.AutoRetransmission = DISABLE;
+  hfdcan1.Init.TransmitPause = DISABLE;
+  hfdcan1.Init.NominalPrescaler = 1;
+  hfdcan1.Init.NominalSyncJumpWidth = 1;
+  hfdcan1.Init.NominalTimeSeg1 = 2;
+  hfdcan1.Init.NominalTimeSeg2 = 2;
+  hfdcan1.Init.DataPrescaler = 1;
+  hfdcan1.Init.DataSyncJumpWidth = 1;
+  hfdcan1.Init.DataTimeSeg1 = 1;
+  hfdcan1.Init.DataTimeSeg2 = 1;
+  hfdcan1.Init.MessageRAMOffset = 0;
+  hfdcan1.Init.StdFiltersNbr = 0;
+  hfdcan1.Init.ExtFiltersNbr = 0;
+  hfdcan1.Init.RxFifo0ElmtsNbr = 0;
+  hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.Init.RxFifo1ElmtsNbr = 0;
+  hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.Init.RxBuffersNbr = 0;
+  hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.Init.TxEventsNbr = 0;
+  hfdcan1.Init.TxBuffersNbr = 0;
+  hfdcan1.Init.TxFifoQueueElmtsNbr = 0;
+  hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+  hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.msgRam.StandardFilterSA = 0;
+  hfdcan1.msgRam.ExtendedFilterSA = 0;
+  hfdcan1.msgRam.RxFIFO0SA = 0;
+  hfdcan1.msgRam.RxFIFO1SA = 0;
+  hfdcan1.msgRam.RxBufferSA = 0;
+  hfdcan1.msgRam.TxEventFIFOSA = 0;
+  hfdcan1.msgRam.TxBufferSA = 0;
+  hfdcan1.msgRam.TxFIFOQSA = 0;
+  hfdcan1.msgRam.TTMemorySA = 0;
+  hfdcan1.msgRam.EndAddress = 0;
+  hfdcan1.ErrorCode = 0;
+  if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
   {
-
-#if 0
-    Queue_static_pod<int, 10> q;
-
-    Object_pool<int, 10> op;
-
-    int* a = op.allocate(5);
-    *a = 5;
-    volatile int b = *a;
-    *a = b+1;
-    op.deallocate(a);
-    a = nullptr;
-
-    {
-      Object_pool<int, 10>::unique_node_ptr b = op.allocate_unique(6);
-    }
-#endif
-    for(;;)
-    {
-      HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
-      vTaskDelay(pdMS_TO_TICKS(500));
-      HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
-
-      HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
-      vTaskDelay(pdMS_TO_TICKS(500));
-      HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
-    }
+    Error_Handler();
   }
-};
-task1 task1_instance __attribute__(( section(".ram_d1_noload_area") ));
+  /* USER CODE BEGIN FDCAN1_Init 2 */
 
-class task2 : public Task_static<1024>
+  /* USER CODE END FDCAN1_Init 2 */
+
+}
+
+/**
+  * @brief HASH Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_HASH_Init(void)
 {
-public:
 
-  void work() override
+  /* USER CODE BEGIN HASH_Init 0 */
+
+  /* USER CODE END HASH_Init 0 */
+
+  /* USER CODE BEGIN HASH_Init 1 */
+
+  /* USER CODE END HASH_Init 1 */
+  hhash.Init.DataType = HASH_DATATYPE_32B;
+  if (HAL_HASH_Init(&hhash) != HAL_OK)
   {
-    for(;;)
-    {
-      HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
-      vTaskDelay(pdMS_TO_TICKS(500));
-      HAL_GPIO_TogglePin(GPIOD, RED2_Pin);
-      
-      HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
-      vTaskDelay(pdMS_TO_TICKS(500));
-      HAL_GPIO_TogglePin(GPIOD, GREEN2_Pin);
-    }
+    Error_Handler();
   }
-};
-task2 task2_instance __attribute__(( section(".ram_d1_noload_area") ));
+  /* USER CODE BEGIN HASH_Init 2 */
 
-class task3 : public Task_static<1024>
+  /* USER CODE END HASH_Init 2 */
+
+}
+
+/**
+  * @brief RNG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RNG_Init(void)
 {
-public:
 
-  task3()
+  /* USER CODE BEGIN RNG_Init 0 */
+
+  /* USER CODE END RNG_Init 0 */
+
+  /* USER CODE BEGIN RNG_Init 1 */
+
+  /* USER CODE END RNG_Init 1 */
+  hrng.Instance = RNG;
+  hrng.Init.ClockErrorDetection = RNG_CED_ENABLE;
+  if (HAL_RNG_Init(&hrng) != HAL_OK)
   {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RNG_Init 2 */
+
+  /* USER CODE END RNG_Init 2 */
+
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+  /**Initialize RTC Only 
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
     
-  }
+  /* USER CODE END Check_RTC_BKUP */
 
-  void work() override
+  /**Initialize RTC and set the Time and Date 
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
   {
-	//Start ULPI CLK
-	HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
-	vTaskDelay(pdMS_TO_TICKS(10));
-	// //Release ULPI from RESET
-	HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
-	vTaskDelay(pdMS_TO_TICKS(5));
-
-    MX_USB_DEVICE_Init();
-    
-  	HAL_PWREx_EnableUSBVoltageDetector();
-
-    for(;;)
-    {
-      HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
-      vTaskDelay(pdMS_TO_TICKS(500));
-    }
+    Error_Handler();
   }
-protected:
-  UART_HandleTypeDef m_uart;
-};
-task3 task3_instance __attribute__(( section(".ram_d1_noload_area") ));
+  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 0x1;
+  sDate.Year = 0x0;
 
-class task4 : public Task_static<1024>
-{
-public:
-
-  task4()
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
   {
-    m_fdcan = FDCAN_HandleTypeDef();
+    Error_Handler();
   }
+  /* USER CODE BEGIN RTC_Init 2 */
 
-  void work() override
-  {
-  	console_print<64>("CAN init startup\r\n");
+  /* USER CODE END RTC_Init 2 */
 
-    m_fdcan.Instance        = FDCAN1;
-    // m_fdcan.ttcan
-    m_fdcan.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
-    m_fdcan.Init.Mode = FDCAN_MODE_NORMAL;
-    // m_fdcan.Init.AutoRetransmission = DISABLE;
-    m_fdcan.Init.AutoRetransmission = ENABLE;
-    m_fdcan.Init.TransmitPause = DISABLE;
-    m_fdcan.Init.ProtocolException = DISABLE;
-    m_fdcan.Init.NominalPrescaler = 24;
-    m_fdcan.Init.NominalSyncJumpWidth = 1;
-    m_fdcan.Init.NominalTimeSeg1 = 13;
-    m_fdcan.Init.NominalTimeSeg2 = 3;
-    m_fdcan.Init.DataPrescaler = 24;
-    m_fdcan.Init.DataSyncJumpWidth = 1;
-    m_fdcan.Init.DataTimeSeg1 = 13;
-    m_fdcan.Init.DataTimeSeg2 = 3;
-    m_fdcan.Init.MessageRAMOffset = 0;
-    m_fdcan.Init.StdFiltersNbr = 1;
-    m_fdcan.Init.ExtFiltersNbr = 0;
-    m_fdcan.Init.RxFifo0ElmtsNbr = 2;
-    m_fdcan.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
-    m_fdcan.Init.RxFifo1ElmtsNbr = 0;
-    m_fdcan.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-    m_fdcan.Init.RxBuffersNbr = 0;
-    m_fdcan.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
-    m_fdcan.Init.TxEventsNbr = 0;
-    m_fdcan.Init.TxBuffersNbr = 0;
-    m_fdcan.Init.TxFifoQueueElmtsNbr = 2;
-    m_fdcan.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-    m_fdcan.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
-
-	//0x4000AC00
-	//0x4000D3FF
-	//0x0000 - 0x27FF = 10240 bytes = 2560 words
-	//regions must be 4b aligned
-    //m_fdcan.msgRam.StandardFilterSA = 0;//11 bit filter, 0 - 128 elements / 0 - 512 byte
-    //m_fdcan.msgRam.ExtendedFilterSA = 0;//29 bit filter, 0 - 64 elements / 0 - 512 byte
-    //m_fdcan.msgRam.RxFIFO0SA = 0;//rx fifo 0, 0 - 64 elements / 0 - 4608 byte
-    //m_fdcan.msgRam.RxFIFO1SA = 0;//rx fifo 0, 0 - 64 elements / 0 - 4608 byte
-    //m_fdcan.msgRam.RxBufferSA = 0;//rx buffer, 0 - 64 elements / 0 - 4608 byte
-    //m_fdcan.msgRam.TxEventFIFOSA = 0;//tx event fifo, 0 - 32 elements / 0 - 256 byte
-    //m_fdcan.msgRam.TxBufferSA = 0;//tx buffer, 0 - 32 elements / 0 - 2304 byte
-    //m_fdcan.msgRam.TxFIFOQSA = 0;//tx fifo queue start address
-    //m_fdcan.msgRam.TTMemorySA = 0;//trigger memory, 0 - 64 elements / 0 - 512 byte
-    //m_fdcan.msgRam.EndAddress = 0;//msg ram end address
-
-    m_fdcan.ErrorCode = 0;
-    // m_fdcan.msgRam
-    // m_fdcan.State
-
-	if(HAL_FDCAN_Init(&m_fdcan) != HAL_OK)
-	{
-		console_print<64>("HAL_FDCAN_Init failed\r\n");
-        for(;;)
-        {
-          vTaskDelay(pdMS_TO_TICKS(500));
-        }
-	}
-
-	//rx filter, all in rxfifo0
-    m_std_filt.IdType = FDCAN_STANDARD_ID;
-    m_std_filt.FilterIndex = 0;
-    m_std_filt.FilterType = FDCAN_FILTER_MASK;
-    m_std_filt.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
-    m_std_filt.FilterID1 = 0x000;
-    m_std_filt.FilterID2 = 0x000; /* For acceptance, MessageID and FilterID1 must match exactly */
-    HAL_FDCAN_ConfigFilter(&m_fdcan, &m_std_filt);
-
-    //set watermark
-	HAL_FDCAN_ConfigFifoWatermark(&m_fdcan, FDCAN_CFG_RX_FIFO0, 2);
-
-	//enable watermark notification
-	HAL_FDCAN_ActivateNotification(&m_fdcan, FDCAN_IT_RX_FIFO0_WATERMARK, 0);
-
-	if(HAL_FDCAN_Start(&m_fdcan) != HAL_OK)
-	{
-		console_print<64>("HAL_FDCAN_Start failed\r\n");
-        for(;;)
-        {
-          vTaskDelay(pdMS_TO_TICKS(500));
-        }
-	}
-
-    for(;;)
-    {
-		FDCAN_TxHeaderTypeDef tx_header;
-
-        // tx_header.Identifier = 0x111;
-        // tx_header.IdType = FDCAN_STANDARD_ID;
-        tx_header.Identifier = 0xAB111;
-        tx_header.IdType = FDCAN_EXTENDED_ID;
-        tx_header.TxFrameType = FDCAN_DATA_FRAME;
-        tx_header.DataLength = FDCAN_DLC_BYTES_8;
-        tx_header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-        tx_header.BitRateSwitch = FDCAN_BRS_OFF;
-        tx_header.FDFormat = FDCAN_CLASSIC_CAN;
-        // tx_header.FDFormat = FDCAN_FD_CAN;
-        tx_header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
-        tx_header.MessageMarker = 0;
-
-        std::array<uint8_t, 8> tx_data = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-
-		if(HAL_FDCAN_AddMessageToTxFifoQ(&m_fdcan, &tx_header, tx_data.data()) == HAL_OK)
-		{
-			console_print<128>("HAL_FDCAN_AddMessageToTxFifoQ ok\r\n");
-		}
-		else
-		{
-			console_print<128>("HAL_FDCAN_AddMessageToTxFifoQ failed\r\n");
-	        for(;;)
-	        {
-	          vTaskDelay(pdMS_TO_TICKS(500));
-	        }
-		}
-
-
-        vTaskDelay(pdMS_TO_TICKS(500));
-    }
-  }
-protected:
-  FDCAN_HandleTypeDef m_fdcan;
-  FDCAN_FilterTypeDef m_std_filt;
-};
-task4 task4_instance __attribute__(( section(".ram_d1_noload_area") ));
-
-extern "C"
-{
-
-  uint8_t ucHeap[ configTOTAL_HEAP_SIZE ] __attribute__(( section(".ram_d1_noload_area") ));
-  uint8_t ucHeap2[ 128U * 1024U ]         __attribute__(( section(".ram_d2_noload_area") ));
-  uint8_t ucHeap3[ 64U * 1024U ]          __attribute__(( section(".ram_d3_noload_area") ));
-
-  StaticTask_t xIdleTaskTCB;
-  StackType_t  uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
-
-void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
-                                    StackType_t **ppxIdleTaskStackBuffer,
-                                    uint32_t *pulIdleTaskStackSize )
-  {
-    /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
-    state will be stored. */
-    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
-
-    /* Pass out the array that will be used as the Idle task's stack. */
-    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
-
-    /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
-    Note that, as the array is necessarily of type StackType_t,
-    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
-    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
-  }
-
-  void vApplicationIdleHook( void )
-  {
-    // HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-  }
-
-  void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
-  {
-    for(;;)
-    {
-
-    }
-  }
-
-  void vApplicationMallocFailedHook(void)
-  {
-    for(;;)
-    {
-      
-    }
-  }
 }
 
-void read_des(std::array<uint32_t, 3>* const out_uid)
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
 {
-  const uint32_t* uid_base = reinterpret_cast<const uint32_t*>(0x1FF1E800);
-  std::copy_n(uid_base, 3, out_uid->data());
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.Init.Prescaler = UART_PRESCALER_DIV1;
+  huart1.Init.FIFOMode = UART_FIFOMODE_DISABLE;
+  huart1.Init.TXFIFOThreshold = UART_TXFIFO_THRESHOLD_1_8;
+  huart1.Init.RXFIFOThreshold = UART_RXFIFO_THRESHOLD_1_8;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
 }
 
-void read_flash_size(uint32_t* const out_flash_size)
-{
-  const uint32_t* flash_size_base = reinterpret_cast<const uint32_t*>(0x1FF1E880);
-
-  *out_flash_size = *flash_size_base;
-}
-
-void set_gpio_low_power(GPIO_TypeDef* const gpio)
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  GPIO_InitStruct.Pin = GPIO_PIN_All;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  // GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(gpio, &GPIO_InitStruct);
-}
 
-void set_gpio_low_power()
-{
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOI_CLK_ENABLE();
-  __HAL_RCC_GPIOJ_CLK_ENABLE();
-  __HAL_RCC_GPIOK_CLK_ENABLE();
-  
-  set_gpio_low_power(GPIOA);
-  set_gpio_low_power(GPIOB);
-  set_gpio_low_power(GPIOC);
-  set_gpio_low_power(GPIOD);
-  set_gpio_low_power(GPIOE);
-  set_gpio_low_power(GPIOF);
-  set_gpio_low_power(GPIOG);
-  set_gpio_low_power(GPIOH);
-  set_gpio_low_power(GPIOI);
-  set_gpio_low_power(GPIOJ);
-  set_gpio_low_power(GPIOK);
 
-  __HAL_RCC_GPIOA_CLK_DISABLE();
-  __HAL_RCC_GPIOB_CLK_DISABLE();
-  __HAL_RCC_GPIOC_CLK_DISABLE();
-  __HAL_RCC_GPIOD_CLK_DISABLE();
-  __HAL_RCC_GPIOE_CLK_DISABLE();
-  __HAL_RCC_GPIOF_CLK_DISABLE();
-  __HAL_RCC_GPIOG_CLK_DISABLE();
-  __HAL_RCC_GPIOH_CLK_DISABLE();
-  __HAL_RCC_GPIOI_CLK_DISABLE();
-  __HAL_RCC_GPIOJ_CLK_DISABLE();
-  __HAL_RCC_GPIOK_CLK_DISABLE();
-}
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin|ULPI_nRESET_Pin, GPIO_PIN_SET);
 
-int main()
-{
-  ucHeap[0]  = 0;
-  ucHeap2[0] = 0;
-  ucHeap3[0] = 0;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_RESET);
 
-  SCB_EnableICache();
-  SCB_EnableDCache();
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, RED1_Pin|GREEN1_Pin|RED2_Pin|GREEN2_Pin, GPIO_PIN_RESET);
 
-  HAL_Init();
-
-  //set_gpio_low_power();
-
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-
-  __HAL_RCC_SYSCFG_CLK_ENABLE();
-
-  /* System interrupt init*/
-  /* PendSV_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(PendSV_IRQn, 15, 0);
-
-  /* Disable the Internal Voltage Reference buffer */
-  HAL_SYSCFG_DisableVREFBUF();
-
-  /* Configure the internal voltage reference buffer high impedance mode */
-  HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_ENABLE);
-
-  //Configure flash for 100MHz AXI / Vcore VOS3
-  //TODO: CUBE MIGHT BE DOING THIS WRONG
-  //Could be reduced to 1 at VOS2 or VOS1
-  // __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
-  //WRHIGHFREQ defaults to 0b11
-  // __HAL_FLASH_SET_LATENCY(FLASH_LATENCY_2);
-
-  SystemClock_Config();
-  SystemCoreClock = 200000000U;
-
-  __HAL_RCC_CRC_CLK_ENABLE();
-  __HAL_RCC_HASH_CLK_ENABLE();
-
-  __HAL_RCC_USART1_CLK_ENABLE();
-  __HAL_RCC_FDCAN_CLK_ENABLE();
-
-  //disconnect internal analog switches
-  MODIFY_REG(SYSCFG->PMCR, 
-    SYSCFG_PMCR_PA0SO_Msk | SYSCFG_PMCR_PA1SO_Msk | SYSCFG_PMCR_PC2SO_Msk | SYSCFG_PMCR_PC3SO_Msk, 
-    SYSCFG_PMCR_PA0SO | SYSCFG_PMCR_PA1SO | SYSCFG_PMCR_PC2SO | SYSCFG_PMCR_PC3SO
-  );
-
-  //USART1 - PA9 / PA10
-  // if(0)
-  {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);    
-  }
-
-
-  //FDCAN1 - PA11 / PA12
-  // if(0)
-  {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-    GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-  }
-
-  //ULPI_CLK_EN_Pin, ULPI_nRESET_Pin
-  //if(0)
-  {
-  HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin|ULPI_nRESET_Pin, GPIO_PIN_RESET);
-
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  /*Configure GPIO pins : ULPI_CLK_EN_Pin ULPI_nRESET_Pin */
   GPIO_InitStruct.Pin = ULPI_CLK_EN_Pin|ULPI_nRESET_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-  }
 
-  //CAN_SILENT_Pin, CAN_STDBY_Pin 
-  {
-  HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_SET);
-
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  /*Configure GPIO pins : CAN_SILENT_Pin CAN_STDBY_Pin */
   GPIO_InitStruct.Pin = CAN_SILENT_Pin|CAN_STDBY_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-  }
 
-  //RED1_Pin GREEN1_Pin RED2_Pin GREEN2_Pin
-  //if(0)
-  {
-  HAL_GPIO_WritePin(GPIOD, RED1_Pin|GREEN1_Pin|RED2_Pin|GREEN2_Pin, GPIO_PIN_RESET);
-  
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  /*Configure GPIO pins : RED1_Pin GREEN1_Pin RED2_Pin GREEN2_Pin */
   GPIO_InitStruct.Pin = RED1_Pin|GREEN1_Pin|RED2_Pin|GREEN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-  }
 
-  //Enable CAN
-  HAL_GPIO_WritePin(GPIOB, CAN_STDBY_Pin, GPIO_PIN_RESET);
-  HAL_Delay(1);
-  HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin, GPIO_PIN_RESET);
-  HAL_Delay(1);
-
-console_uart = UART_HandleTypeDef();
-console_uart.Instance        = USART1;
-console_uart.Init.BaudRate   = 115200;
-console_uart.Init.WordLength = UART_WORDLENGTH_8B;
-console_uart.Init.StopBits   = UART_STOPBITS_1;
-console_uart.Init.Parity     = UART_PARITY_NONE;
-console_uart.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-console_uart.Init.Mode       = UART_MODE_TX_RX;
-
-	if(HAL_UART_Init(&console_uart) != HAL_OK)
-	{
-	  for(;;)
-	  {
-	    HAL_Delay(pdMS_TO_TICKS(500));
-	  }
-	}
-
-	console_print<64>("Startup\r\n");
-
-
-  // task1_instance.launch("task1", 1024, 1);
-  // task2_instance.launch("task2", 1);
-  task3_instance.launch("task3", 2);
-  task4_instance.launch("task4", 1);
-
-  vTaskStartScheduler();
-
-  return 0;
 }
 
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used 
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void const * argument)
+{
+  /* init code for USB_DEVICE */
+  MX_USB_DEVICE_Init();
+
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END 5 */ 
+}
+extern "C"
+{
 /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM17 interrupt took place, inside
@@ -660,23 +615,39 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM17) {
     HAL_IncTick();
-    // xPortSysTickHandler();
   }
   /* USER CODE BEGIN Callback 1 */
 
   /* USER CODE END Callback 1 */
 }
 
-extern "C"
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
 {
-  void Error_Handler();
-  
-  void Error_Handler(void)
-  {
-    for(;;)
-    {
-      HAL_GPIO_TogglePin(RED1_GPIO_Port, RED1_Pin);
-      HAL_Delay(500);
-    }
-  }
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+
+  /* USER CODE END Error_Handler_Debug */
 }
+}
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{ 
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

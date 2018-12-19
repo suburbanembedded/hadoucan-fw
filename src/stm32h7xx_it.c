@@ -34,8 +34,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32h7xx_hal.h"
-#include "stm32h7xx_hal_pcd.h"
+#include "main.h"
 #include "stm32h7xx_it.h"
 #include "cmsis_os.h"
 /* Private includes ----------------------------------------------------------*/
