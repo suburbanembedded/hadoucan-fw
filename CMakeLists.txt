@@ -51,8 +51,9 @@ add_executable(canusbfdiso
 	src/stm32h7xx_it.c
 	src/stm32h7xx_hal_timebase_tim.c
 	src/stm32h7xx_hal_msp.c
-
+	
 	src/main.cpp
+	src/main2.cpp
 	#src/main.c
 
 	src/freertos.c
