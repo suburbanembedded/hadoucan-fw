@@ -70,7 +70,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+uint8_t ucHeap[configTOTAL_HEAP_SIZE];
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/

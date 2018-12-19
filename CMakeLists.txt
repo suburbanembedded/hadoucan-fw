@@ -53,16 +53,14 @@ add_executable(canusbfdiso
 	src/stm32h7xx_hal_msp.c
 	
 	src/main.cpp
-	src/main2.cpp
-	#src/main.c
+	src/main_cube.cpp
 
-	src/freertos.c
+	src/freertos_stubs.c
 
-	src/usb/usbd_cdc_if.c
+	#src/usb/usbd_cdc_if.c
 	src/usb/usbd_conf.c
 	src/usb/usbd_desc.c
 	src/usb/usb_device.c
-
 )
 
 target_link_libraries(canusbfdiso
