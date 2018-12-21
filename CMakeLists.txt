@@ -53,7 +53,7 @@ add_executable(canusbfdiso
 	src/stm32h7xx_hal_msp.c
 	
 	src/main.cpp
-	src/main_cube.cpp
+	src/main_cube.c
 
 	src/freertos_stubs.c
 

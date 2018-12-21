@@ -85,6 +85,15 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
+void SystemClock_Config(void);
+void MX_GPIO_Init(void);
+void MX_USART1_UART_Init(void);
+void MX_FDCAN1_Init(void);
+void MX_CRC_Init(void);
+void MX_HASH_Init(void);
+void MX_RTC_Init(void);
+void MX_RNG_Init(void);
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
