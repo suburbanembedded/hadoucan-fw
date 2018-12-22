@@ -7,6 +7,13 @@ extern "C"
 		Task_base* inst = static_cast<Task_base*>(ctx);
 
 		inst->work();
+
+		//in case work returns, remove us from the runnable list
+		//we could also self-delete, but on some combination of port and newlib that crashes
+		for(;;)
+		{
+			vTaskSuspend(nullptr);
+		}
 	}
 }
 
