@@ -41,7 +41,7 @@ include_directories(
 )
 
 add_subdirectory(stm32cube_fw_h7_v1_3_0)
-add_subdirectory(src/freertos_util)
+add_subdirectory(freertos_cpp_util)
 
 add_executable(canusbfdiso
 	#src/startup_stm32h750xx.s
@@ -80,7 +80,7 @@ target_link_libraries(canusbfdiso
 	freertos_v9
 	freertos_v9_cmsis
 
-	freertos_util
+	freertos_cpp_util
 )
 
 # Generate intel hex image

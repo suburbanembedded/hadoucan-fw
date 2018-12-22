@@ -3,13 +3,32 @@
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 
-#include "freertos_util/Task_static.hpp"
-#include "freertos_util/BSema_static.hpp"
+#include "freertos_cpp_util/Task_static.hpp"
+#include "freertos_cpp_util/BSema_static.hpp"
+#include "freertos_cpp_util/object_pool/Object_pool.hpp"
 
 #include <array>
 #include <algorithm>
 
 extern USBD_HandleTypeDef hUsbDeviceHS;
+
+class Pool_test_task : public Task_static<1024>
+{
+public:
+
+  void work() override
+  {
+    for(;;)
+    {
+
+    }
+  }
+
+protected:
+  Object_pool<int, 16> m_pool;
+};
+
+Pool_test_task pool_test_task;
 
 class USB_tx_task : public Task_static<256>
 {
@@ -185,8 +204,10 @@ int main(void)
   MX_RTC_Init();
   MX_RNG_Init();
 
-  usb_rx_task.launch("usb_rx", 1);
-  usb_tx_task.launch("usb_tx", 2);
+  // usb_rx_task.launch("usb_rx", 1);
+  // usb_tx_task.launch("usb_tx", 2);
+  pool_test_task.launch("usb_tx", 2);
+
   vTaskStartScheduler();
   
   for(;;)
