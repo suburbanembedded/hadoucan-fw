@@ -11,9 +11,10 @@ class USB_TX_task : public Task_static<512>
 {
 public:
 
-	void init()
+	void handle_init_callback()
 	{
-		m_init_complete.give_from_isr();
+		// m_init_complete.give_from_isr();
+		// m_init_complete.give();
 	}
 	void work() override;
 

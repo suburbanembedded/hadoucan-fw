@@ -30,10 +30,9 @@ public:
 	typedef Object_pool<RX_buf, 8> USB_rx_pool_type;
 	typedef USB_rx_pool_type::unique_node_ptr USB_rx_buf_ptr;
 
-	void init()
-	{
-		m_init_complete.give_from_isr();
-	}
+	USB_RX_task();
+
+	void handle_init_callback();
 	void work() override;
 
 	int8_t handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len);
@@ -42,11 +41,12 @@ protected:
 
 	BSema_static m_init_complete;
 
-	// USB_rx_pool_type m_rx_buf_pool;
+	USB_rx_pool_type m_rx_buf_pool;
 
 	// USB_rx_buf_ptr m_active_buf_front;
 	// USB_rx_buf_ptr m_active_buf_back;
 	BSema_static m_read_complete;
 
 	RX_buf m_buf;
+	RX_buf* m_pool_buf;
 };

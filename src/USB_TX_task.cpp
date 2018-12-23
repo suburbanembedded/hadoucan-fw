@@ -4,7 +4,7 @@ extern USBD_HandleTypeDef hUsbDeviceHS;
 
 void USB_TX_task::work()
 {
-	m_init_complete.take();
+	// m_init_complete.take();
 	
 	for(;;)
 	{

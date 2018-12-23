@@ -163,8 +163,8 @@ extern "C"
 
   int8_t CDC_Init_HS(void)
   {
-    usb_rx_task.init();
-    usb_tx_task.init();
+    usb_rx_task.handle_init_callback();
+    usb_tx_task.handle_init_callback();
     // usb_rx_task.launch("usb_rx", 3);
     // usb_tx_task.launch("usb_tx", 2);
     return (USBD_OK);
@@ -205,8 +205,6 @@ int main(void)
   MX_HASH_Init();
   MX_RTC_Init();
   MX_RNG_Init();
-
-  MX_USB_DEVICE_Init();
 
   //pool_test_task.launch("pool_test", 1);
   usb_rx_task.launch("usb_rx", 3);
