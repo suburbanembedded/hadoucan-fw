@@ -40,8 +40,8 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-add_subdirectory(stm32cube_fw_h7_v1_3_0)
-add_subdirectory(freertos_cpp_util)
+add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
+add_subdirectory(external/freertos_cpp_util)
 
 add_executable(canusbfdiso
 	#src/startup_stm32h750xx.s
@@ -54,6 +54,9 @@ add_executable(canusbfdiso
 	
 	src/main.cpp
 	src/main_cube.c
+
+	src/USB_RX_task.cpp
+	src/USB_TX_task.cpp
 
 	src/freertos_stubs.c
 
