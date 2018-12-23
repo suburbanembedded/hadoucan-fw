@@ -1,0 +1,49 @@
+SM1301RPC DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+IMPORTS CANPacket20B, CANPacketFD, CANPacket FROM CANProtocol;
+
+Connect ::= SEQUENCE
+{
+	
+}
+
+Disconnect ::= SEQUENCE
+{
+	
+}
+
+SetBitRate ::= SEQUENCE
+{
+	bitRate INTEGER(0..1000000)
+}
+
+SendPacket ::= SEQUENCE
+{
+	packet CANPacket
+}
+
+Command ::= CHOICE
+{
+	connect Connect,
+	disconnect Disconnect,
+	sbr SetBitRate,
+	sp SendPacket
+}
+
+CmdPacket ::= SEQUENCE
+{
+	cmd Command
+}
+
+Response ::= ENUMERATED
+{
+	ok (0),
+	error (1)
+}
+
+RespPacket ::= SEQUENCE
+{
+	resp Response
+}
+
+END

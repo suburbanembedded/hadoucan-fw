@@ -20,6 +20,7 @@ add_definitions(
 	-D__weak=__attribute__\(\(weak\)\)
 	-D__packed=__attribute__\(\(__packed__\)\)
 	-DUSE_HAL_DRIVER
+	-DWORD_SIZE=4
 )
 
 set(CMAKE_ASM_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -Wa,--warn -x assembler-with-cpp")
@@ -64,6 +65,15 @@ add_executable(canusbfdiso
 	src/usb/usbd_conf.c
 	src/usb/usbd_desc.c
 	src/usb/usb_device.c
+
+	src/msg/acn.c
+	src/msg/asn1crt.c
+	src/msg/ber.c
+	src/msg/can_packet.c
+	src/msg/real.c
+	src/msg/sm-1301_rpc.c
+	src/msg/xer.c
+
 )
 
 target_link_libraries(canusbfdiso

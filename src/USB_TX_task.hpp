@@ -13,8 +13,7 @@ public:
 
 	void handle_init_callback()
 	{
-		// m_init_complete.give_from_isr();
-		// m_init_complete.give();
+		m_init_complete.give_from_isr();
 	}
 	void work() override;
 

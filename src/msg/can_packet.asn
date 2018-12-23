@@ -1,0 +1,50 @@
+CANProtocol DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+StdId ::= INTEGER(0..2047)
+ExtId ::= INTEGER(0..2147483647)
+
+Id ::= CHOICE
+{
+	stdId StdId,
+	extId ExtId
+}
+
+DLC ::= INTEGER(0..8)
+Data ::= OCTET STRING (SIZE(0..8))
+
+RTR ::= ENUMERATED
+{
+	dataFrame (0),
+	remoteRequestFrame (1)
+}
+
+DLCFD ::= INTEGER(0..8 | 12 | 16 | 20 | 24 | 32 | 48 | 64)
+DataFD ::= OCTET STRING (SIZE(0..8 | 12 | 16 | 20 | 24 | 32 | 48 | 64))
+
+CANPacket20B ::= SEQUENCE
+{
+
+	id Id,
+	rtr RTR,
+	res BOOLEAN DEFAULT FALSE,
+	dlc DLC,
+	data Data
+}
+
+CANPacketFD ::= SEQUENCE
+{
+	id Id,
+	res BOOLEAN DEFAULT FALSE,
+	brs BOOLEAN,
+	esi BOOLEAN,
+	dlc DLCFD,
+	data DataFD
+}
+
+CANPacket ::= CHOICE
+{
+	p20b CANPacket20B,
+	pfd CANPacketFD
+}
+
+END
