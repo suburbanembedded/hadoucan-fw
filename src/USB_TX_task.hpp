@@ -22,7 +22,8 @@ public:
 
 	void wait_tx_finish();
 
-	size_t queue_buffer(const uint8_t* buf, const size_t len);
+	size_t queue_buffer(const uint8_t* buf, const size_t len, const TickType_t xTicksToWait);
+	size_t queue_buffer_blocking(const uint8_t* buf, const size_t len);
 
 protected:
 
@@ -30,5 +31,5 @@ protected:
 
 	BSema_static m_init_complete;
 
-	Queue_static_pod<USB_buf*, 16> m_pending_tx_buffers;
+	Queue_static_pod<USB_buf*, 32> m_pending_tx_buffers;
 };

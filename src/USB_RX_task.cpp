@@ -46,6 +46,8 @@ void USB_RX_task::work()
 
 	for(;;)
 	{
+		m_rx_complete.take();
+
 		//if this is null, there was an underflow
 		//alloc a new buffer and restart tx
 		//normally the isr does this
@@ -89,6 +91,10 @@ int8_t USB_RX_task::handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len)
 	{
 		USBD_CDC_SetRxBuffer(&hUsbDeviceHS, active_buf->buf.data());
 		USBD_CDC_ReceivePacket(&hUsbDeviceHS);		
+	}
+	else
+	{
+		m_rx_complete.give_from_isr();
 	}
 
 	//update the active ptr

@@ -55,15 +55,40 @@ void USB_TX_task::wait_tx_finish()
 	}
 }
 
-size_t USB_TX_task::queue_buffer(const uint8_t* buf, const size_t len)
+size_t USB_TX_task::queue_buffer_blocking(const uint8_t* buf, const size_t len)
 {
 	size_t num_queued = 0;
 
 	while(num_queued < len)
 	{
-		USB_buf* usb_buf = tx_buf_pool.allocate();
+		USB_buf* usb_buf = nullptr;
+		do
+		{
+			usb_buf = tx_buf_pool.try_allocate_for_ticks(portMAX_DELAY);
+		} while(usb_buf == nullptr);
+		
+		const size_t num_to_copy = std::min(len - num_queued, usb_buf->buf.size());
+		std::copy_n(buf + num_queued, num_to_copy, usb_buf->buf.data() + num_queued);
+		usb_buf->len = num_to_copy;
+	
+		m_pending_tx_buffers.push_back(usb_buf);
+	
+		num_queued += num_to_copy;		
+	}
+
+	return num_queued;
+}
+
+size_t USB_TX_task::queue_buffer(const uint8_t* buf, const size_t len, const TickType_t xTicksToWait)
+{
+	size_t num_queued = 0;
+
+	while(num_queued < len)
+	{
+		USB_buf* usb_buf = tx_buf_pool.try_allocate_for_ticks(xTicksToWait);
 		if(!usb_buf)
 		{
+			uart1_print<64>("tx could not alloc\r\n");
 			return num_queued;
 		}
 		

@@ -120,7 +120,7 @@ public:
     {
       USB_RX_task::USB_rx_buf_ptr in_buf = usb_rx_task.get_rx_buffer();
 
-      usb_tx_task.queue_buffer(in_buf->buf.data(), in_buf->len);
+      usb_tx_task.queue_buffer_blocking(in_buf->buf.data(), in_buf->len);
     }
   }
 

@@ -28,6 +28,8 @@ protected:
 
 	BSema_static m_init_complete;
 
+	BSema_static m_rx_complete;
+
 	//USB_MAX_EP0_SIZE
 	//CDC_DATA_HS_OUT_PACKET_SIZE
 	std::atomic<USB_buf*> m_active_buf;

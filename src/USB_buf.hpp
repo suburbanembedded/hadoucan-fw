@@ -24,5 +24,5 @@ public:
 typedef Object_pool<USB_buf, 16> USB_rx_pool_type;
 extern USB_rx_pool_type rx_buf_pool;
 
-typedef Object_pool<USB_buf, 16> USB_tx_pool_type;
+typedef Object_pool<USB_buf, 32> USB_tx_pool_type;
 extern USB_tx_pool_type tx_buf_pool;
