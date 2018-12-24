@@ -94,6 +94,8 @@ int8_t USB_RX_task::handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len)
 	}
 	else
 	{
+		//wake up our user thread
+		//it will continue waiting for a buffer
 		m_rx_complete.give_from_isr();
 	}
 
