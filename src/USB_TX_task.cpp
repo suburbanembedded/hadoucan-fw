@@ -12,6 +12,9 @@
 USB_TX_task::USB_TX_task()
 {
 	m_tx_idle.give();
+
+	//don't need to send this until we've sent data for the first time
+	m_needs_send_null = false;
 }
 
 void USB_TX_task::handle_init_callback()
@@ -30,15 +33,22 @@ void USB_TX_task::work()
 		USB_buf* usb_buffer = nullptr;
 		if(!m_pending_tx_buffers.pop_front(&usb_buffer, pdMS_TO_TICKS(50)))
 		{
-			// uart1_print<64>("tx pend is empty for 50 ms\r\n");
-			// uart1_print<64>("tx send null buf\r\n");
-			send_buffer(nullptr);
+			//if we previously sent data, we should send a nullpacket
+			//this is a hint to the OS to release buffers
+			if(m_needs_send_null)
+			{
+				// uart1_print<64>("tx pend is empty for 50 ms\r\n");
+				// uart1_print<64>("tx send null buf\r\n");
+				send_buffer(nullptr);
+				m_needs_send_null = false;
+			}
 			continue;
 		}
 
 		// uart1_print<64>("tx send buf\r\n");
 
 		send_buffer(usb_buffer);
+		m_needs_send_null = true;
 		
 		// uart1_print<64>("tx free buf\r\n");
 
