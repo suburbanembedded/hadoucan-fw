@@ -5,7 +5,10 @@
 
 #include "freertos_cpp_util/BSema_static.hpp"
 #include "freertos_cpp_util/Task_static.hpp"
+#include "freertos_cpp_util/Queue_static_pod.hpp"
 #include "freertos_cpp_util/object_pool/Object_pool.hpp"
+
+#include <atomic>
 
 class USB_RX_task : public Task_static<1024>
 {
@@ -23,7 +26,7 @@ public:
 			len = 0;
 		}
 
-		std::array<uint8_t, USB_MAX_EP0_SIZE> buf;
+		std::array<uint8_t, CDC_DATA_HS_OUT_PACKET_SIZE> buf;
 		size_t len;
 	};
 
@@ -43,10 +46,9 @@ protected:
 
 	USB_rx_pool_type m_rx_buf_pool;
 
-	// USB_rx_buf_ptr m_active_buf_front;
-	// USB_rx_buf_ptr m_active_buf_back;
-	BSema_static m_read_complete;
+	//USB_MAX_EP0_SIZE
+	//CDC_DATA_HS_OUT_PACKET_SIZE
+	std::atomic<RX_buf*> m_active_buf;
 
-	uint8_t m_buf[512];
-	RX_buf* m_pool_buf;
+	Queue_static_pod<RX_buf*, 8> m_full_buffers;
 };

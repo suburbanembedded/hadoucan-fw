@@ -10,33 +10,20 @@
 
 USB_RX_task::USB_RX_task()
 {
-	m_pool_buf = nullptr;
+	m_active_buf = nullptr;
 }
 
 void USB_RX_task::handle_init_callback()
 {
 	USBD_CDC_SetTxBuffer(&hUsbDeviceHS, nullptr, 0);
-	USBD_CDC_SetRxBuffer(&hUsbDeviceHS, m_buf);
+	USBD_CDC_SetRxBuffer(&hUsbDeviceHS, m_active_buf.load()->buf.data());
 
 	m_init_complete.give_from_isr();
 }
 
 void USB_RX_task::work()
 {
-	// m_rx_buf_pool.initialize();
-
-	m_pool_buf = m_rx_buf_pool.allocate();
-
-	Object_pool_node<RX_buf>* n_ptr = Object_pool_node<RX_buf>::get_this_from_val_ptr(m_pool_buf);
-	uart1_print<64>("First alloc\r\n");
-	uart1_print<64>("\tm_pool_buf            is 0x%" PRIXPTR "\r\n", m_pool_buf);
-	uart1_print<64>("\t&m_rx_buf_pool        is 0x%" PRIXPTR "\r\n", &m_rx_buf_pool);
-	uart1_print<64>("\tn_ptr                 is 0x%" PRIXPTR "\r\n", n_ptr);
-	if(n_ptr)
-	{
-		uart1_print<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
-		uart1_print<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
-	}
+	m_active_buf = m_rx_buf_pool.allocate();
 
 	MX_USB_DEVICE_Init();
 
@@ -44,51 +31,51 @@ void USB_RX_task::work()
 
 	for(;;)
 	{
-		//wait for read completion
-		m_read_complete.take();
-
-		HAL_GPIO_TogglePin(GPIOD, GREEN1_Pin);
-
-		RX_buf* new_pool_buf = m_rx_buf_pool.allocate();
-
-		Object_pool_node<RX_buf>* n_ptr = Object_pool_node<RX_buf>::get_this_from_val_ptr(new_pool_buf);
-		uart1_print<64>("new alloc\r\n");
-		uart1_print<64>("\tnew_pool_buf            is 0x%" PRIXPTR "\r\n", new_pool_buf);
-		uart1_print<64>("\t&m_rx_buf_pool        is 0x%" PRIXPTR "\r\n", &m_rx_buf_pool);
-		uart1_print<64>("\tn_ptr                 is 0x%" PRIXPTR "\r\n", n_ptr);
-		if(n_ptr)
+		RX_buf* usb_buffer = nullptr;
+		if(!m_full_buffers.pop_front(&usb_buffer))
 		{
-			uart1_print<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
-			uart1_print<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
+			continue;
 		}
 
+		m_rx_buf_pool.deallocate(usb_buffer);
+
+		//if this is null, there was an underflow
+		//alloc a new buffer and restart tx
+		//normally the isr does this
+		RX_buf* active_buf = m_active_buf.load();
+		if(active_buf == nullptr)
 		{
-			Critical_section crit_sec;
-			std::swap(m_pool_buf, new_pool_buf);
+			//this will succeed since we just deleted one
+			active_buf = m_rx_buf_pool.allocate();
+			USBD_CDC_SetRxBuffer(&hUsbDeviceHS, active_buf->buf.data());
+
+			m_active_buf.store(active_buf);
+			USBD_CDC_ReceivePacket(&hUsbDeviceHS);		
 		}
-
-		uart1_print<64>("start dealloc\r\n");
-
-		m_rx_buf_pool.deallocate(new_pool_buf);
-
-		uart1_print<64>("finish dealloc\r\n");
-
-		// HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
 	}
 }
 
 int8_t USB_RX_task::handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len)
 {
-	//std::copy_n(in_buf, in_buf_len, m_pool_buf->buf.data());
-	//m_pool_buf->len = in_buf_len;
-
 	HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
 
-	// //swap front and back buffers
-	USBD_CDC_SetRxBuffer(&hUsbDeviceHS, m_buf);
-	USBD_CDC_ReceivePacket(&hUsbDeviceHS);
+	//cache the active ptr
+	RX_buf* active_buf = m_active_buf.load();
 
-	m_read_complete.give_from_isr();
+	active_buf->len = in_buf_len;
+
+	m_full_buffers.push_back_isr(active_buf);
+
+	//if allocation fails, stall the host by not starting a new rx
+	active_buf = m_rx_buf_pool.try_allocate_isr();
+	if(active_buf)
+	{
+		USBD_CDC_SetRxBuffer(&hUsbDeviceHS, active_buf->buf.data());
+		USBD_CDC_ReceivePacket(&hUsbDeviceHS);		
+	}
+
+	//update the active ptr
+	m_active_buf.store(active_buf);
 
 	return (USBD_OK);
 }
