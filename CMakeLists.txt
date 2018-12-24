@@ -59,6 +59,7 @@ add_executable(canusbfdiso
 
 	src/USB_RX_task.cpp
 	src/USB_TX_task.cpp
+	src/USB_buf.cpp
 
 	src/freertos_stubs.c
 

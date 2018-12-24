@@ -110,6 +110,24 @@ Pool_test_task pool_test_task;
 USB_RX_task usb_rx_task;
 USB_TX_task usb_tx_task;
 
+class USB_echo_task : public Task_static<1024>
+{
+public:
+
+  void work() override
+  {
+    for(;;)
+    {
+      USB_RX_task::USB_rx_buf_ptr in_buf = usb_rx_task.get_rx_buffer();
+
+      usb_tx_task.queue_buffer(in_buf->buf.data(), in_buf->len);
+    }
+  }
+
+};
+
+USB_echo_task usb_echo_task;
+
 extern "C"
 {
   int8_t CDC_Init_HS(void);
@@ -156,7 +174,7 @@ int main(void)
 {
   SCB_EnableICache();
 
-  //SCB_EnableDCache();
+  // SCB_EnableDCache();
 
   HAL_Init();
 
@@ -171,6 +189,7 @@ int main(void)
   MX_RNG_Init();
 
   // pool_test_task.launch("pool_test", 1);
+  usb_echo_task.launch("usb_echo", 1);
   usb_rx_task.launch("usb_rx", 3);
   usb_tx_task.launch("usb_tx", 2);
   vTaskStartScheduler();

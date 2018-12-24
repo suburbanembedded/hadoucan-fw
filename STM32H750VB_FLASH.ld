@@ -34,18 +34,22 @@ ENTRY(Reset_Handler)
 /* Highest address of the user mode stack */
 _estack = 0x20020000;    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size  = 0x8000; /* required amount of heap  */
-_Min_Stack_Size = 0x0400; /* required amount of stack */
+_Min_Heap_Size  = 0x4000; /* required amount of heap  */
+_Min_Stack_Size = 0x0800; /* required amount of stack */
 
 /* Specify the memory areas */
 MEMORY
 {
+  ITCMRAM (xrw)   : ORIGIN = 0x00000000, LENGTH = 64K
+
+  FLASH   (rx)    : ORIGIN = 0x08000000, LENGTH = 128K
+
   DTCMRAM (xrw)   : ORIGIN = 0x20000000, LENGTH = 128K
   RAM_D1  (xrw)   : ORIGIN = 0x24000000, LENGTH = 512K
   RAM_D2  (xrw)   : ORIGIN = 0x30000000, LENGTH = 288K
   RAM_D3  (xrw)   : ORIGIN = 0x38000000, LENGTH = 64K
-  ITCMRAM (xrw)   : ORIGIN = 0x00000000, LENGTH = 64K
-  FLASH   (rx)    : ORIGIN = 0x08000000, LENGTH = 128K
+  
+  BBRAM  (xrx)    : ORIGIN = 0x38800000, LENGTH = 4K
 }
 
 /* Define output sections */
@@ -204,6 +208,22 @@ SECTIONS
     PROVIDE ( _end = . );
     . = ALIGN(8);
   } >RAM_D3
+
+  .bbram_area :
+  {
+    . = ALIGN(8);
+    PROVIDE ( end = . );
+    PROVIDE ( _end = . );
+    . = ALIGN(8);
+  } >BBRAM
+  
+  .bbram_noload_area (NOLOAD) :
+  {
+    . = ALIGN(8);
+    PROVIDE ( end = . );
+    PROVIDE ( _end = . );
+    . = ALIGN(8);
+  } >BBRAM
 
   /* Remove information from the standard libraries */
   /DISCARD/ :
