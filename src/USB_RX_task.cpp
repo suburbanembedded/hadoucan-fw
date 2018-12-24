@@ -32,7 +32,7 @@ void USB_RX_task::work()
 	for(;;)
 	{
 		RX_buf* usb_buffer = nullptr;
-		if(!m_full_buffers.pop_front(&usb_buffer))
+		if(!m_full_buffers.pop_front(&usb_buffer, portMAX_DELAY))
 		{
 			continue;
 		}
@@ -57,17 +57,17 @@ void USB_RX_task::work()
 
 int8_t USB_RX_task::handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len)
 {
-	HAL_GPIO_TogglePin(GPIOD, RED1_Pin);
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
 	//cache the active ptr
 	RX_buf* active_buf = m_active_buf.load();
 
 	active_buf->len = in_buf_len;
 
-	m_full_buffers.push_back_isr(active_buf);
+	m_full_buffers.push_back_isr(active_buf, &xHigherPriorityTaskWoken);
 
 	//if allocation fails, stall the host by not starting a new rx
-	active_buf = m_rx_buf_pool.try_allocate_isr();
+	active_buf = m_rx_buf_pool.try_allocate_isr(&xHigherPriorityTaskWoken);
 	if(active_buf)
 	{
 		USBD_CDC_SetRxBuffer(&hUsbDeviceHS, active_buf->buf.data());
@@ -76,6 +76,8 @@ int8_t USB_RX_task::handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len)
 
 	//update the active ptr
 	m_active_buf.store(active_buf);
+
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 
 	return (USBD_OK);
 }

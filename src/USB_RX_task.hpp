@@ -30,7 +30,7 @@ public:
 		size_t len;
 	};
 
-	typedef Object_pool<RX_buf, 8> USB_rx_pool_type;
+	typedef Object_pool<RX_buf, 16> USB_rx_pool_type;
 	typedef USB_rx_pool_type::unique_node_ptr USB_rx_buf_ptr;
 
 	USB_RX_task();
@@ -50,5 +50,5 @@ protected:
 	//CDC_DATA_HS_OUT_PACKET_SIZE
 	std::atomic<RX_buf*> m_active_buf;
 
-	Queue_static_pod<RX_buf*, 8> m_full_buffers;
+	Queue_static_pod<RX_buf*, 16> m_full_buffers;
 };
