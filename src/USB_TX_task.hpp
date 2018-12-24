@@ -7,6 +7,7 @@
 #include "usbd_cdc_if.h"
 
 #include "freertos_cpp_util/BSema_static.hpp"
+#include "freertos_cpp_util/Mutex_static.hpp"
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/object_pool/Object_pool.hpp"
 
@@ -25,11 +26,16 @@ public:
 	size_t queue_buffer(const uint8_t* buf, const size_t len, const TickType_t xTicksToWait);
 	size_t queue_buffer_blocking(const uint8_t* buf, const size_t len);
 
+	void notify_tx_complete_callback();
+
+	bool is_tx_complete();
+
 protected:
 
 	uint8_t send_buffer(USB_buf* const buf);
 
 	BSema_static m_init_complete;
+	BSema_static m_tx_idle;
 
 	Queue_static_pod<USB_buf*, 32> m_pending_tx_buffers;
 };

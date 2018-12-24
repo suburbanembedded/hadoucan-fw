@@ -11,7 +11,7 @@
 
 USB_TX_task::USB_TX_task()
 {
-
+	m_tx_idle.give();
 }
 
 void USB_TX_task::handle_init_callback()
@@ -46,12 +46,26 @@ void USB_TX_task::work()
 	}
 }
 
+void USB_TX_task::notify_tx_complete_callback()
+{
+	m_tx_idle.give_from_isr();
+}
+
+bool USB_TX_task::is_tx_complete()
+{
+	return 0 < m_tx_idle.get_count();
+}
+
 void USB_TX_task::wait_tx_finish()
 {
 	USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceHS.pClassData;
 	while(hcdc->TxState != 0)
 	{
-		vTaskDelay(1);
+		m_tx_idle.take();
+		m_tx_idle.give();
+		//this causes perf to drop to ~500kBps down from 4.6MBps
+		//TODO: implement event based tx finish
+		//vTaskDelay(1);
 	}
 }
 
@@ -108,6 +122,8 @@ uint8_t USB_TX_task::send_buffer(USB_buf* const buf)
 {
 	wait_tx_finish();
     
+	m_tx_idle.take();
+
     if(buf)
     {
 		USBD_CDC_SetTxBuffer(&hUsbDeviceHS, buf->buf.data(), buf->len);

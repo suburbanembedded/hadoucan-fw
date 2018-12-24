@@ -134,13 +134,15 @@ extern "C"
   int8_t CDC_DeInit_HS(void);
   int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length);
   int8_t CDC_Receive_HS(uint8_t* pbuf, uint32_t *Len);
+  void CDC_TX_Cmpl_HS(void);
 
   USBD_CDC_ItfTypeDef USBD_Interface_fops_HS =
   {
     CDC_Init_HS,
     CDC_DeInit_HS,
     CDC_Control_HS,
-    CDC_Receive_HS
+    CDC_Receive_HS,
+    CDC_TX_Cmpl_HS
   };
 
   int8_t CDC_Init_HS(void)
@@ -162,6 +164,11 @@ extern "C"
   int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
   {
     return usb_rx_task.handle_rx_callback(Buf, *Len);
+  }
+
+  void CDC_TX_Cmpl_HS(void)
+  {
+    usb_tx_task.notify_tx_complete_callback();
   }
 
   int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
