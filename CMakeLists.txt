@@ -55,6 +55,7 @@ add_executable(canusbfdiso
 	
 	src/main.cpp
 	src/main_cube.c
+	src/hal_inst.cpp
 
 	src/USB_RX_task.cpp
 	src/USB_TX_task.cpp

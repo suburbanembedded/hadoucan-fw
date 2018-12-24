@@ -7,7 +7,7 @@
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/object_pool/Object_pool.hpp"
 
-class USB_RX_task : public Task_static<512>
+class USB_RX_task : public Task_static<1024>
 {
 public:
 	class RX_buf
@@ -47,6 +47,6 @@ protected:
 	// USB_rx_buf_ptr m_active_buf_back;
 	BSema_static m_read_complete;
 
-	RX_buf m_buf;
+	uint8_t m_buf[512];
 	RX_buf* m_pool_buf;
 };

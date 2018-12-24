@@ -3,6 +3,8 @@
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 
+#include "uart1_printf.hpp"
+
 #include "USB_RX_task.hpp"
 #include "USB_TX_task.hpp"
 
@@ -15,46 +17,8 @@
 #include <algorithm>
 #include <cstdio>
 #include <cinttypes>
-#include <cstdarg>
-#include <mutex>
 
-extern USBD_HandleTypeDef hUsbDeviceHS;
-extern UART_HandleTypeDef huart1;
-
-Mutex_static m_uart1_mutex;
-
-template<size_t LEN>
-bool uart1_print(const char* fmt, ...)
-{
-	std::array<uint8_t, LEN> m_buf;
-
-	va_list args;
-	va_start (args, fmt);
-	int ret = vsnprintf(reinterpret_cast<char*>(m_buf.data()), m_buf.size(), fmt, args);
-	va_end(args);
-
-	if(ret < 0)	
-	{
-		return false;
-	}
-
-	size_t num_to_print = 0;
-	if(ret > 0)	
-	{
-		num_to_print = std::min<size_t>(ret, m_buf.size()-1);
-	}
-
-  HAL_StatusTypeDef uartret;
-  {
-    std::lock_guard<Mutex_static> lock(m_uart1_mutex);
-	  uartret = HAL_UART_Transmit(&huart1, m_buf.data(), num_to_print, -1);
-  }
-
-
-	return uartret == HAL_OK;
-}
-
-#if 0
+#if 1
 class foo
 {
 public:
@@ -206,7 +170,7 @@ int main(void)
   MX_RTC_Init();
   MX_RNG_Init();
 
-  //pool_test_task.launch("pool_test", 1);
+  // pool_test_task.launch("pool_test", 1);
   usb_rx_task.launch("usb_rx", 3);
   usb_tx_task.launch("usb_tx", 2);
   vTaskStartScheduler();
