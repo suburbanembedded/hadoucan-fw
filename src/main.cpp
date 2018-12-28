@@ -177,13 +177,70 @@ extern "C"
   }
 }
 
+void set_gpio_low_power(GPIO_TypeDef* const gpio)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_All;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  // GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(gpio, &GPIO_InitStruct);
+}
+
+void set_all_gpio_low_power()
+{
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOI_CLK_ENABLE();
+  __HAL_RCC_GPIOJ_CLK_ENABLE();
+  __HAL_RCC_GPIOK_CLK_ENABLE();
+  
+  set_gpio_low_power(GPIOA);
+  set_gpio_low_power(GPIOB);
+  set_gpio_low_power(GPIOC);
+  set_gpio_low_power(GPIOD);
+  set_gpio_low_power(GPIOE);
+  set_gpio_low_power(GPIOF);
+  set_gpio_low_power(GPIOG);
+  set_gpio_low_power(GPIOH);
+  set_gpio_low_power(GPIOI);
+  set_gpio_low_power(GPIOJ);
+  set_gpio_low_power(GPIOK);
+
+  __HAL_RCC_GPIOA_CLK_DISABLE();
+  __HAL_RCC_GPIOB_CLK_DISABLE();
+  __HAL_RCC_GPIOC_CLK_DISABLE();
+  __HAL_RCC_GPIOD_CLK_DISABLE();
+  __HAL_RCC_GPIOE_CLK_DISABLE();
+  __HAL_RCC_GPIOF_CLK_DISABLE();
+  __HAL_RCC_GPIOG_CLK_DISABLE();
+  __HAL_RCC_GPIOH_CLK_DISABLE();
+  __HAL_RCC_GPIOI_CLK_DISABLE();
+  __HAL_RCC_GPIOJ_CLK_DISABLE();
+  __HAL_RCC_GPIOK_CLK_DISABLE();
+}
+
+extern int RTOS_RAM_START;
+extern int RTOS_ROM_START;
+extern int RTOS_ROM_SIZE;
+
 int main(void)
 {
+
   SCB_EnableICache();
 
   // SCB_EnableDCache();
 
   HAL_Init();
+
+  set_all_gpio_low_power();
 
   SystemClock_Config();
 
