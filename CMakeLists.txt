@@ -15,12 +15,19 @@ set(CMAKE_CXX_COMPILER ${ATOLLIC_PATH}/arm-atollic-eabi-g++)
 set(CXX_STANDARD 11)
 set(C_STANDARD 11)
 
+set(INSTALL_GTEST OFF)
+
 add_definitions(
 	-DSTM32H750xx
 	-D__weak=__attribute__\(\(weak\)\)
 	-D__packed=__attribute__\(\(__packed__\)\)
 	-DUSE_HAL_DRIVER
 	-DWORD_SIZE=4
+	-DGTEST_HAS_PTHREAD=0
+	-DGTEST_HAS_CLONE=0
+	-DGTEST_HAS_POSIX_RE=0
+	-DGTEST_LINKED_AS_SHARED_LIBRARY=0
+	-DGTEST_CREATE_SHARED_LIBRARY=0
 )
 
 set(CMAKE_ASM_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -Wa,--warn -x assembler-with-cpp")
@@ -31,7 +38,7 @@ set(CMAKE_C_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -f
 set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_C_FLAGS_RELEASE "-Os")
 
-set(CMAKE_CXX_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -ffunction-sections -fdata-sections -fstack-usage -fno-exceptions -fno-threadsafe-statics -Wall -specs=nano.specs")
+set(CMAKE_CXX_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -ffunction-sections -fdata-sections -fstack-usage  -fno-threadsafe-statics -Wall -specs=nano.specs")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os")
 
@@ -43,6 +50,31 @@ include_directories(
 
 add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
 add_subdirectory(external/freertos_cpp_util)
+#add_subdirectory(external/googletest)
+
+add_library(gtest_stm32
+	external/googletest/googletest/src/gtest-all.cc
+)
+target_include_directories(gtest_stm32
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/googletest/include
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/googletest
+)
+
+add_library(gmock_stm32
+	external/googletest/googlemock/src/gmock-all.cc
+)
+target_include_directories(gmock_stm32
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/googlemock/include
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/googlemock
+)
+
+target_link_libraries(gmock_stm32
+	gtest_stm32
+)
 
 add_executable(canusbfdiso
 	#src/startup_stm32h750xx.s
@@ -61,7 +93,9 @@ add_executable(canusbfdiso
 	src/USB_TX_task.cpp
 	src/USB_buf.cpp
 
-	src/freertos_stubs.c
+	src/freertos_stubs.cpp
+	#src/freertos_new.cpp
+	#src/newlib_stubs.c
 
 	#src/usb/usbd_cdc_if.c
 	src/usb/usbd_conf.c
@@ -76,6 +110,8 @@ add_executable(canusbfdiso
 	src/msg/sm-1301_rpc.c
 	src/msg/xer.c
 
+	src/lawicel/Lawicel_parser.cpp
+	src/lawicel/Lawicel_parser_stm32.cpp
 )
 
 target_link_libraries(canusbfdiso
@@ -96,6 +132,9 @@ target_link_libraries(canusbfdiso
 	freertos_v9_cmsis
 
 	freertos_cpp_util
+
+	gtest_stm32
+	gmock_stm32
 )
 
 # Generate intel hex image

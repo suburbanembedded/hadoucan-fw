@@ -8,12 +8,17 @@
 #include "USB_RX_task.hpp"
 #include "USB_TX_task.hpp"
 
+#include "lawicel/Lawicel_parser_stm32.hpp"
+
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
 #include "freertos_cpp_util/Mutex_static.hpp"
+#include "freertos_cpp_util/Condition_variable.hpp"
 #include "freertos_cpp_util/object_pool/Object_pool.hpp"
 
 #include <array>
+#include <deque>
+#include <vector>
 #include <algorithm>
 #include <cstdio>
 #include <cinttypes>
@@ -110,6 +115,7 @@ Pool_test_task pool_test_task;
 USB_RX_task usb_rx_task;
 USB_TX_task usb_tx_task;
 
+
 class USB_echo_task : public Task_static<1024>
 {
 public:
@@ -125,8 +131,116 @@ public:
   }
 
 };
-
 USB_echo_task usb_echo_task;
+
+/*
+class USB_rx_buffer_task : public Task_static<1024>
+{
+public:
+
+  void work() override
+  {
+    for(;;)
+    {
+      USB_RX_task::USB_rx_buf_ptr in_buf = usb_rx_task.get_rx_buffer();
+
+      {
+        std::unique_lock<Mutex_static> lock(m_rx_buf_mutex);
+        m_rx_buf.insert(m_rx_buf.end(), in_buf->buf.data(), in_buf->buf.data() + in_buf->len);
+      }
+
+      m_rx_buf_condvar.notify_one();
+    }
+  }
+
+  //you must hold a lock on m_rx_buf_mutex
+  bool has_line()
+  {
+    auto it = std::find(m_rx_buf.begin(), m_rx_buf.end(), '\r');
+    
+    return it != m_rx_buf.end();
+  }
+
+  //you must hold a lock on m_rx_buf_mutex
+  bool get_line(std::vector<uint8_t>* out_line)
+  {
+    out_line->clear();
+
+    const auto cr_it = std::find(m_rx_buf.begin(), m_rx_buf.end(), '\r');
+
+    if(cr_it == m_rx_buf.end())
+    {
+      return false;
+    }
+
+    //include the \r
+    const auto cr_next_it = std::next(cr_it);
+    out_line->insert(out_line->begin(), m_rx_buf.begin(), cr_next_it);
+    out_line->push_back('\0');
+
+    //erase the \r
+    m_rx_buf.erase(cr_next_it);
+
+    return true;
+  }
+
+  Mutex_static& get_mutex()
+  {
+    return m_rx_buf_mutex;
+  }
+
+  Condition_variable& get_cv()
+  {
+    return m_rx_buf_condvar;
+  }
+
+protected:
+  Mutex_static m_rx_buf_mutex;
+  Condition_variable m_rx_buf_condvar;
+  std::deque<uint8_t> m_rx_buf;
+
+};
+USB_rx_buffer_task usb_rx_buffer_task;
+
+class USB_lawicel_task : public Task_static<1024>
+{
+public:
+
+  void work() override
+  {
+    std::function<bool(void)> has_line_pred = std::bind(&USB_rx_buffer_task::has_line, &usb_rx_buffer_task);
+    
+    std::vector<uint8_t> out_line;
+    out_line.reserve(128);
+
+    for(;;)
+    {
+      //allocate line
+      {
+        std::unique_lock<Mutex_static> lock(usb_rx_buffer_task.get_mutex());
+
+        usb_rx_buffer_task.get_cv().wait(lock, has_line_pred);
+
+        if(!usb_rx_buffer_task.get_line(&out_line))
+        {
+          continue;
+        }
+      }
+
+      uart1_print<64>("got line: %s\r\n", out_line.data());
+
+      //we unlock lock so buffering can continue
+
+      //process line
+    }
+  }
+
+protected:
+  Lawicel_parser_stm32 m_parser;
+};
+
+USB_lawicel_task usb_lawicel_task;
+*/
 
 extern "C"
 {
@@ -253,6 +367,9 @@ int main(void)
   MX_RNG_Init();
 
   // pool_test_task.launch("pool_test", 1);
+  // usb_rx_buffer_task.launch("usb_rx_buf", 1);
+  // usb_lawicel_task.launch("usb_lawicel", 1);
+
   usb_echo_task.launch("usb_echo", 1);
   usb_rx_task.launch("usb_rx", 3);
   usb_tx_task.launch("usb_tx", 2);

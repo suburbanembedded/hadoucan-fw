@@ -4,3 +4,6 @@
 [submodule "freertos_cpp_util"]
 	path = external/freertos_cpp_util
 	url = git@github.com:jacobschloss/freertos_cpp_util.git
+[submodule "external/googletest"]
+	path = external/googletest
+	url = git@github.com:jacobschloss/googletest.git
