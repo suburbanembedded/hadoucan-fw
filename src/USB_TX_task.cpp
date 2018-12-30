@@ -120,6 +120,9 @@ size_t USB_TX_task::queue_buffer(const uint8_t* buf, const size_t len, const Tic
 		std::copy_n(buf + num_queued, num_to_copy, usb_buf->buf.data() + num_queued);
 		usb_buf->len = num_to_copy;
 	
+		//commit to sram so dma can see it
+		usb_buf->flush_cache();
+		
 		m_pending_tx_buffers.push_back(usb_buf);
 	
 		num_queued += num_to_copy;		

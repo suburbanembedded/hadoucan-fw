@@ -4,6 +4,8 @@
 
 #include "usbd_cdc_if.h"
 
+#include "core_cm7.h"
+
 class USB_buf
 {
 public:
@@ -15,6 +17,30 @@ public:
 	void reset()
 	{
 		len = 0;
+	}
+
+	void invalidate_cache()
+	{
+		uint32_t* inv_ptr = reinterpret_cast<uint32_t*>(reinterpret_cast<uint32_t>(buf.data()) & (~0x1FU));
+		size_t inv_len = ((len + 31U) / 32U)*32U;
+
+		SCB_InvalidateDCache_by_Addr(inv_ptr, inv_len);	
+	}
+
+	void flush_cache()
+	{
+		uint32_t* inv_ptr = reinterpret_cast<uint32_t*>(reinterpret_cast<uint32_t>(buf.data()) & (~0x1FU));
+		size_t inv_len = ((len + 31U) / 32U)*32U;
+
+		SCB_CleanDCache_by_Addr(inv_ptr, inv_len);	
+	}
+
+	void flush_invalidate_cache()
+	{
+		uint32_t* inv_ptr = reinterpret_cast<uint32_t*>(reinterpret_cast<uint32_t>(buf.data()) & (~0x1FU));
+		size_t inv_len = ((len + 31U) / 32U)*32U;
+
+		SCB_CleanInvalidateDCache_by_Addr(inv_ptr, inv_len);	
 	}
 
 	std::array<uint8_t, CDC_DATA_HS_OUT_PACKET_SIZE> buf;

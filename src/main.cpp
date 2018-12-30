@@ -207,6 +207,21 @@ class USB_lawicel_task : public Task_static<1024>
 {
 public:
 
+  static bool usb_input_drop(uint8_t c)
+  {
+    switch(c)
+    {
+      // case '\r':
+      //   return true;
+      case '\n':
+        return true;
+      default:
+        return false;
+    }
+
+    return false;
+  }
+
   void work() override
   {
     std::function<bool(void)> has_line_pred = std::bind(&USB_rx_buffer_task::has_line, &usb_rx_buffer_task);
@@ -216,7 +231,6 @@ public:
 
     for(;;)
     {
-      //allocate line
       {
         std::unique_lock<Mutex_static> lock(usb_rx_buffer_task.get_mutex());
 
@@ -230,7 +244,17 @@ public:
         }
       }
 
-      uart1_print<64>("[USB_lawicel_task] got line: %s\r\n", out_line.data());
+      //drop what usb_input_drop says we should drop
+      auto end_it = std::remove_if(out_line.begin(), out_line.end(), &usb_input_drop);
+      out_line.erase(end_it, out_line.end());
+
+      //drop lines that are now empty
+      if(out_line.empty() || (out_line[0] == '\0') )
+      {
+        continue;
+      }
+
+      uart1_print<64>("[USB_lawicel_task] got line: [%s]\r\n", out_line.data());
 
       //we unlock lock so buffering can continue
 
@@ -354,7 +378,7 @@ int main(void)
 
   SCB_EnableICache();
 
-  // SCB_EnableDCache();
+  SCB_EnableDCache();
 
   HAL_Init();
 
