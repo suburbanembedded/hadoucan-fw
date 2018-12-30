@@ -143,9 +143,10 @@ public:
 
       uart1_print<64>("[USB_rx_buffer_task] got buf\r\n");
 
+      volatile uint8_t* in_ptr = in_buf->buf.data();
       {
         std::unique_lock<Mutex_static> lock(m_rx_buf_mutex);
-        m_rx_buf.insert(m_rx_buf.end(), in_buf->buf.data(), in_buf->buf.data() + in_buf->len);
+        m_rx_buf.insert(m_rx_buf.end(), in_ptr, in_ptr + in_buf->len);
       }
 
       uart1_print<64>("[USB_rx_buffer_task] added buf to stream\r\n");

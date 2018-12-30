@@ -22,28 +22,28 @@ public:
 	void invalidate_cache()
 	{
 		uint32_t* inv_ptr = reinterpret_cast<uint32_t*>(reinterpret_cast<uint32_t>(buf.data()) & (~0x1FU));
-		size_t inv_len = ((len + 31U) / 32U)*32U;
+		int32_t inv_len = ((len + 31) / 32)*32;
 
 		SCB_InvalidateDCache_by_Addr(inv_ptr, inv_len);	
 	}
 
-	void flush_cache()
+	void clean_cache()
 	{
 		uint32_t* inv_ptr = reinterpret_cast<uint32_t*>(reinterpret_cast<uint32_t>(buf.data()) & (~0x1FU));
-		size_t inv_len = ((len + 31U) / 32U)*32U;
+		int32_t inv_len = ((len + 31) / 32)*32;
 
 		SCB_CleanDCache_by_Addr(inv_ptr, inv_len);	
 	}
 
-	void flush_invalidate_cache()
+	void clean_invalidate_cache()
 	{
 		uint32_t* inv_ptr = reinterpret_cast<uint32_t*>(reinterpret_cast<uint32_t>(buf.data()) & (~0x1FU));
-		size_t inv_len = ((len + 31U) / 32U)*32U;
+		int32_t inv_len = ((len + 31) / 32)*32;
 
 		SCB_CleanInvalidateDCache_by_Addr(inv_ptr, inv_len);	
 	}
 
-	std::array<uint8_t, CDC_DATA_HS_OUT_PACKET_SIZE> buf;
+	alignas(32) std::array<uint8_t, CDC_DATA_HS_OUT_PACKET_SIZE> buf;
 	size_t len;
 };
 
