@@ -130,7 +130,7 @@ public:
 };
 USB_echo_task usb_echo_task;
 
-/*
+
 class USB_rx_buffer_task : public Task_static<1024>
 {
 public:
@@ -141,10 +141,14 @@ public:
     {
       USB_RX_task::USB_rx_buf_ptr in_buf = usb_rx_task.get_rx_buffer();
 
+      uart1_print<64>("[USB_rx_buffer_task] got buf\r\n");
+
       {
         std::unique_lock<Mutex_static> lock(m_rx_buf_mutex);
         m_rx_buf.insert(m_rx_buf.end(), in_buf->buf.data(), in_buf->buf.data() + in_buf->len);
       }
+
+      uart1_print<64>("[USB_rx_buffer_task] added buf to stream\r\n");
 
       m_rx_buf_condvar.notify_one();
     }
@@ -170,13 +174,13 @@ public:
       return false;
     }
 
-    //include the \r
+    //copy the [begin, \r]
     const auto cr_next_it = std::next(cr_it);
     out_line->insert(out_line->begin(), m_rx_buf.begin(), cr_next_it);
     out_line->push_back('\0');
 
-    //erase the \r
-    m_rx_buf.erase(cr_next_it);
+    //erase the [begin, \r]
+    m_rx_buf.erase(m_rx_buf.begin(), cr_next_it);
 
     return true;
   }
@@ -216,7 +220,9 @@ public:
       {
         std::unique_lock<Mutex_static> lock(usb_rx_buffer_task.get_mutex());
 
+        uart1_print<64>("[USB_lawicel_task] wait(lock, has_line_pred)\r\n");
         usb_rx_buffer_task.get_cv().wait(lock, has_line_pred);
+        uart1_print<64>("[USB_lawicel_task] woke\r\n");
 
         if(!usb_rx_buffer_task.get_line(&out_line))
         {
@@ -224,7 +230,7 @@ public:
         }
       }
 
-      uart1_print<64>("got line: %s\r\n", out_line.data());
+      uart1_print<64>("[USB_lawicel_task] got line: %s\r\n", out_line.data());
 
       //we unlock lock so buffering can continue
 
@@ -235,9 +241,8 @@ public:
 protected:
   Lawicel_parser_stm32 m_parser;
 };
-
 USB_lawicel_task usb_lawicel_task;
-*/
+
 
 extern "C"
 {
@@ -366,10 +371,11 @@ int main(void)
   MX_RNG_Init();
 
   // pool_test_task.launch("pool_test", 1);
-  // usb_rx_buffer_task.launch("usb_rx_buf", 1);
-  // usb_lawicel_task.launch("usb_lawicel", 1);
 
-  usb_echo_task.launch("usb_echo", 1);
+  usb_rx_buffer_task.launch("usb_rx_buf", 1);
+  usb_lawicel_task.launch("usb_lawicel", 1);
+
+  // usb_echo_task.launch("usb_echo", 1);
   usb_rx_task.launch("usb_rx", 3);
   usb_tx_task.launch("usb_tx", 2);
   vTaskStartScheduler();
