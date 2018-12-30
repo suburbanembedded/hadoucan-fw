@@ -96,13 +96,10 @@ public:
       uart1_print<64>("c.v2 is %d\r\n", c->m_v2);
 		}
 
-
 		Object_pool<foo, 16>::free(a);
 		Object_pool<foo, 16>::free(b);
 		Object_pool<foo, 16>::free(c);
 		//m_pool.deallocate(a);
-
-
     }
   }
 
@@ -244,6 +241,8 @@ USB_lawicel_task usb_lawicel_task;
 
 extern "C"
 {
+  USBD_CDC_HandleTypeDef usb_cdc_class_data;
+
   int8_t CDC_Init_HS(void);
   int8_t CDC_DeInit_HS(void);
   int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length);

@@ -89,6 +89,8 @@
  extern uint32_t SystemCoreClock;
 #endif
 
+#define configUSE_NEWLIB_REENTRANT        1
+
 #define configUSE_PREEMPTION              1
 #define configUSE_TIME_SLICING            1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1

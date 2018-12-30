@@ -77,13 +77,11 @@ target_link_libraries(gmock_stm32
 )
 
 add_executable(canusbfdiso
-	#src/startup_stm32h750xx.s
-	#src/syscalls.c
-	#src/system_stm32h7xx.c
-	#src/tiny_printf.c
 	src/stm32h7xx_it.c
 	src/stm32h7xx_hal_timebase_tim.c
 	src/stm32h7xx_hal_msp.c
+
+	src/syscalls.c
 	
 	src/main.cpp
 	src/main_cube.c
@@ -94,21 +92,20 @@ add_executable(canusbfdiso
 	src/USB_buf.cpp
 
 	src/freertos_stubs.cpp
-	#src/freertos_new.cpp
-	#src/newlib_stubs.c
+	src/freertos_new.cpp
+	src/newlib_stubs.c
 
-	#src/usb/usbd_cdc_if.c
 	src/usb/usbd_conf.c
 	src/usb/usbd_desc.c
 	src/usb/usb_device.c
 
-	src/msg/acn.c
-	src/msg/asn1crt.c
-	src/msg/ber.c
-	src/msg/can_packet.c
-	src/msg/real.c
-	src/msg/sm-1301_rpc.c
-	src/msg/xer.c
+	#src/msg/acn.c
+	#src/msg/asn1crt.c
+	#src/msg/ber.c
+	#src/msg/can_packet.c
+	#src/msg/real.c
+	#src/msg/sm-1301_rpc.c
+	#src/msg/xer.c
 
 	src/lawicel/Lawicel_parser.cpp
 	src/lawicel/Lawicel_parser_stm32.cpp
@@ -133,8 +130,8 @@ target_link_libraries(canusbfdiso
 
 	freertos_cpp_util
 
-	gtest_stm32
-	gmock_stm32
+	#gtest_stm32
+	#gmock_stm32
 )
 
 # Generate intel hex image
