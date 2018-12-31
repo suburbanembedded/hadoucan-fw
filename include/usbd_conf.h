@@ -121,11 +121,14 @@
 
 /* Memory management macros */
 
+void* USBD_cdc_class_malloc(size_t size);
+void USBD_cdc_class_free(void* p);
+
 /** Alias for memory allocation. */
-#define USBD_malloc         pvPortMalloc
+#define USBD_malloc         (uint32_t *)USBD_cdc_class_malloc
 
 /** Alias for memory release. */
-#define USBD_free           vPortFree
+#define USBD_free           USBD_cdc_class_free
 
 /** Alias for memory set. */
 #define USBD_memset         memset

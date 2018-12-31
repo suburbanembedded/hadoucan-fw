@@ -67,7 +67,8 @@ void USB_RX_task::work()
 			} while(!active_buf);
 
 			//invalidate cache so when dma fills it we will read it
-			active_buf->clean_invalidate_cache();
+			// active_buf->clean_invalidate_cache();
+			// active_buf->clean_cache();
 
 			USBD_CDC_SetRxBuffer(&hUsbDeviceHS, active_buf->buf.data());
 
@@ -93,7 +94,8 @@ int8_t USB_RX_task::handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len)
 	if(active_buf)
 	{
 		//invalidate cache so when dma fills it we will read it
-		active_buf->clean_invalidate_cache();
+		// active_buf->clean_invalidate_cache();
+		// active_buf->clean_cache();
 
 		USBD_CDC_SetRxBuffer(&hUsbDeviceHS, active_buf->buf.data());
 		USBD_CDC_ReceivePacket(&hUsbDeviceHS);		

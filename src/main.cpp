@@ -140,6 +140,8 @@ public:
     for(;;)
     {
       USB_RX_task::USB_rx_buf_ptr in_buf = usb_rx_task.get_rx_buffer();
+      // in_buf->clean_invalidate_cache();
+      // in_buf->invalidate_cache();
 
       uart1_print<64>("[USB_rx_buffer_task] got buf\r\n");
 
@@ -273,6 +275,21 @@ extern "C"
 {
   USBD_CDC_HandleTypeDef usb_cdc_class_data;
 
+  void* USBD_cdc_class_malloc(size_t size)
+  {
+    if(size != sizeof(usb_cdc_class_data))
+    {
+      return nullptr;
+    }
+
+    return &usb_cdc_class_data;
+  }
+
+  void USBD_cdc_class_free(void* ptr)
+  {
+
+  }
+
   int8_t CDC_Init_HS(void);
   int8_t CDC_DeInit_HS(void);
   int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length);
@@ -379,7 +396,7 @@ int main(void)
 
   SCB_EnableICache();
 
-  SCB_EnableDCache();
+  // SCB_EnableDCache();
 
   HAL_Init();
 
