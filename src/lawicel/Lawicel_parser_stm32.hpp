@@ -2,12 +2,24 @@
 
 #include "Lawicel_parser.hpp"
 
+#include "../stm32_fdcan.hpp"
+
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_hal_fdcan.h"
 
 class Lawicel_parser_stm32 : public Lawicel_parser
 {
 	public:
+
+	Lawicel_parser_stm32()
+	{
+		m_fdcan = nullptr;
+	}
+
+	void set_can(stm32_fdcan* const fdcan)
+	{
+		m_fdcan = fdcan;
+	}
 
 	bool write_string(const char* out_str) override;
 
@@ -28,6 +40,6 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 
 	protected:
 
-	FDCAN_HandleTypeDef* m_fdcan;
+	stm32_fdcan* m_fdcan;
 
 };

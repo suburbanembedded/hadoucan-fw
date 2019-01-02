@@ -109,13 +109,11 @@ add_executable(canusbfdiso
 
 	src/lawicel/Lawicel_parser.cpp
 	src/lawicel/Lawicel_parser_stm32.cpp
+
+	src/stm32_fdcan.cpp
 )
 
 target_link_libraries(canusbfdiso
-	c
-	m
-	stdc++
-	supc++
 
 	stm32h7xx_hal
 	stm32h7xx_ll
@@ -129,10 +127,26 @@ target_link_libraries(canusbfdiso
 	freertos_v9_cmsis
 
 	freertos_cpp_util
-
-	#gtest_stm32
-	#gmock_stm32
 )
+
+#target_link_libraries(canusbfdiso_tests
+#
+#	stm32h7xx_hal
+#	stm32h7xx_ll
+#	stm32h750xx_cmsis
+#
+#	stm32_usb_lib_core
+#	stm32_usb_lib_cdc
+#
+#	freertos_v9_heap4
+#	freertos_v9
+#	freertos_v9_cmsis
+#
+#	freertos_cpp_util
+#
+#	gtest_stm32
+#	gmock_stm32
+#)
 
 # Generate intel hex image
 add_custom_command(

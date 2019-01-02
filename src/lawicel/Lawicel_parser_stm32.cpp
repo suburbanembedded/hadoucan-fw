@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <stdexcept>
 
-uint32_t stm32_get_dlc_from_dlc(const uint8_t dlc)
+namespace
+{
+	uint32_t stm32_get_dlc_from_dlc(const uint8_t dlc)
 {
 	switch(dlc)
 	{
@@ -45,6 +47,7 @@ uint32_t stm32_get_dlc_from_dlc(const uint8_t dlc)
 
 	throw std::domain_error("dlc not in bounds");
 }
+}
 
 bool Lawicel_parser_stm32::write_string(const char* out_str)
 {
@@ -61,59 +64,19 @@ bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t b0, const uint8_t b1)
 }
 bool Lawicel_parser_stm32::handle_open()
 {
-	return false;
+	return m_fdcan->open();
 }
 bool Lawicel_parser_stm32::handle_close()
 {
-	return false;
+	return m_fdcan->close();
 }
 bool Lawicel_parser_stm32::handle_tx_std(const uint32_t id, const uint8_t dlc, const uint8_t* data)
 {
-	FDCAN_TxHeaderTypeDef tx_head;
-
-	tx_head.Identifier = id;
-	tx_head.IdType = FDCAN_STANDARD_ID;
-	tx_head.TxFrameType = FDCAN_DATA_FRAME;
-	tx_head.DataLength = stm32_get_dlc_from_dlc(dlc);
-	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
-	tx_head.FDFormat = FDCAN_CLASSIC_CAN;
-	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
-	tx_head.MessageMarker = 0;
-
-	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, dlc, out_data.begin());
-
-	if(HAL_FDCAN_AddMessageToTxFifoQ(m_fdcan, &tx_head, out_data.data()) != HAL_OK)
-	{
-		return false;
-	}
-
-	return true;
+	return m_fdcan->tx_std(id, dlc, data);
 }
 bool Lawicel_parser_stm32::handle_tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data)
 {
-	FDCAN_TxHeaderTypeDef tx_head;
-
-	tx_head.Identifier = id;
-	tx_head.IdType = FDCAN_EXTENDED_ID;
-	tx_head.TxFrameType = FDCAN_DATA_FRAME;
-	tx_head.DataLength = stm32_get_dlc_from_dlc(dlc);
-	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
-	tx_head.FDFormat = FDCAN_CLASSIC_CAN;
-	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
-	tx_head.MessageMarker = 0;
-
-	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, dlc, out_data.begin());
-
-	if(HAL_FDCAN_AddMessageToTxFifoQ(m_fdcan, &tx_head, out_data.data()) != HAL_OK)
-	{
-		return false;
-	}
-
-	return true;
+	return m_fdcan->tx_ext(id, dlc, data);;
 }
 bool Lawicel_parser_stm32::handle_tx_rtr_std(const uint32_t id, const uint8_t dlc, const uint8_t* data)
 {
@@ -132,10 +95,10 @@ bool Lawicel_parser_stm32::handle_tx_rtr_std(const uint32_t id, const uint8_t dl
 	std::array<uint8_t, 8> out_data;
 	std::copy_n(data, dlc, out_data.begin());
 
-	if(HAL_FDCAN_AddMessageToTxFifoQ(m_fdcan, &tx_head, out_data.data()) != HAL_OK)
-	{
-		return false;
-	}
+	// if(HAL_FDCAN_AddMessageToTxFifoQ(m_fdcan, &tx_head, out_data.data()) != HAL_OK)
+	// {
+	// 	return false;
+	// }
 
 	return true;
 }
@@ -156,10 +119,10 @@ bool Lawicel_parser_stm32::handle_tx_rtr_ext(const uint32_t id, const uint8_t dl
 	std::array<uint8_t, 8> out_data;
 	std::copy_n(data, dlc, out_data.begin());
 
-	if(HAL_FDCAN_AddMessageToTxFifoQ(m_fdcan, &tx_head, out_data.data()) != HAL_OK)
-	{
-		return false;
-	}
+	// if(HAL_FDCAN_AddMessageToTxFifoQ(m_fdcan, &tx_head, out_data.data()) != HAL_OK)
+	// {
+	// 	return false;
+	// }
 
 	return true;
 }

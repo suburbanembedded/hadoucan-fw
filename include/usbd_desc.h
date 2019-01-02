@@ -131,7 +131,8 @@ extern USBD_DescriptorsTypeDef HS_Desc;
   */
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
-
+  char* get_usb_serial_number();
+  void set_usb_serial_number(char id_str[25]);
 /* USER CODE END EXPORTED_FUNCTIONS */
 
 /**

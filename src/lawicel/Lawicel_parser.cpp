@@ -353,6 +353,7 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 {
 	const size_t in_str_len = strlen(in_str);
 
+	//tiiil\r
 	if(in_str_len < 6)
 	{
 		write_string("\b");
@@ -412,13 +413,14 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 {
 	const size_t in_str_len = strlen(in_str);
 
-	if(in_str_len < 6)
+	//Tiiiiiiiil\r
+	if(in_str_len < 11)
 	{
 		write_string("\b");
 		return false;
 	}
 	
-	if(in_str[0] != 't')
+	if(in_str[0] != 'T')
 	{
 		write_string("\b");
 		return false;
