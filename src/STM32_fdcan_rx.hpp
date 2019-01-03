@@ -41,4 +41,4 @@ protected:
 
 };
 
-extern STM32_fdcan_rx stm32_fdcan_rx_inst;
+extern STM32_fdcan_rx stm32_fdcan_rx_task;

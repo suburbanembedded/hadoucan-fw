@@ -2,7 +2,7 @@
 
 #include "uart1_printf.hpp"
 
-STM32_fdcan_rx stm32_fdcan_rx_inst;
+STM32_fdcan_rx stm32_fdcan_rx_task;
 
 void STM32_fdcan_rx::work()
 {
@@ -37,7 +37,7 @@ extern "C"
 
 			if(HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &pk.rxheader, pk.data.data()) == HAL_OK)
 			{
-				stm32_fdcan_rx_inst.insert_packet_isr(pk);
+				stm32_fdcan_rx_task.insert_packet_isr(pk);
 			}
 			else
 			{
@@ -63,7 +63,7 @@ extern "C"
 
 			if(HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO1, &pk.rxheader, pk.data.data()) == HAL_OK)
 			{
-				stm32_fdcan_rx_inst.insert_packet_isr(pk);
+				stm32_fdcan_rx_task.insert_packet_isr(pk);
 			}
 			else
 			{

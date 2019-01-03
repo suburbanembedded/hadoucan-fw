@@ -19,6 +19,11 @@ public:
     m_usb_rx_task = nullptr;
   }
 
+  //if an insertion would put us over this limit
+  const size_t BUFFER_HIGH_WATERMARK = 1024 * 16;
+  //block until it is below this limit
+  const size_t BUFFER_LOW_WATERMARK = 1024 * 12;
+
   void set_usb_rx(USB_RX_task* const usb_rx_task)
   {
     m_usb_rx_task = usb_rx_task;
@@ -54,6 +59,9 @@ public:
     //erase the [begin, \r]
     m_rx_buf.erase(m_rx_buf.begin(), cr_next_it);
 
+    //notify space was made
+    m_rx_buf_read_condvar.notify_one();
+
     return true;
   }
 
@@ -62,14 +70,16 @@ public:
     return m_rx_buf_mutex;
   }
 
+  //this is notified when data is added to the buffer
   Condition_variable& get_cv()
   {
-    return m_rx_buf_condvar;
+    return m_rx_buf_write_condvar;
   }
 
 protected:
   Mutex_static m_rx_buf_mutex;
-  Condition_variable m_rx_buf_condvar;
+  Condition_variable m_rx_buf_write_condvar;///< this is notified when data is added to the buffer
+  Condition_variable m_rx_buf_read_condvar;///< this is notified when data is removed from the buffer
   std::deque<uint8_t> m_rx_buf;
 
   USB_RX_task* m_usb_rx_task;

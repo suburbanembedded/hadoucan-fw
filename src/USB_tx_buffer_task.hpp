@@ -70,6 +70,14 @@ public:
 		m_tx_buf_condvar.notify_one();
 	}
 
+	//insert string into the internal buffer
+	void write(const char* str)
+	{
+		size_t len = strlen(str);
+
+		write(str, str + len);
+	}
+
 protected:
 
 	std::deque<uint8_t> m_tx_buf;

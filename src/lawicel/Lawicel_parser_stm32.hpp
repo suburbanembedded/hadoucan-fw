@@ -21,8 +21,6 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 		m_fdcan = fdcan;
 	}
 
-	bool write_string(const char* out_str) override;
-
 	bool handle_std_baud(const uint8_t baud) override;
 	bool handle_cust_baud(const uint8_t b0, const uint8_t b1) override;
 	bool handle_open() override;

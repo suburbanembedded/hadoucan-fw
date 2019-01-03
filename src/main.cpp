@@ -124,6 +124,11 @@ class USB_lawicel_task : public Task_static<1024>
 {
 public:
 
+  USB_lawicel_task()
+  {
+    m_usb_tx_buffer = nullptr;
+  }
+
   static bool usb_input_drop(uint8_t c)
   {
     switch(c)
@@ -143,10 +148,24 @@ public:
     return false;
   }
 
+  void set_usb_tx(USB_tx_buffer_task* const usb_tx_buffer)
+  {
+    m_usb_tx_buffer = usb_tx_buffer;
+  }
+
+  bool write_string_usb(const char* str)
+  {
+    m_usb_tx_buffer->write(str);
+    return true;
+  }
+
   void work() override
   {
     m_can.set_can(FDCAN1);
     m_parser.set_can(&m_can);
+    m_parser.set_write_string_func(
+      std::bind(&USB_lawicel_task::write_string_usb, this, std::placeholders::_1)
+      );
 
     std::function<bool(void)> has_line_pred = std::bind(&USB_rx_buffer_task::has_line, &usb_rx_buffer_task);
     
@@ -207,6 +226,8 @@ protected:
   STM32_fdcan_tx m_can;
 
   Lawicel_parser_stm32 m_parser;
+
+  USB_tx_buffer_task* m_usb_tx_buffer;
 };
 USB_lawicel_task usb_lawicel_task;
 
@@ -420,6 +441,7 @@ int main(void)
 	{
 		std::array<char, 25> id_str;
 		get_unique_id_str(&id_str);
+    uart1_log<64>(LOG_LEVEL::INFO, "main", "Initialing");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
 	}
@@ -428,13 +450,24 @@ int main(void)
   usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
   usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
   stm32_fdcan_rx.set_usb_tx(&usb_tx_buffer_task);
+  usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
 
-  usb_rx_buffer_task.launch("usb_rx_buf", 1);
-  usb_lawicel_task.launch("usb_lawicel", 1);
+  //can RX
+  stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 1);
+  
+  //protocol state machine
+  usb_lawicel_task.launch("usb_lawicel", 2);
 
-  // usb_echo_task.launch("usb_echo", 1);
+  //process usb packets
+  usb_rx_buffer_task.launch("usb_rx_buf", 4);
+  usb_tx_buffer_task.launch("usb_tx_buf", 5);
+
+  //actually send usb packets on the wire
   usb_rx_task.launch("usb_rx", 3);
-  usb_tx_task.launch("usb_tx", 2);
+  usb_tx_task.launch("usb_tx", 4);
+
+  uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
+
   vTaskStartScheduler();
   
   for(;;)

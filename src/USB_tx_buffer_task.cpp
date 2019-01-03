@@ -24,6 +24,8 @@ void USB_tx_buffer_task::work()
 			auto first = m_tx_buf.begin();
 			auto last  = std::next(first, std::min<size_t>(512, m_tx_buf.size()));
 			m_packet_buf.insert(m_packet_buf.begin(), first, last);
+
+			m_tx_buf.erase(first, last);
 		}
 
 		m_usb_tx_task->queue_buffer_blocking(m_packet_buf.data(), m_packet_buf.size());

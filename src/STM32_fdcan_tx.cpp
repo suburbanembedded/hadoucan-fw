@@ -351,7 +351,7 @@ bool STM32_fdcan_tx::send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data)
 
 		if(ret != HAL_OK)
 		{
-			uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::send_packet", "HAL_FDCAN_AddMessageToTxFifoQ failed, overflow?");
+			uart1_log<128>(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::send_packet", "HAL_FDCAN_AddMessageToTxFifoQ failed, overflow?");
 
 			if(retry_counter > 2)
 			{

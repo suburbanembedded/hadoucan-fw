@@ -49,11 +49,6 @@ namespace
 }
 }
 
-bool Lawicel_parser_stm32::write_string(const char* out_str)
-{
-	return false;
-}
-
 bool Lawicel_parser_stm32::handle_std_baud(const uint8_t baud)
 {
 	return false;
