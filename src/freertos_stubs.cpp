@@ -37,7 +37,7 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
 {
 	for(;;)
 	{
-		uart1_print<64>("Stack Overflow!\r\n");
+		uart1_log<64>(LOG_LEVEL::FATAL, "freertos", "Stack Overflow!");
 		vTaskDelay(500);
 	}
 }
@@ -46,7 +46,7 @@ void vApplicationMallocFailedHook(void)
 {
 	for(;;)
 	{
-		uart1_print<64>("Malloc Failed!\r\n");
+		uart1_log<64>(LOG_LEVEL::FATAL, "freertos", "Malloc Failed!");
 		vTaskDelay(500);
 	}
 }

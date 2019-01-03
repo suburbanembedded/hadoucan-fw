@@ -61,7 +61,7 @@ void USB_RX_task::work()
 
 				if(!active_buf)
 				{
-					uart1_print<64>("rx could not alloc\r\n");
+					uart1_log<128>(LOG_LEVEL::ERROR, "USB_RX_task", "Could not alloc rx buffer in 1000ms");
 				}
 
 			} while(!active_buf);

@@ -8,6 +8,7 @@
 #include "uart1_printf.hpp"
 
 #include <algorithm>
+#include <cinttypes>
 
 USB_TX_task::USB_TX_task()
 {
@@ -73,9 +74,6 @@ void USB_TX_task::wait_tx_finish()
 	{
 		m_tx_idle.take();
 		m_tx_idle.give();
-		//this causes perf to drop to ~500kBps down from 4.6MBps
-		//TODO: implement event based tx finish
-		//vTaskDelay(1);
 	}
 }
 
@@ -107,21 +105,28 @@ size_t USB_TX_task::queue_buffer(const uint8_t* buf, const size_t len, const Tic
 {
 	size_t num_queued = 0;
 
+	TimeOut_t tx_timeout;
+	vTaskSetTimeOutState(&tx_timeout);
+	TickType_t ticks_left = xTicksToWait;
+
 	while(num_queued < len)
 	{
-		USB_buf* usb_buf = tx_buf_pool.try_allocate_for_ticks(xTicksToWait);
+		USB_buf* usb_buf = tx_buf_pool.try_allocate_for_ticks(ticks_left);
 		if(!usb_buf)
 		{
-			uart1_print<64>("tx could not alloc\r\n");
+			uart1_log<128>(LOG_LEVEL::ERROR, "USB_TX_task", "Could not alloc tx buffer in %" PRIu32 " ticks", uint32_t(xTicksToWait));
 			return num_queued;
 		}
+
+		//update wait time for if we need to loop
+		xTaskCheckForTimeOut(&tx_timeout, &ticks_left);
 		
 		const size_t num_to_copy = std::min(len - num_queued, usb_buf->buf.size());
 		std::copy_n(buf + num_queued, num_to_copy, usb_buf->buf.data() + num_queued);
 		usb_buf->len = num_to_copy;
 	
 		//commit to sram so dma can see it
-		usb_buf->clean_cache();
+		// usb_buf->clean_cache();
 
 		m_pending_tx_buffers.push_back(usb_buf);
 	

@@ -2,7 +2,7 @@
 
 #include "Lawicel_parser.hpp"
 
-#include "../stm32_fdcan.hpp"
+#include "../STM32_fdcan_tx.hpp"
 
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_hal_fdcan.h"
@@ -16,7 +16,7 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 		m_fdcan = nullptr;
 	}
 
-	void set_can(stm32_fdcan* const fdcan)
+	void set_can(STM32_fdcan_tx* const fdcan)
 	{
 		m_fdcan = fdcan;
 	}
@@ -40,6 +40,6 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 
 	protected:
 
-	stm32_fdcan* m_fdcan;
+	STM32_fdcan_tx* m_fdcan;
 
 };

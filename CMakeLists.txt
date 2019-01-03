@@ -34,11 +34,11 @@ set(CMAKE_ASM_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 
 set(CMAKE_ASM_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_ASM_FLAGS_RELEASE "-Os")
 
-set(CMAKE_C_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -ffunction-sections -fdata-sections -fstack-usage -Wall -specs=nano.specs")
+set(CMAKE_C_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -ffunction-sections -fdata-sections -fstack-usage -Wall -specs=nano.specs -Werror=return-type")
 set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_C_FLAGS_RELEASE "-Os")
 
-set(CMAKE_CXX_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -ffunction-sections -fdata-sections -fstack-usage  -fno-threadsafe-statics -Wall -specs=nano.specs")
+set(CMAKE_CXX_FLAGS "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -ffunction-sections -fdata-sections -fstack-usage  -fno-threadsafe-statics -Wall -specs=nano.specs -Werror=return-type")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os")
 
@@ -90,6 +90,11 @@ add_executable(canusbfdiso
 	src/USB_RX_task.cpp
 	src/USB_TX_task.cpp
 	src/USB_buf.cpp
+	
+	src/USB_tx_buffer_task.cpp
+	src/USB_rx_buffer_task.cpp
+
+	src/uart1_printf.cpp
 
 	src/freertos_stubs.cpp
 	src/freertos_new.cpp
@@ -110,7 +115,8 @@ add_executable(canusbfdiso
 	src/lawicel/Lawicel_parser.cpp
 	src/lawicel/Lawicel_parser_stm32.cpp
 
-	src/stm32_fdcan.cpp
+	src/STM32_fdcan_tx.cpp
+	src/STM32_fdcan_rx.cpp
 )
 
 target_link_libraries(canusbfdiso

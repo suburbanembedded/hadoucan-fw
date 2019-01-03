@@ -7,8 +7,12 @@
 
 #include "USB_RX_task.hpp"
 #include "USB_TX_task.hpp"
+#include "USB_rx_buffer_task.hpp"
+#include "USB_tx_buffer_task.hpp"
 
 #include "lawicel/Lawicel_parser_stm32.hpp"
+#include "STM32_fdcan_rx.hpp"
+#include "STM32_fdcan_tx.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
@@ -39,7 +43,7 @@ public:
   }
   ~foo()
   {
-    uart1_print<64>("called ~foo on 0x%" PRIXPTR "\r\n", this);
+    uart1_printf<64>("called ~foo on 0x%" PRIXPTR "\r\n", this);
   }
   int m_v1;
   int m_v2;
@@ -62,38 +66,38 @@ public:
 
 		if(a)
 		{
-			uart1_print<64>("a is ok\r\n");
+			uart1_printf<64>("a is ok\r\n");
 
 			Object_pool_node<foo>* n_ptr = Object_pool_node<foo>::get_this_from_val_ptr(a);
 
-			uart1_print<64>("\ta                     is 0x%" PRIXPTR "\r\n", a);
-			uart1_print<64>("\t&m_pool               is 0x%" PRIXPTR "\r\n", &m_pool);
-			uart1_print<64>("\tn_ptr                 is 0x%" PRIXPTR "\r\n", n_ptr);
-			uart1_print<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
-			uart1_print<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
+			uart1_printf<64>("\ta                     is 0x%" PRIXPTR "\r\n", a);
+			uart1_printf<64>("\t&m_pool               is 0x%" PRIXPTR "\r\n", &m_pool);
+			uart1_printf<64>("\tn_ptr                 is 0x%" PRIXPTR "\r\n", n_ptr);
+			uart1_printf<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
+			uart1_printf<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
 
-      uart1_print<64>("a.v1 is %d\r\n", a->m_v1);
-      uart1_print<64>("a.v2 is %d\r\n", a->m_v2);
+      uart1_printf<64>("a.v1 is %d\r\n", a->m_v1);
+      uart1_printf<64>("a.v2 is %d\r\n", a->m_v2);
 		}
 		if(b)
 		{
-			uart1_print<64>("b is ok\r\n");
+			uart1_printf<64>("b is ok\r\n");
 
 			Object_pool_node<foo>* n_ptr = Object_pool_node<foo>::get_this_from_val_ptr(b);
 
-			uart1_print<64>("\tb                     is 0x%" PRIXPTR "\r\n", b);
-			uart1_print<64>("\t&m_pool               is 0x%" PRIXPTR "\r\n", &m_pool);
-			uart1_print<64>("\tn_ptr                 is 0x%" PRIXPTR "\r\n", n_ptr);
-			uart1_print<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
-			uart1_print<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
+			uart1_printf<64>("\tb                     is 0x%" PRIXPTR "\r\n", b);
+			uart1_printf<64>("\t&m_pool               is 0x%" PRIXPTR "\r\n", &m_pool);
+			uart1_printf<64>("\tn_ptr                 is 0x%" PRIXPTR "\r\n", n_ptr);
+			uart1_printf<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
+			uart1_printf<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
 			
-      uart1_print<64>("b.v1 is %d\r\n", b->m_v1);
-      uart1_print<64>("b.v2 is %d\r\n", b->m_v2);
+      uart1_printf<64>("b.v1 is %d\r\n", b->m_v1);
+      uart1_printf<64>("b.v2 is %d\r\n", b->m_v2);
     }
     if(c)
     {
-      uart1_print<64>("c.v1 is %d\r\n", c->m_v1);
-      uart1_print<64>("c.v2 is %d\r\n", c->m_v2);
+      uart1_printf<64>("c.v1 is %d\r\n", c->m_v1);
+      uart1_printf<64>("c.v2 is %d\r\n", c->m_v2);
 		}
 
 		Object_pool<foo, 16>::free(a);
@@ -109,102 +113,12 @@ protected:
 
 Pool_test_task pool_test_task;
 #endif
+
 USB_RX_task usb_rx_task;
 USB_TX_task usb_tx_task;
 
-
-class USB_echo_task : public Task_static<1024>
-{
-public:
-
-  void work() override
-  {
-    for(;;)
-    {
-      USB_RX_task::USB_rx_buf_ptr in_buf = usb_rx_task.get_rx_buffer();
-
-      usb_tx_task.queue_buffer_blocking(in_buf->buf.data(), in_buf->len);
-    }
-  }
-
-};
-USB_echo_task usb_echo_task;
-
-
-class USB_rx_buffer_task : public Task_static<1024>
-{
-public:
-
-  void work() override
-  {
-    for(;;)
-    {
-      USB_RX_task::USB_rx_buf_ptr in_buf = usb_rx_task.get_rx_buffer();
-      // in_buf->clean_invalidate_cache();
-      // in_buf->invalidate_cache();
-
-      uart1_print<64>("[USB_rx_buffer_task] got buf\r\n");
-
-      volatile uint8_t* in_ptr = in_buf->buf.data();
-      {
-        std::unique_lock<Mutex_static> lock(m_rx_buf_mutex);
-        m_rx_buf.insert(m_rx_buf.end(), in_ptr, in_ptr + in_buf->len);
-      }
-
-      uart1_print<64>("[USB_rx_buffer_task] added buf to stream\r\n");
-
-      m_rx_buf_condvar.notify_one();
-    }
-  }
-
-  //you must hold a lock on m_rx_buf_mutex
-  bool has_line()
-  {
-    auto it = std::find(m_rx_buf.begin(), m_rx_buf.end(), '\r');
-    
-    return it != m_rx_buf.end();
-  }
-
-  //you must hold a lock on m_rx_buf_mutex
-  bool get_line(std::vector<uint8_t>* out_line)
-  {
-    out_line->clear();
-
-    const auto cr_it = std::find(m_rx_buf.begin(), m_rx_buf.end(), '\r');
-
-    if(cr_it == m_rx_buf.end())
-    {
-      return false;
-    }
-
-    //copy the [begin, \r]
-    const auto cr_next_it = std::next(cr_it);
-    out_line->insert(out_line->begin(), m_rx_buf.begin(), cr_next_it);
-    out_line->push_back('\0');
-
-    //erase the [begin, \r]
-    m_rx_buf.erase(m_rx_buf.begin(), cr_next_it);
-
-    return true;
-  }
-
-  Mutex_static& get_mutex()
-  {
-    return m_rx_buf_mutex;
-  }
-
-  Condition_variable& get_cv()
-  {
-    return m_rx_buf_condvar;
-  }
-
-protected:
-  Mutex_static m_rx_buf_mutex;
-  Condition_variable m_rx_buf_condvar;
-  std::deque<uint8_t> m_rx_buf;
-
-};
 USB_rx_buffer_task usb_rx_buffer_task;
+USB_tx_buffer_task usb_tx_buffer_task;
 
 class USB_lawicel_task : public Task_static<1024>
 {
@@ -217,9 +131,13 @@ public:
       // case '\r':
       //   return true;
       case '\n':
+      {
         return true;
+      }
       default:
+      {
         return false;
+      }
     }
 
     return false;
@@ -240,11 +158,10 @@ public:
     for(;;)
     {
       {
+        uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "wait(lock, has_line_pred)");
         std::unique_lock<Mutex_static> lock(usb_rx_buffer_task.get_mutex());
-
-        uart1_print<64>("[USB_lawicel_task] wait(lock, has_line_pred)\r\n");
         usb_rx_buffer_task.get_cv().wait(lock, has_line_pred);
-        uart1_print<64>("[USB_lawicel_task] woke\r\n");
+        uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "woke");
 
         if(!usb_rx_buffer_task.get_line(&usb_line))
         {
@@ -257,34 +174,43 @@ public:
       usb_line.erase(end_it, usb_line.end());
 
       //drop lines that are now empty
-      if(usb_line.empty() || (usb_line[0] == '\0') )
+      if(strnlen((char*)usb_line.data(), usb_line.size()) == 0)
       {
+        uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Empty line");
         continue;
       }
 
-      uart1_print<64>("[USB_lawicel_task] got line: [%s]\r\n", usb_line.data());
+      //drop lines that are only '\r'
+      if(usb_line.front() == '\r')
+      {
+        uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Line only contains \\r");
+        continue;
+      }
+
+      uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "got line: [%s]", usb_line.data());
 
       //we unlock lock so buffering can continue
 
       //process line
       if(!m_parser.parse_string((char*)usb_line.data()))
       {
-        uart1_print<64>("[USB_lawicel_task] parse error\r\n");
+        uart1_log<64>(LOG_LEVEL::ERROR, "USB_lawicel_task", "parse error");
       }
       else
       {
-        uart1_print<64>("[USB_lawicel_task] ok\r\n");
+        uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "ok");
       }
     }
   }
 
 protected:
-  stm32_fdcan m_can;
+  STM32_fdcan_tx m_can;
 
   Lawicel_parser_stm32 m_parser;
 };
 USB_lawicel_task usb_lawicel_task;
 
+STM32_fdcan_rx stm32_fdcan_rx;
 
 extern "C"
 {
@@ -377,7 +303,7 @@ void get_unique_id_str(std::array<char, 25>* id_str)
   std::array<uint32_t, 3> id;
   get_unique_id(&id);
 
-  snprintf(id_str->data(), id_str->size(), "%08X%08X%08X", id[0], id[1], id[2]);
+  snprintf(id_str->data(), id_str->size(), "%08" PRIX32 "%08" PRIX32 "%08" PRIX32, id[0], id[1], id[2]);
 }
 
 void set_gpio_low_power(GPIO_TypeDef* const gpio)
@@ -477,18 +403,31 @@ int main(void)
   MX_RTC_Init();
   MX_RNG_Init();
 
-{
-  /*Configure GPIO pin : PA8 */
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-  GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  	if(0)
+	{
+		/*Configure GPIO pin : PA8 */
+		GPIO_InitTypeDef GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = GPIO_PIN_8;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+		GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-   HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
-}
+		HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
+	}
+
+	{
+		std::array<char, 25> id_str;
+		get_unique_id_str(&id_str);
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
+	}
+
+  //init
+  usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
+  usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
+  stm32_fdcan_rx.set_usb_tx(&usb_tx_buffer_task);
 
   usb_rx_buffer_task.launch("usb_rx_buf", 1);
   usb_lawicel_task.launch("usb_lawicel", 1);
