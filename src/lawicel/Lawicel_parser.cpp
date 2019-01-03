@@ -8,7 +8,7 @@
 
 bool Lawicel_parser::write_bell()
 {
-	return write_string("\b");
+	return write_string("\a");
 }
 bool Lawicel_parser::write_cr()
 {
@@ -210,19 +210,19 @@ bool Lawicel_parser::parse_std_baud(const char* in_str)
 
 	if(in_str_len != 3)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 	
 	if(in_str[0] != 'S')
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	if(in_str[2] != '\r')
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -231,20 +231,20 @@ bool Lawicel_parser::parse_std_baud(const char* in_str)
 	int ret = sscanf(in_str, "S%u\r", &baud);
 	if(ret != 1)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 }
 
 	if(baud > 8)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	if(!handle_std_baud(baud))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -257,19 +257,19 @@ bool Lawicel_parser::parse_cust_baud(const char* in_str)
 
 	if(in_str_len != 6)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 	
 	if(in_str[0] != 's')
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	if(in_str[5] != '\r')
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -285,7 +285,7 @@ bool Lawicel_parser::parse_cust_baud(const char* in_str)
 	const int ret = sscanf(b0_str.data(), "%x", &b0);
 	if(ret != 1)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 }
@@ -298,13 +298,13 @@ bool Lawicel_parser::parse_cust_baud(const char* in_str)
 	const int ret = sscanf(b1_str.data(), "%x", &b1);
 	if(ret != 1)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 }
 	if(!handle_cust_baud(b0, b1))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -317,13 +317,13 @@ bool Lawicel_parser::parse_open(const char* in_str)
 	const int ret = strncmp("O\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	if(!handle_open())
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -335,13 +335,13 @@ bool Lawicel_parser::parse_close(const char* in_str)
 	int ret = strncmp("C\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	if(!handle_close())
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -356,20 +356,20 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 	//tiiil\r
 	if(in_str_len < 6)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 	
 	if(in_str[0] != 't')
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	uint32_t id = 0;
 	if(!parse_std_id(in_str, &id))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -382,7 +382,7 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 
 	if(!parse_std_dlc(dlc_str.data(), &dlc))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 }
@@ -390,20 +390,20 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 	//verify len
 	if(in_str_len != (1U+3U+1U+2U*dlc+1U))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	std::array<uint8_t, 8> data;
 	if(!parse_std_data(in_str+5, dlc, &data))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	if(!handle_tx_std(id, dlc, data.data()))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -416,20 +416,20 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 	//Tiiiiiiiil\r
 	if(in_str_len < 11)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 	
 	if(in_str[0] != 'T')
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	uint32_t id = 0;
 	if(!parse_ext_id(in_str, &id))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -441,7 +441,7 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 
 	if(!parse_std_dlc(dlc_str.data(), &dlc))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 }
@@ -449,20 +449,20 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 	//verify len
 	if(in_str_len != (1U+8U+1U+2U*dlc+1U))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	std::array<uint8_t, 8> data;
 	if(!parse_std_data(in_str+10, dlc, &data))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	if(!handle_tx_ext(id, dlc, data.data()))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -471,29 +471,29 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 
 bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 {
-	write_string("\b");
+	write_string("\a");
 	return false;
 }
 bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 {
-	write_string("\b");
+	write_string("\a");
 	return false;
 }
 
 bool Lawicel_parser::parse_get_flags(const char* in_str)
 {
-	write_string("\b");
+	write_string("\a");
 	return false;
 }
 
 bool Lawicel_parser::parse_set_accept_code(const char* in_str)
 {
-	write_string("\b");
+	write_string("\a");
 	return false;
 }
 bool Lawicel_parser::parse_set_accept_mask(const char* in_str)
 {
-	write_string("\b");
+	write_string("\a");
 	return false;
 }
 
@@ -502,14 +502,14 @@ bool Lawicel_parser::parse_get_version(const char* in_str)
 	const int ret = strncmp("V\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	std::array<uint8_t, 4> ver;
 	if(!handle_get_version(&ver))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -528,14 +528,14 @@ bool Lawicel_parser::parse_get_serial(const char* in_str)
 	const int ret = strncmp("N\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
 	std::array<uint8_t, 4> sn;
 	if(!handle_get_serial(&sn))
 	{
-		write_string("\b");
+		write_string("\a");
 		return false;
 	}
 
@@ -551,6 +551,6 @@ bool Lawicel_parser::parse_get_serial(const char* in_str)
 }
 bool Lawicel_parser::parse_set_timestamp(const char* in_str)
 {
-	write_string("\b");
+	write_string("\a");
 	return false;
 }

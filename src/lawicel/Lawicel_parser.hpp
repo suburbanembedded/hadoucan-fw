@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <functional>
 
 #include <cstdint>
 
@@ -8,9 +9,29 @@ class Lawicel_parser
 {
 	public:
 
-	bool parse_string(const char* in_str);
+	typedef std::function<bool (const char* str)> WriteStringCallback;
 
-	virtual bool write_string(const char* out_str) = 0;
+	Lawicel_parser()
+	{
+		m_write_str_func = nullptr;
+	}
+
+	void set_write_string_func(WriteStringCallback func)
+	{
+		m_write_str_func = func;
+	}
+
+	bool write_string(const char* str)
+	{
+		if(m_write_str_func == nullptr)
+		{
+			return false;
+		}
+
+		return m_write_str_func(str);
+	}
+
+	bool parse_string(const char* in_str);
 
 	virtual bool handle_std_baud(const uint8_t baud) = 0;
 	virtual bool handle_cust_baud(const uint8_t b0, const uint8_t b1) = 0;
@@ -28,6 +49,8 @@ class Lawicel_parser
 	virtual bool handle_set_timestamp(bool enable) = 0;
 
 	protected:
+
+	WriteStringCallback m_write_str_func;
 
 	bool parse_std_baud(const char* in_str);
 	bool parse_cust_baud(const char* in_str);
