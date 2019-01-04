@@ -13,9 +13,19 @@ public:
 		m_fdcan = nullptr;
 	}
 
-	void set_can(FDCAN_GlobalTypeDef* can)
+	void set_can_instance(FDCAN_GlobalTypeDef* can)
 	{
 		m_fdcan = can;
+	}
+
+	FDCAN_GlobalTypeDef* get_can_instance()
+	{
+		return m_fdcan;
+	}
+
+	FDCAN_HandleTypeDef* get_can_handle()
+	{
+		return &m_hfdcan;
 	}
 
 	bool init();

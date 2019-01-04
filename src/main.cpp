@@ -161,7 +161,7 @@ public:
 
   void work() override
   {
-    m_can.set_can(FDCAN1);
+    m_can.set_can_instance(FDCAN1);
     m_parser.set_can(&m_can);
     m_parser.set_write_string_func(
       std::bind(&USB_lawicel_task::write_string_usb, this, std::placeholders::_1)
@@ -222,16 +222,15 @@ public:
     }
   }
 
-protected:
   STM32_fdcan_tx m_can;
+
+protected:
 
   Lawicel_parser_stm32 m_parser;
 
   USB_tx_buffer_task* m_usb_tx_buffer;
 };
 USB_lawicel_task usb_lawicel_task;
-
-STM32_fdcan_rx stm32_fdcan_rx;
 
 extern "C"
 {
@@ -424,7 +423,7 @@ int main(void)
   MX_RTC_Init();
   MX_RNG_Init();
 
-  	if(0)
+	if(0)
 	{
 		/*Configure GPIO pin : PA8 */
 		GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -449,8 +448,11 @@ int main(void)
   //init
   usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
   usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
-  stm32_fdcan_rx.set_usb_tx(&usb_tx_buffer_task);
+  stm32_fdcan_rx_task.set_usb_tx(&usb_tx_buffer_task);
   usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
+
+  stm32_fdcan_rx_task.set_can_instance(FDCAN1);
+  stm32_fdcan_rx_task.set_can_handle(usb_lawicel_task.m_can.get_can_handle());
 
   //can RX
   stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 1);

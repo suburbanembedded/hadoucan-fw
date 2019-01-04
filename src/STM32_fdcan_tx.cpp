@@ -125,9 +125,9 @@ bool STM32_fdcan_tx::init()
 	m_hfdcan.Init.MessageRAMOffset = 0;//0 - 2560
 	m_hfdcan.Init.StdFiltersNbr = 1;
 	m_hfdcan.Init.ExtFiltersNbr = 1;
-	m_hfdcan.Init.RxFifo0ElmtsNbr = 1;
+	m_hfdcan.Init.RxFifo0ElmtsNbr = 4;
 	m_hfdcan.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
-	m_hfdcan.Init.RxFifo1ElmtsNbr = 1;
+	m_hfdcan.Init.RxFifo1ElmtsNbr = 0;
 	m_hfdcan.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
 	m_hfdcan.Init.RxBuffersNbr = 0;
 
@@ -165,14 +165,66 @@ bool STM32_fdcan_tx::init()
 	sFilter1.IdType = FDCAN_EXTENDED_ID;
 	sFilter1.FilterIndex = 0;
 	sFilter1.FilterType = FDCAN_FILTER_MASK;
-	sFilter1.FilterConfig = FDCAN_FILTER_TO_RXFIFO1;
+	sFilter1.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 	sFilter1.FilterID1 = 0x00000000;//filter
 	// sFilter1.FilterID2 = 0x1FFFFFFF;//mask
-	sFilter0.FilterID2 = 0x00000000;//mask none, match all
+	sFilter1.FilterID2 = 0x00000000;//mask none, match all
 	ret = HAL_FDCAN_ConfigFilter(&m_hfdcan, &sFilter1);
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter failed");
+		return false;
+	}
+
+	// ret = HAL_FDCAN_ConfigFifoWatermark(&m_hfdcan, FDCAN_CFG_RX_FIFO0, 2);
+	// if(ret != HAL_OK)
+	// {
+	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigFifoWatermark for FIFO0 failed");
+	// 	return false;
+	// }
+
+	// ret = HAL_FDCAN_ConfigRxFifoOverwrite(&m_hfdcan, FDCAN_CFG_RX_FIFO0, FDCAN_RX_FIFO_OVERWRITE);
+	// if(ret != HAL_OK)
+	// {
+	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigRxFifoOverwrite for FIFO0 failed");
+	// 	return false;
+	// }
+
+	// ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK | FDCAN_IT_RX_FIFO0_FULL | FDCAN_IT_RX_FIFO0_MESSAGE_LOST, 0);
+	// ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK, 0);
+	// if(ret != HAL_OK)
+	// {
+	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ActivateNotification for FIFO0 failed");
+	// 	return false;
+	// }
+
+	// ret = HAL_FDCAN_ConfigFifoWatermark(&m_hfdcan, FDCAN_CFG_RX_FIFO1, 2);
+	// if(ret != HAL_OK)
+	// {
+	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigFifoWatermark for FIFO1 failed");
+	// 	return false;
+	// }
+
+	// ret = HAL_FDCAN_ConfigRxFifoOverwrite(&m_hfdcan, FDCAN_CFG_RX_FIFO1, FDCAN_RX_FIFO_OVERWRITE);
+	// if(ret != HAL_OK)
+	// {
+	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigRxFifoOverwrite for FIFO1 failed");
+	// 	return false;
+	// }
+
+	// ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO1_WATERMARK | FDCAN_IT_RX_FIFO1_FULL | FDCAN_IT_RX_FIFO1_MESSAGE_LOST, 0);
+	// ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO1_WATERMARK, 0);
+	// if(ret != HAL_OK)
+	// {
+	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ActivateNotification for FIFO1 failed");
+	// 	return false;
+	// }
+
+	// ret = HAL_FDCAN_ConfigGlobalFilter(&m_hfdcan, FDCAN_ACCEPT_IN_RX_FIFO0, FDCAN_ACCEPT_IN_RX_FIFO1, DISABLE, DISABLE);
+	ret = HAL_FDCAN_ConfigGlobalFilter(&m_hfdcan, FDCAN_REJECT, FDCAN_REJECT, DISABLE, DISABLE);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigGlobalFilter failed");
 		return false;
 	}
 
@@ -189,20 +241,6 @@ bool STM32_fdcan_tx::open()
 		return false;
 	}
 
-	ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
-	if(ret != HAL_OK)
-	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ActivateNotification for FIFO0 failed");
-		return false;
-	}
-
-	ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO1_NEW_MESSAGE, 0);
-	if(ret != HAL_OK)
-	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ActivateNotification for FIFO1 failed");
-		return false;
-	}
-
 	ret = HAL_FDCAN_Start(&m_hfdcan);
 	if(ret != HAL_OK)
 	{
@@ -210,19 +248,26 @@ bool STM32_fdcan_tx::open()
 		return false;
 	}
 
+	if(HAL_FDCAN_IsRestrictedOperationMode(&m_hfdcan))
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "FDCAN is in Restricted Mode");
+		return false;	
+	}
+
+	uart1_log<128>(LOG_LEVEL::INFO, "STM32_fdcan_tx::open", "CAN is open");
 	m_is_open = true;
 
 	return true;
 }
 bool STM32_fdcan_tx::close()
 {
-	if(HAL_FDCAN_DeactivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != HAL_OK)
+	if(HAL_FDCAN_DeactivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK | FDCAN_IT_RX_FIFO0_FULL | FDCAN_IT_RX_FIFO0_MESSAGE_LOST) != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::close", "HAL_FDCAN_DeactivateNotification for FIFO0 failed");
 		return false;	
 	}
 
-	if(HAL_FDCAN_DeactivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO1_NEW_MESSAGE) != HAL_OK)
+	if(HAL_FDCAN_DeactivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO1_WATERMARK | FDCAN_IT_RX_FIFO1_FULL | FDCAN_IT_RX_FIFO1_MESSAGE_LOST) != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::close", "HAL_FDCAN_DeactivateNotification for FIFO1 failed");
 		return false;	
@@ -233,6 +278,7 @@ bool STM32_fdcan_tx::close()
 		return false;
 	}
 
+	uart1_log<128>(LOG_LEVEL::INFO, "STM32_fdcan_tx::open", "CAN is closed");
 	m_is_open = false;
 
 	return true;
