@@ -55,7 +55,10 @@ protected:
 	FDCAN_GlobalTypeDef* m_fdcan;
 	FDCAN_HandleTypeDef* m_fdcan_handle;
 
-	Queue_static_pod<CAN_fd_packet, 64> m_can_fd_queue;
+	//HW FIFO is 64 elements
+	//Could have FIFO0 and FIFO1
+	//set to 150% of FIFO0 + FIFO1
+	Queue_static_pod<CAN_fd_packet, 192> m_can_fd_queue;
 
 	USB_tx_buffer_task* m_usb_tx_buffer;
 
@@ -64,9 +67,6 @@ protected:
 
 	std::atomic<bool> m_can_fifo1_full;
 	std::atomic<bool> m_can_fifo1_msg_lost;
-
-	std::atomic<uint32_t> m_RxFifo0ITs;
-
 };
 
 extern STM32_fdcan_rx stm32_fdcan_rx_task;

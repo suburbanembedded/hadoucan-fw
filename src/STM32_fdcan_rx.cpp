@@ -215,36 +215,20 @@ void STM32_fdcan_rx::work()
 			queue_set_pk = m_can_fd_queue.pop_front(&pk, pdMS_TO_TICKS(50));
 		}
 
+		//check flags
 		{
 			Critical_section crit_sec;
 
-			if(m_can_fifo0_full.load())
-			{
-				m_can_fifo0_full.store(false);
-				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO0 full");
-			}
 			if(m_can_fifo0_msg_lost.load())
 			{
 				m_can_fifo0_msg_lost.store(false);
 				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO0 msg lost");
-			}
-			if(m_can_fifo1_full.load())
-			{
-				m_can_fifo1_full.store(false);
-				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO1 full");
 			}
 			if(m_can_fifo1_msg_lost.load())
 			{
 				m_can_fifo1_msg_lost.store(false);
 				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO1 msg lost");
 			}
-
-			// uint32_t RxFifo0ITs = m_RxFifo0ITs.load();
-			// uart1_log<64>(LOG_LEVEL::TRACE, "STM32_fdcan_rx", "RxFifo0ITs is %08" PRIX32, RxFifo0ITs);
-			// uart1_log<64>(LOG_LEVEL::TRACE, "STM32_fdcan_rx", "FDCAN_IT_RX_FIFO0_WATERMARK is %08" PRIX32, FDCAN_IT_RX_FIFO0_WATERMARK);
-			// uart1_log<64>(LOG_LEVEL::TRACE, "STM32_fdcan_rx", "FDCAN_IT_RX_FIFO0_FULL is %08" PRIX32, FDCAN_IT_RX_FIFO0_FULL);
-			// uart1_log<64>(LOG_LEVEL::TRACE, "STM32_fdcan_rx", "FDCAN_IT_RX_FIFO0_MESSAGE_LOST is %08" PRIX32, FDCAN_IT_RX_FIFO0_MESSAGE_LOST);
-			// m_RxFifo0ITs.store(0);
 		}
 
 		//if we didn't sleep because we should poll, or we woke up due to timeout, check the fifo
@@ -257,6 +241,35 @@ void STM32_fdcan_rx::work()
 			}			
 		}
 
+		//check more flags
+		//re-enable fifo full after we deque to try and avoid isr race
+		{
+			Critical_section crit_sec;
+
+			if(m_can_fifo0_full.load())
+			{
+				m_can_fifo0_full.store(false);
+				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO0 full");
+
+				if(HAL_FDCAN_ActivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO0_FULL, 0) != HAL_OK)
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "Could not reenable FDCAN_IT_RX_FIFO0_FULL");
+				}
+			}
+
+			if(m_can_fifo1_full.load())
+			{
+				m_can_fifo1_full.store(false);
+				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO1 full");
+
+				if(HAL_FDCAN_ActivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO1_FULL, 0) != HAL_OK)
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "Could not reenable FDCAN_IT_RX_FIFO0_FULL");
+				}
+			}
+		}
+
+		//stringify the packet
 		packet_str.clear();
 		if(!append_packet_type(pk.rxheader, &packet_str))
 		{
@@ -275,34 +288,32 @@ void STM32_fdcan_rx::work()
 		}
 		packet_str.push_back('\r');
 
+		//send the packet to a stream, that will try to coalesce a USB HS packet
 		m_usb_tx_buffer->write(packet_str.begin(), packet_str.end());
 	}
 }
 
 void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
-	m_RxFifo0ITs.store(RxFifo0ITs);
-
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_WATERMARK) != 0U)
 	{
-		HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
-
 		//insert as many as we can
 		//if we can't drain below the watermark, the isr will get called again...
 		//TODO: in that case we turn off the isr and fall back to thread-mode drain, then re-enable
 		CAN_fd_packet pk;
 		while(!m_can_fd_queue.full_isr())
 		{
-			if(HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &pk.rxheader, pk.data.data()) != HAL_OK)
+			if(HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &pk.rxheader, pk.data.data()) == HAL_OK)
 			{
 				//this should not fail, since we checked it was not full
 				if(!m_can_fd_queue.push_back_isr(pk))
 				{
-					HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+					//TODO: assert? WD reset?
 				}
 			}
 			else
 			{
+				//no more in fifo
 				break;
 			}
 		}
@@ -317,10 +328,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_FULL) != 0U)
 	{
 		m_can_fifo0_full.store(true);
-		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_FULL, 0) != HAL_OK)
-		{
-
-		}
+		//this is turned back on in the rx thread, after the fifo is drained
 	}
 
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_MESSAGE_LOST) != RESET)
