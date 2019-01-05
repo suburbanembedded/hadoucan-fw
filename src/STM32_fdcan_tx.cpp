@@ -341,7 +341,7 @@ bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t*
 	return send_packet(tx_head, out_data.data());
 }
 
-bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t dlc)
 {
 	if(!m_is_open)
 	{
@@ -361,12 +361,9 @@ bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t dlc, const uint
 	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	tx_head.MessageMarker = 0;
 
-	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, get_size_from_dlc(dlc), out_data.begin());
-
-	return send_packet(tx_head, out_data.data());
+	return send_packet(tx_head, nullptr);
 }
-bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t dlc)
 {
 	if(!m_is_open)
 	{
@@ -386,10 +383,7 @@ bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t dlc, const uint
 	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	tx_head.MessageMarker = 0;
 
-	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, get_size_from_dlc(dlc), out_data.begin());
-
-	return send_packet(tx_head, out_data.data());
+	return send_packet(tx_head, nullptr);
 }
 
 bool STM32_fdcan_tx::send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data)

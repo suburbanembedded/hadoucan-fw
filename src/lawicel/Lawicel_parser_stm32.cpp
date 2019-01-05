@@ -61,6 +61,10 @@ bool Lawicel_parser_stm32::handle_open()
 {
 	return m_fdcan->open();
 }
+bool Lawicel_parser_stm32::handle_open_listen()
+{
+	return false;
+}
 bool Lawicel_parser_stm32::handle_close()
 {
 	return m_fdcan->close();
@@ -73,13 +77,13 @@ bool Lawicel_parser_stm32::handle_tx_ext(const uint32_t id, const uint8_t dlc, c
 {
 	return m_fdcan->tx_ext(id, dlc, data);;
 }
-bool Lawicel_parser_stm32::handle_tx_rtr_std(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool Lawicel_parser_stm32::handle_tx_rtr_std(const uint32_t id, const uint8_t dlc)
 {
-	return m_fdcan->tx_std_rtr(id, dlc, data);
+	return m_fdcan->tx_std_rtr(id, dlc);
 }
-bool Lawicel_parser_stm32::handle_tx_rtr_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool Lawicel_parser_stm32::handle_tx_rtr_ext(const uint32_t id, const uint8_t dlc)
 {
-	return m_fdcan->tx_ext_rtr(id, dlc, data);
+	return m_fdcan->tx_ext_rtr(id, dlc);
 }
 bool Lawicel_parser_stm32::handle_get_flags()
 {
@@ -93,16 +97,29 @@ bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 {
 	return false;
 }
-bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* ver)
+bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 {
-	return false;
+	return write_string("V0000");
 }
-bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* sn)
+bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
 {
-	return false;
+	return write_string("N0000");
 }
-bool Lawicel_parser_stm32::handle_set_timestamp(bool enable)
+bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
 {
 	return false;
 }
 
+bool Lawicel_parser_stm32::handle_poll_one()
+{
+	return false;
+}
+bool Lawicel_parser_stm32::handle_poll_all()
+{
+	return false;
+}
+
+bool Lawicel_parser_stm32::handle_auto_poll(const bool enable)
+{
+	return false;	
+}

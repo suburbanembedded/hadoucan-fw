@@ -30,13 +30,13 @@ public:
 
 	bool tx_std(const uint32_t id, const uint8_t dlc, const uint8_t* data);
 	bool tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data);
-	bool tx_std_rtr(const uint32_t id, const uint8_t dlc, const uint8_t* data);
-	bool tx_ext_rtr(const uint32_t id, const uint8_t dlc, const uint8_t* data);
+	bool tx_std_rtr(const uint32_t id, const uint8_t dlc);
+	bool tx_ext_rtr(const uint32_t id, const uint8_t dlc);
 
 	bool tx_fd_std(const uint32_t id, const uint8_t dlc, const uint8_t* data);
 	bool tx_fd_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data);
-	bool tx_fd_rtr_std(const uint32_t id, const uint8_t dlc, const uint8_t* data);
-	bool tx_fd_rtr_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data);
+	bool tx_fd_rtr_std(const uint32_t id, const uint8_t dlc);
+	bool tx_fd_rtr_ext(const uint32_t id, const uint8_t dlc);
 
 protected:
 

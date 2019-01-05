@@ -124,6 +124,16 @@ bool Lawicel_parser::parse_string(const char* in_str)
 	bool ret = false;
 	switch(in_str[0])
 	{
+		case 'A':
+		{
+			ret = parse_poll_all(in_str);
+			break;
+		}
+		case 'P':
+		{
+			ret = parse_poll_one(in_str);
+			break;
+		}
 		case 'S':
 		{
 			ret = parse_std_baud(in_str);
@@ -137,6 +147,11 @@ bool Lawicel_parser::parse_string(const char* in_str)
 		case 'O':
 		{
 			ret = parse_open(in_str);
+			break;
+		}
+		case 'L':
+		{
+			ret = parse_open_listen(in_str);
 			break;
 		}
 		case 'C':
@@ -187,6 +202,11 @@ bool Lawicel_parser::parse_string(const char* in_str)
 		case 'N':
 		{
 			ret = parse_get_serial(in_str);
+			break;
+		}
+		case 'X':
+		{
+			ret = parse_auto_poll(in_str);
 			break;
 		}
 		case 'Z':
@@ -330,6 +350,24 @@ bool Lawicel_parser::parse_open(const char* in_str)
 	write_string("\r");
 	return true;
 }
+bool Lawicel_parser::parse_open_listen(const char* in_str)
+{
+	const int ret = strncmp("L\r", in_str, 2);
+	if(ret != 0)
+	{
+		write_string("\a");
+		return false;
+	}
+
+	if(!handle_open_listen())
+	{
+		write_string("\a");
+		return false;
+	}
+
+	write_string("\r");
+	return true;
+}
 bool Lawicel_parser::parse_close(const char* in_str)
 {
 	int ret = strncmp("C\r", in_str, 2);
@@ -407,7 +445,27 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 		return false;
 	}
 
-	return true;
+	bool success = false;
+	switch(m_poll_mode)
+	{
+		case POLL_MODE::MANUAL:
+		{
+			write_string("\r");
+			success = true;
+		}
+		case POLL_MODE::AUTO:
+		{
+			write_string("z\r");
+			success = true;
+		}
+		default:
+		{
+			write_string("\a");
+			success = false;
+		}
+	}
+
+	return success;
 }
 bool Lawicel_parser::parse_tx_ext(const char* in_str)
 {
@@ -466,24 +524,175 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 		return false;
 	}
 
-	return true;
+	bool success = false;
+	switch(m_poll_mode)
+	{
+		case POLL_MODE::MANUAL:
+		{
+			write_string("\r");
+			success = true;
+		}
+		case POLL_MODE::AUTO:
+		{
+			write_string("Z\r");
+			success = true;
+		}
+		default:
+		{
+			write_string("\a");
+			success = false;
+		}
+	}
+	return success;
 }
 
 bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 {
-	write_string("\a");
-	return false;
+	const size_t in_str_len = strlen(in_str);
+
+	//riiil\r
+	if(in_str_len < 6)
+	{
+		write_string("\a");
+		return false;
+	}
+	
+	if(in_str[0] != 'r')
+	{
+		write_string("\a");
+		return false;
+	}
+
+	uint32_t id = 0;
+	if(!parse_std_id(in_str, &id))
+	{
+		write_string("\a");
+		return false;
+	}
+
+	uint8_t dlc = 0;
+{
+	std::array<char, 2> dlc_str;
+	dlc_str.fill(0);
+	std::copy_n(in_str+4, 1, dlc_str.data());
+
+	if(!parse_std_dlc(dlc_str.data(), &dlc))
+	{
+		write_string("\a");
+		return false;
+	}
+}
+
+	if(!handle_tx_rtr_std(id, dlc))
+	{
+		write_string("\a");
+		return false;
+	}
+
+	bool success = false;
+	switch(m_poll_mode)
+	{
+		case POLL_MODE::MANUAL:
+		{
+			write_string("\r");
+			success = true;
+		}
+		case POLL_MODE::AUTO:
+		{
+			write_string("z\r");
+			success = true;
+		}
+		default:
+		{
+			write_string("\a");
+			success = false;
+		}
+	}
+
+	return success;
 }
 bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 {
-	write_string("\a");
-	return false;
+	const size_t in_str_len = strlen(in_str);
+
+	//Riiiiiiiil\r
+	if(in_str_len < 11)
+	{
+		write_string("\a");
+		return false;
+	}
+
+	if(in_str[0] != 'R')
+	{
+		write_string("\a");
+		return false;
+	}
+
+	uint32_t id = 0;
+	if(!parse_ext_id(in_str, &id))
+	{
+		write_string("\a");
+		return false;
+	}
+
+	uint8_t dlc = 0;
+{
+	std::array<char, 2> dlc_str;
+	dlc_str.fill(0);
+	std::copy_n(in_str+9, 1, dlc_str.data());
+
+	if(!parse_std_dlc(dlc_str.data(), &dlc))
+	{
+		write_string("\a");
+		return false;
+	}
+}
+
+	if(!handle_tx_rtr_ext(id, dlc))
+	{
+		write_string("\a");
+		return false;
+	}
+
+	bool success = false;
+	switch(m_poll_mode)
+	{
+		case POLL_MODE::MANUAL:
+		{
+			write_string("\r");
+			success = true;
+		}
+		case POLL_MODE::AUTO:
+		{
+			write_string("Z\r");
+			success = true;
+		}
+		default:
+		{
+			write_string("\a");
+			success = false;
+		}
+	}
+	return success;
 }
 
 bool Lawicel_parser::parse_get_flags(const char* in_str)
 {
-	write_string("\a");
-	return false;
+	int ret = strncmp("F\r", in_str, 2);
+	if(ret != 0)
+	{
+		write_string("\a");
+		return false;
+	}
+
+	if(!handle_get_flags())
+	{
+		write_string("\a");
+		return false;
+	}
+
+	write_string("\r");
+	return true;
 }
 
 bool Lawicel_parser::parse_set_accept_code(const char* in_str)
@@ -549,8 +758,94 @@ bool Lawicel_parser::parse_get_serial(const char* in_str)
 
 	return true;
 }
+
 bool Lawicel_parser::parse_set_timestamp(const char* in_str)
 {
-	write_string("\a");
-	return false;
+	unsigned int timestamp = 0;
+	{
+		const int ret = sscanf(in_str, "Z%u\r", &timestamp);
+		if(ret != 1)
+		{
+			write_string("\a");
+			return false;
+		}
+	}
+
+	if(!handle_set_timestamp(timestamp))
+	{
+		write_string("\a");
+		return false;
+	}
+
+	write_string("\r");
+	return true;
+}
+
+bool Lawicel_parser::parse_poll_one(const char* in_str)
+{
+	const int ret = strncmp("P\r", in_str, 2);
+	if(ret != 0)
+	{
+		write_string("\a");
+		return false;
+	}
+
+	if(!handle_poll_one())
+	{
+		write_string("\a");
+		return false;
+	}
+
+	write_string("\r");
+	return true;
+}
+
+bool Lawicel_parser::parse_poll_all(const char* in_str)
+{
+	const int ret = strncmp("A\r", in_str, 2);
+	if(ret != 0)
+	{
+		write_string("\a");
+		return false;
+	}
+
+	if(!handle_poll_all())
+	{
+		write_string("\a");
+		return false;
+	}
+
+	write_string("\r");
+	return true;
+}
+
+bool Lawicel_parser::parse_auto_poll(const char* in_str)
+{
+	unsigned int auto_poll = 0;
+	{
+		const int ret = sscanf(in_str, "X%u\r", &auto_poll);
+		if(ret != 1)
+		{
+			write_string("\a");
+			return false;
+		}
+	}
+
+	if(auto_poll)
+	{
+		m_poll_mode = POLL_MODE::AUTO;
+	}
+	else
+	{
+		m_poll_mode = POLL_MODE::MANUAL;
+	}
+
+	if(!handle_auto_poll(auto_poll))
+	{
+		write_string("\a");
+		return false;
+	}
+
+	write_string("\r");
+	return true;
 }

@@ -14,6 +14,8 @@ class Lawicel_parser
 	Lawicel_parser()
 	{
 		m_write_str_func = nullptr;
+
+		m_poll_mode = POLL_MODE::MANUAL;
 	}
 
 	void set_write_string_func(WriteStringCallback func)
@@ -35,18 +37,31 @@ class Lawicel_parser
 
 	virtual bool handle_std_baud(const uint8_t baud) = 0;
 	virtual bool handle_cust_baud(const uint8_t b0, const uint8_t b1) = 0;
+	
 	virtual bool handle_open() = 0;
+	virtual bool handle_open_listen() = 0;
 	virtual bool handle_close() = 0;
+	
 	virtual bool handle_tx_std(const uint32_t id, const uint8_t dlc, const uint8_t* data) = 0;
 	virtual bool handle_tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data) = 0;
-	virtual bool handle_tx_rtr_std(const uint32_t id, const uint8_t dlc, const uint8_t* data) = 0;
-	virtual bool handle_tx_rtr_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data) = 0;
+	
+	virtual bool handle_tx_rtr_std(const uint32_t id, const uint8_t dlc) = 0;
+	virtual bool handle_tx_rtr_ext(const uint32_t id, const uint8_t dlc) = 0;
+	
 	virtual bool handle_get_flags() = 0;
+	
 	virtual bool handle_set_accept_code(const uint32_t code) = 0;
 	virtual bool handle_set_accept_mask(const uint32_t mask) = 0;
-	virtual bool handle_get_version(std::array<uint8_t, 4>* ver) = 0;
-	virtual bool handle_get_serial(std::array<uint8_t, 4>* sn) = 0;
-	virtual bool handle_set_timestamp(bool enable) = 0;
+	
+	virtual bool handle_get_version(std::array<uint8_t, 4>* const ver) = 0;
+	virtual bool handle_get_serial(std::array<uint8_t, 4>* const sn) = 0;
+	
+	virtual bool handle_set_timestamp(const bool enable) = 0;
+
+	virtual bool handle_poll_one() = 0;
+	virtual bool handle_poll_all() = 0;
+
+	virtual bool handle_auto_poll(const bool enable) = 0;
 
 	protected:
 
@@ -56,6 +71,7 @@ class Lawicel_parser
 	bool parse_cust_baud(const char* in_str);
 
 	bool parse_open(const char* in_str);
+	bool parse_open_listen(const char* in_str);
 	bool parse_close(const char* in_str);
 
 	bool parse_tx_std(const char* in_str);
@@ -73,6 +89,11 @@ class Lawicel_parser
 	bool parse_get_serial(const char* in_str);
 	bool parse_set_timestamp(const char* in_str);
 
+	bool parse_poll_one(const char* in_str);
+	bool parse_poll_all(const char* in_str);
+
+	bool parse_auto_poll(const char* in_str);
+
 	bool parse_std_id(const char* in_str, uint32_t* const id);
 	bool parse_ext_id(const char* in_str, uint32_t* const id);
 
@@ -84,4 +105,29 @@ class Lawicel_parser
 
 	bool write_bell();
 	bool write_cr();
+
+	enum class BIT_RATE
+	{
+		NO_BRS_10,
+		NO_BRS_20,
+		NO_BRS_50,
+		NO_BRS_100,
+		NO_BRS_125,
+		NO_BRS_250,
+		NO_BRS_500,
+		NO_BRS_800,
+		NO_BRS_1M,
+		BRS_1M_2M,
+		BRS_1M_4M,
+		BRS_1M_8M,
+		BRS_1M_12M
+	};
+
+	enum class POLL_MODE
+	{
+		MANUAL,
+		AUTO
+	};
+
+	POLL_MODE m_poll_mode;
 };
