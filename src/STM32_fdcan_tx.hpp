@@ -18,14 +18,9 @@ public:
 		m_fdcan = can;
 	}
 
-	FDCAN_GlobalTypeDef* get_can_instance()
+	void set_can_handle(FDCAN_HandleTypeDef* const can_handle)
 	{
-		return m_fdcan;
-	}
-
-	FDCAN_HandleTypeDef* get_can_handle()
-	{
-		return &m_hfdcan;
+		m_fdcan_handle = can_handle;
 	}
 
 	bool init();
@@ -50,5 +45,5 @@ protected:
 	bool send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data);
 
 	FDCAN_GlobalTypeDef* m_fdcan;
-	FDCAN_HandleTypeDef m_hfdcan;
+	FDCAN_HandleTypeDef* m_fdcan_handle;
 };

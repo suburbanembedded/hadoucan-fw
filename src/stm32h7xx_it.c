@@ -1,11 +1,11 @@
 
 #include "main.h"
+#include "hal_inst.h"
 #include "stm32h7xx_it.h"
 #include "cmsis_os.h"
 
 extern PCD_HandleTypeDef hpcd_USB_OTG_HS;
 extern TIM_HandleTypeDef htim17;
-extern FDCAN_HandleTypeDef hfdcan1;
 
 void FDCAN1_IT0_IRQHandler(void);
 void FDCAN2_IT0_IRQHandler(void);

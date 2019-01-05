@@ -19,7 +19,7 @@ void USB_tx_buffer_task::work()
 
 		{
 			std::unique_lock<Mutex_static> lock(m_tx_buf_mutex);
-			m_tx_buf_condvar.wait(lock, has_buffer_pred);
+			m_tx_buf_condvar.wait(lock, std::cref(has_buffer_pred));
 			
 			auto first = m_tx_buf.begin();
 			auto last  = std::next(first, std::min<size_t>(512, m_tx_buf.size()));

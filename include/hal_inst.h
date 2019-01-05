@@ -1,4 +1,4 @@
-#include "freertos_cpp_util/Mutex_static.hpp"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,9 +11,10 @@ extern "C" {
 
 extern USBD_HandleTypeDef hUsbDeviceHS;
 extern UART_HandleTypeDef huart1;
+extern FDCAN_HandleTypeDef hfdcan1;
 
 #ifdef __cplusplus
 }
 #endif
 
-extern Mutex_static m_uart1_mutex;
+

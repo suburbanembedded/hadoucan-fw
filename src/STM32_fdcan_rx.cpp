@@ -200,10 +200,20 @@ void STM32_fdcan_rx::work()
 		if(!m_usb_tx_buffer)
 		{
 			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "usb_tx_buffer is nullptr");
+			vTaskDelay(pdMS_TO_TICKS(500));
 			continue;	
 		}
 
-		bool queue_set_pk = m_can_fd_queue.pop_front(&pk, pdMS_TO_TICKS(500));
+		//check for packets in fifo
+		const uint32_t fifo0_depth = HAL_FDCAN_GetRxFifoFillLevel(m_fdcan_handle, FDCAN_RX_FIFO0);
+
+		//if the fifo is empty, wait for the watermark interrupt or a timeout
+		//once the timeout expires we will poll for packets under the watermark
+		bool queue_set_pk = false;
+		if(fifo0_depth == 0)
+		{
+			queue_set_pk = m_can_fd_queue.pop_front(&pk, pdMS_TO_TICKS(50));
+		}
 
 		{
 			Critical_section crit_sec;
@@ -228,22 +238,26 @@ void STM32_fdcan_rx::work()
 				m_can_fifo1_msg_lost.store(false);
 				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO1 msg lost");
 			}
+
+			// uint32_t RxFifo0ITs = m_RxFifo0ITs.load();
+			// uart1_log<64>(LOG_LEVEL::TRACE, "STM32_fdcan_rx", "RxFifo0ITs is %08" PRIX32, RxFifo0ITs);
+			// uart1_log<64>(LOG_LEVEL::TRACE, "STM32_fdcan_rx", "FDCAN_IT_RX_FIFO0_WATERMARK is %08" PRIX32, FDCAN_IT_RX_FIFO0_WATERMARK);
+			// uart1_log<64>(LOG_LEVEL::TRACE, "STM32_fdcan_rx", "FDCAN_IT_RX_FIFO0_FULL is %08" PRIX32, FDCAN_IT_RX_FIFO0_FULL);
+			// uart1_log<64>(LOG_LEVEL::TRACE, "STM32_fdcan_rx", "FDCAN_IT_RX_FIFO0_MESSAGE_LOST is %08" PRIX32, FDCAN_IT_RX_FIFO0_MESSAGE_LOST);
+			// m_RxFifo0ITs.store(0);
 		}
 
+		//if we didn't sleep because we should poll, or we woke up due to timeout, check the fifo
 		if(!queue_set_pk)
 		{
 			if(HAL_FDCAN_GetRxMessage(m_fdcan_handle, FDCAN_RX_FIFO0, &pk.rxheader, pk.data.data()) != HAL_OK)
 			{
-				//no data
-				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO0 empty");
+				//no data in hw fifo either, go back to sleep
 				continue;
 			}			
 		}
 
-		uart1_log<64>(LOG_LEVEL::TRACE, "STM32_fdcan_rx", "Woke");
-
 		packet_str.clear();
-
 		if(!append_packet_type(pk.rxheader, &packet_str))
 		{
 			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_type failed");
@@ -259,45 +273,48 @@ void STM32_fdcan_rx::work()
 			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_data failed");
 			continue;
 		}
-		packet_str.append("\r");
+		packet_str.push_back('\r');
 
-		uart1_log<64>(LOG_LEVEL::INFO, "STM32_fdcan_rx", "Writing packet");
 		m_usb_tx_buffer->write(packet_str.begin(), packet_str.end());
 	}
 }
 
-bool STM32_fdcan_rx::insert_packet_isr(CAN_fd_packet& pk)
-{
-	return m_can_fd_queue.push_back_isr(pk);
-}
-
 void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
-	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_WATERMARK) != RESET)
+	m_RxFifo0ITs.store(RxFifo0ITs);
+
+	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_WATERMARK) != 0U)
 	{
 		HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
 
+		//insert as many as we can
+		//if we can't drain below the watermark, the isr will get called again...
+		//TODO: in that case we turn off the isr and fall back to thread-mode drain, then re-enable
 		CAN_fd_packet pk;
-
-		if(HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &pk.rxheader, pk.data.data()) != HAL_OK)
+		while(!m_can_fd_queue.full_isr())
 		{
-			if(!insert_packet_isr(pk))
+			if(HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &pk.rxheader, pk.data.data()) != HAL_OK)
 			{
-				HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+				//this should not fail, since we checked it was not full
+				if(!m_can_fd_queue.push_back_isr(pk))
+				{
+					HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+				}
+			}
+			else
+			{
+				break;
 			}
 		}
-		else
-		{
-			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
-		}
 
+		//turn isr back on
 		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK, 0) != HAL_OK)
 		{
 
 		}
 	}
 
-	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_FULL) != RESET)
+	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_FULL) != 0U)
 	{
 		m_can_fifo0_full.store(true);
 		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_FULL, 0) != HAL_OK)
@@ -315,6 +332,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 		}
 	}
 }
+#if 0
 void STM32_fdcan_rx::can_fifo1_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs)
 {
 	if((RxFifo1ITs & FDCAN_IT_RX_FIFO1_WATERMARK) != RESET)
@@ -359,6 +377,7 @@ void STM32_fdcan_rx::can_fifo1_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 		}
 	}
 }
+#endif
 
 extern "C"
 {
@@ -367,10 +386,12 @@ extern "C"
 		stm32_fdcan_rx_task.can_fifo0_callback(hfdcan, RxFifo0ITs);
 	}
 	
+	#if 0
 	void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs)
 	{
 		stm32_fdcan_rx_task.can_fifo1_callback(hfdcan, RxFifo1ITs);
 	}
+	#endif
 	
 	// void HAL_FDCAN_ClockCalibrationCallback(FDCAN_HandleTypeDef *hfdcan, uint32_t ClkCalibrationITs);
 	// void HAL_FDCAN_TxEventFifoCallback(FDCAN_HandleTypeDef *hfdcan, uint32_t TxEventFifoITs);

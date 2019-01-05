@@ -43,8 +43,6 @@ public:
 		std::array<uint8_t, 64> data;
 	};
 
-	bool insert_packet_isr(CAN_fd_packet& pk);
-
 	void can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs);
 	void can_fifo1_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs);
 
@@ -66,6 +64,8 @@ protected:
 
 	std::atomic<bool> m_can_fifo1_full;
 	std::atomic<bool> m_can_fifo1_msg_lost;
+
+	std::atomic<uint32_t> m_RxFifo0ITs;
 
 };
 

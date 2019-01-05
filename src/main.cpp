@@ -162,6 +162,8 @@ public:
   void work() override
   {
     m_can.set_can_instance(FDCAN1);
+    m_can.set_can_handle(&hfdcan1);
+
     m_parser.set_can(&m_can);
     m_parser.set_write_string_func(
       std::bind(&USB_lawicel_task::write_string_usb, this, std::placeholders::_1)
@@ -179,7 +181,7 @@ public:
       {
         uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "wait(lock, has_line_pred)");
         std::unique_lock<Mutex_static> lock(usb_rx_buffer_task.get_mutex());
-        usb_rx_buffer_task.get_cv().wait(lock, has_line_pred);
+        usb_rx_buffer_task.get_cv().wait(lock, std::cref(has_line_pred));
         uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "woke");
 
         if(!usb_rx_buffer_task.get_line(&usb_line))
@@ -307,6 +309,11 @@ extern "C"
   void set_usb_serial_number(char id_str[25])
   {
     snprintf(USB_SERIAL_NUMBER, 25, "%s", id_str);
+  }
+
+  void handle_config_assert(const char* file, const int line, const char* msg)
+  {
+    uart1_log<64>(LOG_LEVEL::FATAL, "freertos", "configASSERT in %s at %d, %s", file, line, msg);
   }
 }
 
@@ -452,7 +459,7 @@ int main(void)
   usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
 
   stm32_fdcan_rx_task.set_can_instance(FDCAN1);
-  stm32_fdcan_rx_task.set_can_handle(usb_lawicel_task.m_can.get_can_handle());
+  stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
 
   //can RX
   stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 1);

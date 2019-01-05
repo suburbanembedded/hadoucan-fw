@@ -1,10 +1,10 @@
 #include "USB_TX_task.hpp"
 
 #include "main.h"
+#include "hal_inst.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 
-#include "hal_inst.hpp"
 #include "uart1_printf.hpp"
 
 #include <algorithm>
@@ -34,8 +34,8 @@ void USB_TX_task::work()
 		USB_buf* usb_buffer = nullptr;
 		if(!m_pending_tx_buffers.pop_front(&usb_buffer, pdMS_TO_TICKS(50)))
 		{
-			//if we previously sent data, we should send a nullpacket
-			//this is a hint to the OS to release buffers
+			//if we previously sent data, and don't have more to send we should send a null packet
+			//this is a hint to the OS to flush buffers / hand data to the application
 			if(m_needs_send_null)
 			{
 				// uart1_print<64>("tx pend is empty for 50 ms\r\n");

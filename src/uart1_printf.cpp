@@ -1,5 +1,7 @@
 #include "uart1_printf.hpp"
 
+Mutex_static m_uart1_mutex;
+
 const char* LOG_LEVEL_to_str(const LOG_LEVEL level)
 {
 	switch(level)

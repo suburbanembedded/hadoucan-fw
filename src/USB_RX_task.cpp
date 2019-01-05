@@ -1,10 +1,10 @@
 #include "USB_RX_task.hpp"
 
 #include "main.h"
+#include "hal_inst.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 
-#include "hal_inst.hpp"
 #include "uart1_printf.hpp"
 
 #include "freertos_cpp_util/Critical_section.hpp"
