@@ -27,7 +27,7 @@
 #include <cstdio>
 #include <cinttypes>
 
-#if 1
+#if 0
 class foo
 {
 public:
@@ -114,8 +114,8 @@ protected:
 Pool_test_task pool_test_task;
 #endif
 
-USB_RX_task usb_rx_task;
-USB_TX_task usb_tx_task;
+USB_RX_task usb_rx_task __attribute__ (( section(".ram_d1_area") ));
+USB_TX_task usb_tx_task __attribute__ (( section(".ram_d1_area") ));
 
 USB_rx_buffer_task usb_rx_buffer_task;
 USB_tx_buffer_task usb_tx_buffer_task;

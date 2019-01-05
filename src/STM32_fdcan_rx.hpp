@@ -18,6 +18,7 @@ public:
 	STM32_fdcan_rx()
 	{
 		m_usb_tx_buffer = nullptr;
+		m_last_fifo_msg_lost_check = 0;
 	}
 
 	void set_usb_tx(USB_tx_buffer_task* const usb_tx_buffer)
@@ -62,11 +63,13 @@ protected:
 
 	USB_tx_buffer_task* m_usb_tx_buffer;
 
-	std::atomic<bool> m_can_fifo0_full;
-	std::atomic<bool> m_can_fifo0_msg_lost;
+	TickType_t m_last_fifo_msg_lost_check;
 
-	std::atomic<bool> m_can_fifo1_full;
-	std::atomic<bool> m_can_fifo1_msg_lost;
+	std::atomic_bool m_can_fifo0_full;
+	std::atomic_uint m_can_fifo0_msg_lost;
+
+	std::atomic_bool m_can_fifo1_full;
+	std::atomic_uint m_can_fifo1_msg_lost;
 };
 
 extern STM32_fdcan_rx stm32_fdcan_rx_task;

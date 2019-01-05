@@ -15,6 +15,11 @@ class USB_tx_buffer_task : public Task_static<1024>
 {
 public:
 
+  //if an insertion would put us over this limit
+  const size_t BUFFER_HIGH_WATERMARK = 1024 * 16;
+  //block until it is below this limit
+  const size_t BUFFER_LOW_WATERMARK = 1024 * 12;
+
 	USB_tx_buffer_task()
 	{
 		m_usb_tx_task = nullptr;
@@ -37,6 +42,52 @@ public:
 		return m_tx_buf_condvar;
 	}	
 
+	//insert [first, last) into the internal buffer
+	//will block until space is availible
+	template<typename InputIt>
+	void write(InputIt first, InputIt last)
+	{
+		const size_t len = std::distance(first, last);
+
+		write(first, last, len);
+	}
+
+	//insert string into the internal buffer
+	//will block until space is availible
+	void write(const char* str)
+	{
+		size_t len = strlen(str);
+
+		write(str, str + len, len);
+	}
+
+protected:
+
+	//insert [first, last) into the internal buffer
+	//len is used to cap ram usage
+	template<typename InputIt>
+	void write(InputIt first, InputIt last, size_t len)
+	{
+		{
+			std::unique_lock<Mutex_static> lock(m_tx_buf_mutex);
+			
+			if((m_tx_buf.size() + len) > BUFFER_HIGH_WATERMARK)
+			{
+				do
+				{
+					m_tx_buf_drain_condvar.wait(lock);
+				} while((m_tx_buf.size() + len) > BUFFER_LOW_WATERMARK);
+			}
+
+			m_tx_buf.insert(m_tx_buf.end(), first, last);
+		}
+
+		//notify the io thread, which will decide if it wants to create a buffer
+		m_tx_buf_condvar.notify_one();
+	}
+
+	//predicate for m_tx_buf_condvar
+	//m_tx_buf_mutex must be locked
 	bool has_buffer()
 	{
 		if(m_tx_buf.size() >= 512)
@@ -57,32 +108,10 @@ public:
 		return ret == pdTRUE;
 	}
 
-	//insert [first, last) into the internal buffer
-	template<typename InputIt>
-	void write(InputIt first, InputIt last)
-	{
-		{
-			std::unique_lock<Mutex_static> lock(m_tx_buf_mutex);
-			m_tx_buf.insert(m_tx_buf.end(), first, last);
-		}
-
-		//notify the io thread, which will decide if it wants to create a buffer
-		m_tx_buf_condvar.notify_one();
-	}
-
-	//insert string into the internal buffer
-	void write(const char* str)
-	{
-		size_t len = strlen(str);
-
-		write(str, str + len);
-	}
-
-protected:
-
 	std::deque<uint8_t> m_tx_buf;
 	Mutex_static m_tx_buf_mutex;
 	Condition_variable m_tx_buf_condvar;
+	Condition_variable m_tx_buf_drain_condvar;
 
 	TimeOut_t  m_tx_timeout;
 	TickType_t m_tx_timeout_ticks_left;

@@ -216,18 +216,27 @@ void STM32_fdcan_rx::work()
 		}
 
 		//check flags
+		if((xTaskGetTickCount() - m_last_fifo_msg_lost_check) > 1000U)
 		{
-			Critical_section crit_sec;
-
-			if(m_can_fifo0_msg_lost.load())
+			m_last_fifo_msg_lost_check = xTaskGetTickCount();
+			unsigned int fifo0_msg_lost = 0;
+			unsigned int fifo1_msg_lost = 0;
 			{
-				m_can_fifo0_msg_lost.store(false);
-				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO0 msg lost");
+				Critical_section crit_sec;
+
+				fifo0_msg_lost = m_can_fifo0_msg_lost.load();
+				fifo1_msg_lost = m_can_fifo1_msg_lost.load();
 			}
-			if(m_can_fifo1_msg_lost.load())
+
+			if(fifo0_msg_lost > 0)
+			{
+				m_can_fifo0_msg_lost.store(0);
+				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO0 lost %d msg in the last second", fifo0_msg_lost);
+			}
+			if(fifo1_msg_lost > 0)
 			{
 				m_can_fifo1_msg_lost.store(false);
-				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO1 msg lost");
+				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO1 lost %d msg in the last second", fifo1_msg_lost);
 			}
 		}
 
@@ -244,9 +253,17 @@ void STM32_fdcan_rx::work()
 		//check more flags
 		//re-enable fifo full after we deque to try and avoid isr race
 		{
-			Critical_section crit_sec;
+			bool fifo0_full = false;
+			bool fifo1_full = false;
+				
+			{
+				Critical_section crit_sec;
 
-			if(m_can_fifo0_full.load())
+				fifo0_full = m_can_fifo0_full.load();
+				fifo1_full = m_can_fifo1_full.load();
+			}
+
+			if(fifo0_full)
 			{
 				m_can_fifo0_full.store(false);
 				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO0 full");
@@ -257,7 +274,7 @@ void STM32_fdcan_rx::work()
 				}
 			}
 
-			if(m_can_fifo1_full.load())
+			if(fifo1_full)
 			{
 				m_can_fifo1_full.store(false);
 				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO1 full");
@@ -333,7 +350,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_MESSAGE_LOST) != RESET)
 	{
-		m_can_fifo0_msg_lost.store(true);
+		m_can_fifo0_msg_lost++;
 		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_MESSAGE_LOST, 0) != HAL_OK)
 		{
 

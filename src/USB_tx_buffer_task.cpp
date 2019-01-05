@@ -28,6 +28,10 @@ void USB_tx_buffer_task::work()
 			m_tx_buf.erase(first, last);
 		}
 
+		//notify we drained some from the buffer
+		m_tx_buf_drain_condvar.notify_one();
+
+		//queue it into USB HS size chunks
 		m_usb_tx_task->queue_buffer_blocking(m_packet_buf.data(), m_packet_buf.size());
 	}
 }
