@@ -204,19 +204,21 @@ void STM32_fdcan_rx::work()
 			continue;	
 		}
 
-		//check for packets in fifo
-		const uint32_t fifo0_depth = HAL_FDCAN_GetRxFifoFillLevel(m_fdcan_handle, FDCAN_RX_FIFO0);
 
 		//if the fifo is empty, wait for the watermark interrupt or a timeout
 		//once the timeout expires we will poll for packets under the watermark
 		bool queue_set_pk = false;
-		if(fifo0_depth == 0)
 		{
-			queue_set_pk = m_can_fd_queue.pop_front(&pk, pdMS_TO_TICKS(50));
+			//check for packets in fifo
+			const uint32_t fifo0_depth = HAL_FDCAN_GetRxFifoFillLevel(m_fdcan_handle, FDCAN_RX_FIFO0);
+			if(fifo0_depth == 0)
+			{
+				queue_set_pk = m_can_fd_queue.pop_front(&pk, pdMS_TO_TICKS(50));
+			}
 		}
 
 		//check flags
-		if((xTaskGetTickCount() - m_last_fifo_msg_lost_check) > 1000U)
+		if((xTaskGetTickCount() - m_last_fifo_msg_lost_check) > pdMS_TO_TICKS(1000))
 		{
 			m_last_fifo_msg_lost_check = xTaskGetTickCount();
 			unsigned int fifo0_msg_lost = 0;
