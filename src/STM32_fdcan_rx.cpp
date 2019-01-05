@@ -127,7 +127,7 @@ bool STM32_fdcan_rx::append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std
 	{
 		std::array<char, 3+1> id;
 
-		int ret = snprintf(id.data(), id.size(), "%03X", x);
+		const int ret = snprintf(id.data(), id.size(), "%03X", x);
 		
 		if(ret < 0)
 		{
@@ -145,7 +145,7 @@ bool STM32_fdcan_rx::append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std
 	{
 		std::array<char, 8+1> id;
 
-		int ret = snprintf(id.data(), id.size(), "%08X", x);
+		const int ret = snprintf(id.data(), id.size(), "%08X", x);
 
 		if(ret < 0)
 		{
@@ -164,13 +164,13 @@ bool STM32_fdcan_rx::append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std
 }
 bool STM32_fdcan_rx::append_packet_data(const CAN_fd_packet& pk, std::string* const s)
 {
-	size_t byte_len = get_size_from_stm32_dlc(pk.rxheader.DataLength);
+	const size_t byte_len = get_size_from_stm32_dlc(pk.rxheader.DataLength);
 	for(size_t i = 0; i < byte_len; i++)
 	{
 		std::array<char, 2+1> str;
 
-		unsigned int x = pk.data[i];
-		int ret = snprintf(str.data(), str.size(), "%02X", x);
+		const unsigned int x = pk.data[i];
+		const int ret = snprintf(str.data(), str.size(), "%02X", x);
 		if(ret < 0)
 		{
 			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "snprintf failed");
