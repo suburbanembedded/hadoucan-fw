@@ -236,7 +236,6 @@ USB_lawicel_task usb_lawicel_task;
 
 extern "C"
 {
-  FDCAN_HandleTypeDef hfdcan1;
 
   USBD_CDC_HandleTypeDef usb_cdc_class_data;
 
