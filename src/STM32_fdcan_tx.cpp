@@ -107,15 +107,15 @@ bool STM32_fdcan_tx::init()
 	m_fdcan_handle->Init.TransmitPause = DISABLE;
 	m_fdcan_handle->Init.ProtocolException = ENABLE;
 
-	// 100 MHz CAN Clk
+	// 72 MHz CAN Clk
 	// tq = NominalPrescaler x (1/fdcan_ker_ck)
-	// tq = 5 x (1/100MHz) = 50ns
+	// tq = 9 x (1/72MHz) = 125ns
 
-	m_fdcan_handle->Init.NominalPrescaler = 5;//1-512
+	m_fdcan_handle->Init.NominalPrescaler = 9;//1-512
 	m_fdcan_handle->Init.NominalSyncJumpWidth = 8;//1-128
 	// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-	m_fdcan_handle->Init.NominalTimeSeg1 = 139;  //1-256 
-	m_fdcan_handle->Init.NominalTimeSeg2 = 20;   //1-128
+	m_fdcan_handle->Init.NominalTimeSeg1 = 55;  //1-256 
+	m_fdcan_handle->Init.NominalTimeSeg2 = 8;   //1-128
 
 	m_fdcan_handle->Init.DataPrescaler = 5;//1-32
 	m_fdcan_handle->Init.DataSyncJumpWidth = 8;//1-16

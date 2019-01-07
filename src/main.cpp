@@ -449,6 +449,9 @@ int main(void)
     uart1_log<64>(LOG_LEVEL::INFO, "main", "Initialing");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
+    
+    const uint32_t actvos = PWR->CSR1 & PWR_CSR1_ACTVOS;
+    uart1_log<64>(LOG_LEVEL::INFO, "main", "VOS: %" PRIX32, actvos);
 	}
 
   //init
