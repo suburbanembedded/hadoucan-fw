@@ -279,8 +279,8 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const ha
 			handle->Init.NominalPrescaler = 5;		//1-512
 			handle->Init.NominalSyncJumpWidth = 8;	//1-128
 			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-			handle->Init.NominalTimeSeg1 = 139;		//1-256 
-			handle->Init.NominalTimeSeg2 = 20;		//1-128
+			handle->Init.NominalTimeSeg1 = 167;		//1-256 
+			handle->Init.NominalTimeSeg2 = 24;		//1-128
 
 			handle->Init.DataPrescaler = 0;//1-32
 			handle->Init.DataSyncJumpWidth = 0;//1-16
