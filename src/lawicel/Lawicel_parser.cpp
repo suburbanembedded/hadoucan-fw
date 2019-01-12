@@ -452,16 +452,19 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 		{
 			write_string("\r");
 			success = true;
+			break;
 		}
 		case POLL_MODE::AUTO:
 		{
 			write_string("z\r");
 			success = true;
+			break;
 		}
 		default:
 		{
 			write_string("\a");
 			success = false;
+			break;
 		}
 	}
 
@@ -531,16 +534,19 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 		{
 			write_string("\r");
 			success = true;
+			break;
 		}
 		case POLL_MODE::AUTO:
 		{
 			write_string("Z\r");
 			success = true;
+			break;
 		}
 		default:
 		{
 			write_string("\a");
 			success = false;
+			break;
 		}
 	}
 	return success;
@@ -596,16 +602,19 @@ bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 		{
 			write_string("\r");
 			success = true;
+			break;
 		}
 		case POLL_MODE::AUTO:
 		{
 			write_string("z\r");
 			success = true;
+			break;
 		}
 		default:
 		{
 			write_string("\a");
 			success = false;
+			break;
 		}
 	}
 
@@ -661,16 +670,19 @@ bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 		{
 			write_string("\r");
 			success = true;
+			break;
 		}
 		case POLL_MODE::AUTO:
 		{
 			write_string("Z\r");
 			success = true;
+			break;
 		}
 		default:
 		{
 			write_string("\a");
 			success = false;
+			break;
 		}
 	}
 	return success;

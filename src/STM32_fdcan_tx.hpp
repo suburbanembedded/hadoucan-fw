@@ -38,6 +38,29 @@ public:
 	bool tx_fd_rtr_std(const uint32_t id, const uint8_t dlc);
 	bool tx_fd_rtr_ext(const uint32_t id, const uint8_t dlc);
 
+	enum class STD_BAUD
+	{
+		B10000,
+		B50000,
+		B100000,
+		B125000,
+		B250000,
+		B500000,
+		B1000000,
+	};
+
+	enum class FD_BAUD
+	{
+		B1000000,
+		B2000000,
+		B4000000,
+		B8000000,
+		B12000000
+	};
+
+	static bool set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const handle);
+	static bool set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FDCAN_HandleTypeDef* const handle);
+
 protected:
 
 	bool m_is_open;
@@ -47,3 +70,4 @@ protected:
 	FDCAN_GlobalTypeDef* m_fdcan;
 	FDCAN_HandleTypeDef* m_fdcan_handle;
 };
+
