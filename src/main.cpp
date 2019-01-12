@@ -31,32 +31,32 @@
 class foo
 {
 public:
-  foo()
-  {
-    m_v1 = 0; 
-    m_v2 = 0;
-  }
-  foo(int x)
-  {
-   m_v1 = x; 
-   m_v2 = 2;
-  }
-  ~foo()
-  {
-    uart1_printf<64>("called ~foo on 0x%" PRIXPTR "\r\n", this);
-  }
-  int m_v1;
-  int m_v2;
+	foo()
+	{
+		m_v1 = 0; 
+		m_v2 = 0;
+	}
+		foo(int x)
+		{
+		m_v1 = x; 
+		m_v2 = 2;
+	}
+	~foo()
+	{
+		uart1_printf<64>("called ~foo on 0x%" PRIXPTR "\r\n", this);
+	}
+	int m_v1;
+	int m_v2;
 };
 
 class Pool_test_task : public Task_static<1024>
 {
 public:
 
-  void work() override
-  {
-    for(;;)
-    {
+void work() override
+{
+	for(;;)
+	{
 		HAL_UART_Transmit(&huart1, (uint8_t*)"test\r\n", 6, 100);
 		vTaskDelay(500);
 
@@ -76,8 +76,8 @@ public:
 			uart1_printf<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
 			uart1_printf<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
 
-      uart1_printf<64>("a.v1 is %d\r\n", a->m_v1);
-      uart1_printf<64>("a.v2 is %d\r\n", a->m_v2);
+			uart1_printf<64>("a.v1 is %d\r\n", a->m_v1);
+			uart1_printf<64>("a.v2 is %d\r\n", a->m_v2);
 		}
 		if(b)
 		{
@@ -91,24 +91,24 @@ public:
 			uart1_printf<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
 			uart1_printf<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
 			
-      uart1_printf<64>("b.v1 is %d\r\n", b->m_v1);
-      uart1_printf<64>("b.v2 is %d\r\n", b->m_v2);
-    }
-    if(c)
-    {
-      uart1_printf<64>("c.v1 is %d\r\n", c->m_v1);
-      uart1_printf<64>("c.v2 is %d\r\n", c->m_v2);
-		}
+			uart1_printf<64>("b.v1 is %d\r\n", b->m_v1);
+			uart1_printf<64>("b.v2 is %d\r\n", b->m_v2);
+	}
+	if(c)
+	{
+		uart1_printf<64>("c.v1 is %d\r\n", c->m_v1);
+		uart1_printf<64>("c.v2 is %d\r\n", c->m_v2);
+	}
 
 		Object_pool<foo, 16>::free(a);
 		Object_pool<foo, 16>::free(b);
 		Object_pool<foo, 16>::free(c);
 		//m_pool.deallocate(a);
-    }
-  }
+	}
+}
 
 protected:
-  Object_pool<foo, 16> m_pool;
+	Object_pool<foo, 16> m_pool;
 };
 
 Pool_test_task pool_test_task;
@@ -124,262 +124,261 @@ class USB_lawicel_task : public Task_static<1024>
 {
 public:
 
-  USB_lawicel_task()
-  {
-    m_usb_tx_buffer = nullptr;
-  }
+	USB_lawicel_task()
+	{
+		m_usb_tx_buffer = nullptr;
+	}
 
-  static bool usb_input_drop(uint8_t c)
-  {
-    switch(c)
-    {
-      // case '\r':
-      //   return true;
-      case '\n':
-      {
-        return true;
-      }
-      default:
-      {
-        return false;
-      }
-    }
+	static bool usb_input_drop(uint8_t c)
+	{
+		switch(c)
+		{
+			// case '\r':
+			// {
+			// 	return true;
+			// }
+			case '\n':
+			{
+				return true;
+			}
+			default:
+			{
+				return false;
+			}
+		}
 
-    return false;
-  }
+		return false;
+	}
 
-  void set_usb_tx(USB_tx_buffer_task* const usb_tx_buffer)
-  {
-    m_usb_tx_buffer = usb_tx_buffer;
-  }
+	void set_usb_tx(USB_tx_buffer_task* const usb_tx_buffer)
+	{
+		m_usb_tx_buffer = usb_tx_buffer;
+	}
 
-  bool write_string_usb(const char* str)
-  {
-    m_usb_tx_buffer->write(str);
-    return true;
-  }
+	bool write_string_usb(const char* str)
+	{
+		m_usb_tx_buffer->write(str);
+		return true;
+	}
 
-  void work() override
-  {
-    m_can.set_can_instance(FDCAN1);
-    m_can.set_can_handle(&hfdcan1);
+	void work() override
+	{
+		m_can.set_can_instance(FDCAN1);
+		m_can.set_can_handle(&hfdcan1);
 
-    m_parser.set_can(&m_can);
-    m_parser.set_write_string_func(
-      std::bind(&USB_lawicel_task::write_string_usb, this, std::placeholders::_1)
-      );
+		m_parser.set_can(&m_can);
+		m_parser.set_write_string_func(
+			std::bind(&USB_lawicel_task::write_string_usb, this, std::placeholders::_1)
+			);
 
-    std::function<bool(void)> has_line_pred = std::bind(&USB_rx_buffer_task::has_line, &usb_rx_buffer_task);
-    
-    //a null terminated string
-    //maybe using std::string is a better idea, or a stringstream....
-    std::vector<uint8_t> usb_line;
-    usb_line.reserve(128);
+		std::function<bool(void)> has_line_pred = std::bind(&USB_rx_buffer_task::has_line, &usb_rx_buffer_task);
 
-    for(;;)
-    {
-      {
-        uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "wait(lock, has_line_pred)");
-        std::unique_lock<Mutex_static> lock(usb_rx_buffer_task.get_mutex());
-        usb_rx_buffer_task.get_cv().wait(lock, std::cref(has_line_pred));
-        uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "woke");
+		//a null terminated string
+		//maybe using std::string is a better idea, or a stringstream....
+		std::vector<uint8_t> usb_line;
+		usb_line.reserve(128);
 
-        if(!usb_rx_buffer_task.get_line(&usb_line))
-        {
-          continue;
-        }
-      }
+		for(;;)
+		{
+			{
+				uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "wait(lock, has_line_pred)");
+				std::unique_lock<Mutex_static> lock(usb_rx_buffer_task.get_mutex());
+				usb_rx_buffer_task.get_cv().wait(lock, std::cref(has_line_pred));
+				uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "woke");
 
-      //drop what usb_input_drop says we should drop
-      auto end_it = std::remove_if(usb_line.begin(), usb_line.end(), &usb_input_drop);
-      usb_line.erase(end_it, usb_line.end());
+				if(!usb_rx_buffer_task.get_line(&usb_line))
+				{
+					continue;
+				}
+			}
+			//we unlock lock so buffering can continue
 
-      //drop lines that are now empty
-      if(strnlen((char*)usb_line.data(), usb_line.size()) == 0)
-      {
-        uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Empty line");
-        continue;
-      }
+			//drop what usb_input_drop says we should drop
+			auto end_it = std::remove_if(usb_line.begin(), usb_line.end(), &usb_input_drop);
+			usb_line.erase(end_it, usb_line.end());
 
-      //drop lines that are only '\r'
-      if(usb_line.front() == '\r')
-      {
-        uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Line only contains \\r");
-        continue;
-      }
+			//drop lines that are now empty
+			if(strnlen((char*)usb_line.data(), usb_line.size()) == 0)
+			{
+				uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Empty line");
+				continue;
+			}
 
-      uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "got line: [%s]", usb_line.data());
+			//drop lines that are only '\r'
+			if(usb_line.front() == '\r')
+			{
+				uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Line only contains \\r");
+				continue;
+			}
 
-      //we unlock lock so buffering can continue
+			uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "got line: [%s]", usb_line.data());
 
-      //process line
-      if(!m_parser.parse_string((char*)usb_line.data()))
-      {
-        uart1_log<64>(LOG_LEVEL::ERROR, "USB_lawicel_task", "parse error");
-      }
-      else
-      {
-        uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "ok");
-      }
-    }
-  }
+			//process line
+			if(!m_parser.parse_string((char*)usb_line.data()))
+			{
+				uart1_log<64>(LOG_LEVEL::ERROR, "USB_lawicel_task", "parse error");
+			}
+			else
+			{
+				uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "ok");
+			}
+		}
+	}
 
-  STM32_fdcan_tx m_can;
+	STM32_fdcan_tx m_can;
 
 protected:
 
-  Lawicel_parser_stm32 m_parser;
+	Lawicel_parser_stm32 m_parser;
 
-  USB_tx_buffer_task* m_usb_tx_buffer;
+	USB_tx_buffer_task* m_usb_tx_buffer;
 };
 USB_lawicel_task usb_lawicel_task;
 
 extern "C"
 {
 
-  USBD_CDC_HandleTypeDef usb_cdc_class_data;
+	USBD_CDC_HandleTypeDef usb_cdc_class_data;
 
-  void* USBD_cdc_class_malloc(size_t size)
-  {
-    if(size != sizeof(usb_cdc_class_data))
-    {
-      return nullptr;
-    }
+	void* USBD_cdc_class_malloc(size_t size)
+	{
+		if(size != sizeof(usb_cdc_class_data))
+		{
+			return nullptr;
+		}
 
-    return &usb_cdc_class_data;
-  }
+		return &usb_cdc_class_data;
+	}
 
-  void USBD_cdc_class_free(void* ptr)
-  {
+	void USBD_cdc_class_free(void* ptr)
+	{
 
-  }
+	}
 
-  int8_t CDC_Init_HS(void);
-  int8_t CDC_DeInit_HS(void);
-  int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length);
-  int8_t CDC_Receive_HS(uint8_t* pbuf, uint32_t *Len);
-  void CDC_TX_Cmpl_HS(void);
+	int8_t CDC_Init_HS(void);
+	int8_t CDC_DeInit_HS(void);
+	int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length);
+	int8_t CDC_Receive_HS(uint8_t* pbuf, uint32_t *Len);
+	void CDC_TX_Cmpl_HS(void);
 
-  USBD_CDC_ItfTypeDef USBD_Interface_fops_HS =
-  {
-    CDC_Init_HS,
-    CDC_DeInit_HS,
-    CDC_Control_HS,
-    CDC_Receive_HS,
-    CDC_TX_Cmpl_HS
-  };
+	USBD_CDC_ItfTypeDef USBD_Interface_fops_HS =
+	{
+		CDC_Init_HS,
+		CDC_DeInit_HS,
+		CDC_Control_HS,
+		CDC_Receive_HS,
+		CDC_TX_Cmpl_HS
+	};
 
-  int8_t CDC_Init_HS(void)
-  {
-    usb_rx_task.handle_init_callback();
-    usb_tx_task.handle_init_callback();
-    // usb_rx_task.launch("usb_rx", 3);
-    // usb_tx_task.launch("usb_tx", 2);
-    return (USBD_OK);
-  }
+	int8_t CDC_Init_HS(void)
+	{
+		usb_rx_task.handle_init_callback();
+		usb_tx_task.handle_init_callback();
+		return USBD_OK;
+	}
 
-  int8_t CDC_DeInit_HS(void)
-  {
-    /* USER CODE BEGIN 9 */
-    return (USBD_OK);
-    /* USER CODE END 9 */
-  }
+	int8_t CDC_DeInit_HS(void)
+	{
+	/* USER CODE BEGIN 9 */
+		return USBD_OK;
+	/* USER CODE END 9 */
+	}
 
-  int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
-  {
-    return usb_rx_task.handle_rx_callback(Buf, *Len);
-  }
+	int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
+	{
+		return usb_rx_task.handle_rx_callback(Buf, *Len);
+	}
 
-  void CDC_TX_Cmpl_HS(void)
-  {
-    usb_tx_task.notify_tx_complete_callback();
-  }
+	void CDC_TX_Cmpl_HS(void)
+	{
+		usb_tx_task.notify_tx_complete_callback();
+	}
 
-  int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
-  {
-    return (USBD_OK);
-  }
+	int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
+	{
+		return USBD_OK;
+	}
 
-  static char USB_SERIAL_NUMBER[25] = {0};
-  char* get_usb_serial_number()
-  {
-    return USB_SERIAL_NUMBER;
-  }
-  void set_usb_serial_number(char id_str[25])
-  {
-    snprintf(USB_SERIAL_NUMBER, 25, "%s", id_str);
-  }
+	static char USB_SERIAL_NUMBER[25] = {0};
+	char* get_usb_serial_number()
+	{
+		return USB_SERIAL_NUMBER;
+	}
+	void set_usb_serial_number(char id_str[25])
+	{
+		snprintf(USB_SERIAL_NUMBER, 25, "%s", id_str);
+	}
 
-  void handle_config_assert(const char* file, const int line, const char* msg)
-  {
-    uart1_log<64>(LOG_LEVEL::FATAL, "freertos", "configASSERT in %s at %d, %s", file, line, msg);
-  }
+	void handle_config_assert(const char* file, const int line, const char* msg)
+	{
+		uart1_log<64>(LOG_LEVEL::FATAL, "freertos", "configASSERT in %s at %d, %s", file, line, msg);
+	}
 }
 
 void get_unique_id(std::array<uint32_t, 3>* id)
 {
-  volatile uint32_t* addr = reinterpret_cast<uint32_t*>(0x1FF1E800);
+	volatile uint32_t* addr = reinterpret_cast<uint32_t*>(0x1FF1E800);
 
-  std::copy_n(addr, 3, id->data());
+	std::copy_n(addr, 3, id->data());
 }
 
 void get_unique_id_str(std::array<char, 25>* id_str)
 {
-  //0x012345670123456701234567
-  std::array<uint32_t, 3> id;
-  get_unique_id(&id);
+	//0x012345670123456701234567
+	std::array<uint32_t, 3> id;
+	get_unique_id(&id);
 
-  snprintf(id_str->data(), id_str->size(), "%08" PRIX32 "%08" PRIX32 "%08" PRIX32, id[0], id[1], id[2]);
+	snprintf(id_str->data(), id_str->size(), "%08" PRIX32 "%08" PRIX32 "%08" PRIX32, id[0], id[1], id[2]);
 }
 
 void set_gpio_low_power(GPIO_TypeDef* const gpio)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  GPIO_InitStruct.Pin = GPIO_PIN_All;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  // GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(gpio, &GPIO_InitStruct);
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = GPIO_PIN_All;
+	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+	// GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(gpio, &GPIO_InitStruct);
 }
 
 void set_all_gpio_low_power()
 {
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOI_CLK_ENABLE();
-  __HAL_RCC_GPIOJ_CLK_ENABLE();
-  __HAL_RCC_GPIOK_CLK_ENABLE();
-  
-  set_gpio_low_power(GPIOA);
-  set_gpio_low_power(GPIOB);
-  set_gpio_low_power(GPIOC);
-  set_gpio_low_power(GPIOD);
-  set_gpio_low_power(GPIOE);
-  set_gpio_low_power(GPIOF);
-  set_gpio_low_power(GPIOG);
-  set_gpio_low_power(GPIOH);
-  set_gpio_low_power(GPIOI);
-  set_gpio_low_power(GPIOJ);
-  set_gpio_low_power(GPIOK);
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_GPIOD_CLK_ENABLE();
+	__HAL_RCC_GPIOE_CLK_ENABLE();
+	__HAL_RCC_GPIOF_CLK_ENABLE();
+	__HAL_RCC_GPIOG_CLK_ENABLE();
+	__HAL_RCC_GPIOH_CLK_ENABLE();
+	__HAL_RCC_GPIOI_CLK_ENABLE();
+	__HAL_RCC_GPIOJ_CLK_ENABLE();
+	__HAL_RCC_GPIOK_CLK_ENABLE();
 
-  __HAL_RCC_GPIOA_CLK_DISABLE();
-  __HAL_RCC_GPIOB_CLK_DISABLE();
-  __HAL_RCC_GPIOC_CLK_DISABLE();
-  __HAL_RCC_GPIOD_CLK_DISABLE();
-  __HAL_RCC_GPIOE_CLK_DISABLE();
-  __HAL_RCC_GPIOF_CLK_DISABLE();
-  __HAL_RCC_GPIOG_CLK_DISABLE();
-  __HAL_RCC_GPIOH_CLK_DISABLE();
-  __HAL_RCC_GPIOI_CLK_DISABLE();
-  __HAL_RCC_GPIOJ_CLK_DISABLE();
-  __HAL_RCC_GPIOK_CLK_DISABLE();
+	set_gpio_low_power(GPIOA);
+	set_gpio_low_power(GPIOB);
+	set_gpio_low_power(GPIOC);
+	set_gpio_low_power(GPIOD);
+	set_gpio_low_power(GPIOE);
+	set_gpio_low_power(GPIOF);
+	set_gpio_low_power(GPIOG);
+	set_gpio_low_power(GPIOH);
+	set_gpio_low_power(GPIOI);
+	set_gpio_low_power(GPIOJ);
+	set_gpio_low_power(GPIOK);
+
+	__HAL_RCC_GPIOA_CLK_DISABLE();
+	__HAL_RCC_GPIOB_CLK_DISABLE();
+	__HAL_RCC_GPIOC_CLK_DISABLE();
+	__HAL_RCC_GPIOD_CLK_DISABLE();
+	__HAL_RCC_GPIOE_CLK_DISABLE();
+	__HAL_RCC_GPIOF_CLK_DISABLE();
+	__HAL_RCC_GPIOG_CLK_DISABLE();
+	__HAL_RCC_GPIOH_CLK_DISABLE();
+	__HAL_RCC_GPIOI_CLK_DISABLE();
+	__HAL_RCC_GPIOJ_CLK_DISABLE();
+	__HAL_RCC_GPIOK_CLK_DISABLE();
 }
 
 extern int RTOS_RAM_START;
@@ -389,45 +388,45 @@ extern int RTOS_ROM_SIZE;
 int main(void)
 {
 
-{
-  //errata 2.2.9
-  volatile uint32_t* AXI_TARG7_FN_MOD = 
-  reinterpret_cast<uint32_t*>(
-    0x51000000 + 
-    0x1108 + 
-    0x1000*7U
-    );
+	{
+		//errata 2.2.9
+		volatile uint32_t* AXI_TARG7_FN_MOD = 
+		reinterpret_cast<uint32_t*>(
+			0x51000000 + 
+			0x1108 + 
+			0x1000*7U
+		);
 
-  uint32_t AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE  = 0x00000001;
-  uint32_t AXI_TARGx_FN_MOD_WRITE_ISS_OVERRIDE = 0x00000002;
+		uint32_t AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE  = 0x00000001;
+		uint32_t AXI_TARGx_FN_MOD_WRITE_ISS_OVERRIDE = 0x00000002;
 
-  SET_BIT(*AXI_TARG7_FN_MOD, AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE);
-}
+		SET_BIT(*AXI_TARG7_FN_MOD, AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE);
+	}
 
-  SCB_EnableICache();
+	SCB_EnableICache();
 
-  // SCB_EnableDCache();
+	// SCB_EnableDCache();
 
-  HAL_Init();
+	HAL_Init();
 
-  set_all_gpio_low_power();
+	set_all_gpio_low_power();
 
-  SystemClock_Config();
+	SystemClock_Config();
 
-  {
-    std::array<char, 25> id_str;
-    get_unique_id_str(&id_str);
+	{
+		std::array<char, 25> id_str;
+		get_unique_id_str(&id_str);
 
-    set_usb_serial_number(id_str.data());
-  }
+		set_usb_serial_number(id_str.data());
+	}
 
-  MX_GPIO_Init();
-  MX_USART1_UART_Init();
-  //MX_FDCAN1_Init();
-  MX_CRC_Init();
-  MX_HASH_Init();
-  MX_RTC_Init();
-  MX_RNG_Init();
+	MX_GPIO_Init();
+	MX_USART1_UART_Init();
+	//MX_FDCAN1_Init();
+	MX_CRC_Init();
+	MX_HASH_Init();
+	MX_RTC_Init();
+	MX_RNG_Init();
 
 	if(0)
 	{
@@ -446,43 +445,43 @@ int main(void)
 	{
 		std::array<char, 25> id_str;
 		get_unique_id_str(&id_str);
-    uart1_log<64>(LOG_LEVEL::INFO, "main", "Initialing");
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "Initialing");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
-    
-    const uint32_t actvos = PWR->CSR1 & PWR_CSR1_ACTVOS;
-    uart1_log<64>(LOG_LEVEL::INFO, "main", "VOS: %" PRIX32, actvos);
+
+		const uint32_t actvos = PWR->CSR1 & PWR_CSR1_ACTVOS;
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "VOS: %" PRIX32, actvos);
 	}
 
-  //init
-  usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
-  usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
-  stm32_fdcan_rx_task.set_usb_tx(&usb_tx_buffer_task);
-  usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
+	//init
+	usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
+	usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
+	stm32_fdcan_rx_task.set_usb_tx(&usb_tx_buffer_task);
+	usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
 
-  stm32_fdcan_rx_task.set_can_instance(FDCAN1);
-  stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
+	stm32_fdcan_rx_task.set_can_instance(FDCAN1);
+	stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
 
-  //can RX
-  stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 1);
-  
-  //protocol state machine
-  usb_lawicel_task.launch("usb_lawicel", 2);
+	//can RX
+	stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 1);
 
-  //process usb packets
-  usb_rx_buffer_task.launch("usb_rx_buf", 4);
-  usb_tx_buffer_task.launch("usb_tx_buf", 5);
+	//protocol state machine
+	usb_lawicel_task.launch("usb_lawicel", 2);
 
-  //actually send usb packets on the wire
-  usb_rx_task.launch("usb_rx", 3);
-  usb_tx_task.launch("usb_tx", 4);
+	//process usb packets
+	usb_rx_buffer_task.launch("usb_rx_buf", 4);
+	usb_tx_buffer_task.launch("usb_tx_buf", 5);
 
-  uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
+	//actually send usb packets on the wire
+	usb_rx_task.launch("usb_rx", 3);
+	usb_tx_task.launch("usb_tx", 4);
 
-  vTaskStartScheduler();
-  
-  for(;;)
-  {
+	uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
 
-  }
+	vTaskStartScheduler();
+
+	for(;;)
+	{
+
+	}
 }
