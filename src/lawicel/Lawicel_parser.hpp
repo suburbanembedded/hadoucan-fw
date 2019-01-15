@@ -1,7 +1,11 @@
 #pragma once
 
+#include "freertos_cpp_util/Mutex_static.hpp"
+
 #include <array>
+#include <deque>
 #include <functional>
+#include <mutex>
 
 #include <cstdint>
 
@@ -15,8 +19,11 @@ class Lawicel_parser
 	{
 		m_write_str_func = nullptr;
 
+		m_is_channel_open = false;
 		m_poll_mode = POLL_MODE::MANUAL;
 	}
+
+	bool queue_rx_packet(const std::string& packet_str);
 
 	void set_write_string_func(WriteStringCallback func)
 	{
@@ -29,6 +36,8 @@ class Lawicel_parser
 		{
 			return false;
 		}
+
+		std::lock_guard<Mutex_static> lock(m_write_string_mutex);
 
 		return m_write_str_func(str);
 	}
@@ -58,14 +67,12 @@ class Lawicel_parser
 	
 	virtual bool handle_set_timestamp(const bool enable) = 0;
 
-	virtual bool handle_poll_one() = 0;
-	virtual bool handle_poll_all() = 0;
-
-	virtual bool handle_auto_poll(const bool enable) = 0;
-
 	protected:
 
-	WriteStringCallback m_write_str_func;
+	bool handle_poll_one();
+	bool handle_poll_all();
+
+	bool handle_auto_poll(const bool enable);
 
 	bool parse_std_baud(const char* in_str);
 	bool parse_cust_baud(const char* in_str);
@@ -106,7 +113,7 @@ class Lawicel_parser
 	bool write_bell();
 	bool write_cr();
 
-	enum class BIT_RATE
+	enum class STD_BIT_RATE
 	{
 		NO_BRS_10,
 		NO_BRS_20,
@@ -116,11 +123,15 @@ class Lawicel_parser
 		NO_BRS_250,
 		NO_BRS_500,
 		NO_BRS_800,
-		NO_BRS_1M,
-		BRS_1M_2M,
-		BRS_1M_4M,
-		BRS_1M_8M,
-		BRS_1M_12M
+		NO_BRS_1M
+	};
+
+	enum class FD_BRS_BIT_RATE
+	{
+		BRS_2M,
+		BRS_4M,
+		BRS_8M,
+		BRS_12M
 	};
 
 	enum class POLL_MODE
@@ -129,5 +140,16 @@ class Lawicel_parser
 		AUTO
 	};
 
+	WriteStringCallback m_write_str_func;
+
+	bool m_is_channel_open;
+
 	POLL_MODE m_poll_mode;
+
+	Mutex_static m_write_string_mutex;
+
+	Mutex_static m_rx_packet_buf_mutex;
+	std::deque<char> m_rx_packet_buf;
+	constexpr static size_t MAX_CAN_PACKET_BUF_SIZE = 1+8+128+1;
+	constexpr static size_t MAX_RX_PACKET_BUF_SIZE = 64 * MAX_CAN_PACKET_BUF_SIZE;
 };

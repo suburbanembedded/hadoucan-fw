@@ -37,11 +37,6 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 	bool handle_get_serial(std::array<uint8_t, 4>* const sn) override;
 	bool handle_set_timestamp(const bool enable) override;
 
-	bool handle_poll_one() override;
-	bool handle_poll_all() override;
-
-	bool handle_auto_poll(const bool enable) override;
-
 	protected:
 
 	STM32_fdcan_tx* m_fdcan;

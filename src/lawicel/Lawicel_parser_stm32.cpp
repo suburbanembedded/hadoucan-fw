@@ -109,17 +109,3 @@ bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
 {
 	return false;
 }
-
-bool Lawicel_parser_stm32::handle_poll_one()
-{
-	return false;
-}
-bool Lawicel_parser_stm32::handle_poll_all()
-{
-	return false;
-}
-
-bool Lawicel_parser_stm32::handle_auto_poll(const bool enable)
-{
-	return false;	
-}

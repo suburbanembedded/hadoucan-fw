@@ -1,7 +1,5 @@
 #pragma once
 
-#include "USB_tx_buffer_task.hpp"
-
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
 #include "freertos_cpp_util/Queue_static_pod.hpp"
@@ -10,6 +8,7 @@
 #include "stm32h7xx_hal_fdcan.h"
 
 #include <atomic>
+#include <functional>
 
 class STM32_fdcan_rx : public Task_static<1024>
 {
@@ -17,13 +16,20 @@ public:
 
 	STM32_fdcan_rx()
 	{
-		m_usb_tx_buffer = nullptr;
 		m_last_fifo_msg_lost_check = 0;
+
+		m_can_fifo0_full = false;
+		m_can_fifo0_msg_lost = 0;
+
+		m_can_fifo1_full = false;
+		m_can_fifo1_msg_lost = 0;
 	}
 
-	void set_usb_tx(USB_tx_buffer_task* const usb_tx_buffer)
+	typedef std::function<bool (const std::string str)> PacketRXCallback;
+
+	void set_packet_callback(const PacketRXCallback& func)
 	{
-		m_usb_tx_buffer = usb_tx_buffer;
+		m_rx_callback = func;
 	}
 	
 	void set_can_instance(FDCAN_GlobalTypeDef* const can)
@@ -61,7 +67,7 @@ protected:
 	//set to 150% of FIFO0 + FIFO1
 	Queue_static_pod<CAN_fd_packet, 192> m_can_fd_queue;
 
-	USB_tx_buffer_task* m_usb_tx_buffer;
+	PacketRXCallback m_rx_callback;
 
 	TickType_t m_last_fifo_msg_lost_check;
 

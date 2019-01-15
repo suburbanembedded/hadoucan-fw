@@ -227,6 +227,11 @@ public:
 
 	STM32_fdcan_tx m_can;
 
+	Lawicel_parser* get_lawicel()
+	{
+		return &m_parser;
+	}
+
 protected:
 
 	Lawicel_parser_stm32 m_parser;
@@ -385,6 +390,11 @@ extern int RTOS_RAM_START;
 extern int RTOS_ROM_START;
 extern int RTOS_ROM_SIZE;
 
+bool can_rx_to_lawicel(const std::string& str)
+{
+	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
+}
+
 int main(void)
 {
 
@@ -456,9 +466,9 @@ int main(void)
 	//init
 	usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
 	usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
-	stm32_fdcan_rx_task.set_usb_tx(&usb_tx_buffer_task);
 	usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
 
+	stm32_fdcan_rx_task.set_packet_callback(&can_rx_to_lawicel);
 	stm32_fdcan_rx_task.set_can_instance(FDCAN1);
 	stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
 

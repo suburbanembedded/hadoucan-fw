@@ -230,19 +230,19 @@ bool Lawicel_parser::parse_std_baud(const char* in_str)
 
 	if(in_str_len != 3)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 	
 	if(in_str[0] != 'S')
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(in_str[2] != '\r')
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -251,24 +251,24 @@ bool Lawicel_parser::parse_std_baud(const char* in_str)
 	int ret = sscanf(in_str, "S%u\r", &baud);
 	if(ret != 1)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 }
 
 	if(baud > 8)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(!handle_std_baud(baud))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
 	return true;
 }
 bool Lawicel_parser::parse_cust_baud(const char* in_str)
@@ -277,19 +277,19 @@ bool Lawicel_parser::parse_cust_baud(const char* in_str)
 
 	if(in_str_len != 6)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 	
 	if(in_str[0] != 's')
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(in_str[5] != '\r')
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -305,7 +305,7 @@ bool Lawicel_parser::parse_cust_baud(const char* in_str)
 	const int ret = sscanf(b0_str.data(), "%x", &b0);
 	if(ret != 1)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 }
@@ -318,17 +318,17 @@ bool Lawicel_parser::parse_cust_baud(const char* in_str)
 	const int ret = sscanf(b1_str.data(), "%x", &b1);
 	if(ret != 1)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 }
 	if(!handle_cust_baud(b0, b1))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
 	return true;
 }
 
@@ -337,17 +337,17 @@ bool Lawicel_parser::parse_open(const char* in_str)
 	const int ret = strncmp("O\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(!handle_open())
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
 	return true;
 }
 bool Lawicel_parser::parse_open_listen(const char* in_str)
@@ -355,17 +355,17 @@ bool Lawicel_parser::parse_open_listen(const char* in_str)
 	const int ret = strncmp("L\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(!handle_open_listen())
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
 	return true;
 }
 bool Lawicel_parser::parse_close(const char* in_str)
@@ -373,17 +373,17 @@ bool Lawicel_parser::parse_close(const char* in_str)
 	int ret = strncmp("C\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(!handle_close())
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
 	return true;
 }
 
@@ -394,20 +394,20 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 	//tiiil\r
 	if(in_str_len < 6)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 	
 	if(in_str[0] != 't')
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	uint32_t id = 0;
 	if(!parse_std_id(in_str, &id))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -420,7 +420,7 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 
 	if(!parse_std_dlc(dlc_str.data(), &dlc))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 }
@@ -428,20 +428,20 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 	//verify len
 	if(in_str_len != (1U+3U+1U+2U*dlc+1U))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	std::array<uint8_t, 8> data;
 	if(!parse_std_data(in_str+5, dlc, &data))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(!handle_tx_std(id, dlc, data.data()))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -450,7 +450,7 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 	{
 		case POLL_MODE::MANUAL:
 		{
-			write_string("\r");
+			write_cr();
 			success = true;
 			break;
 		}
@@ -462,7 +462,7 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 		}
 		default:
 		{
-			write_string("\a");
+			write_bell();
 			success = false;
 			break;
 		}
@@ -477,20 +477,20 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 	//Tiiiiiiiil\r
 	if(in_str_len < 11)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 	
 	if(in_str[0] != 'T')
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	uint32_t id = 0;
 	if(!parse_ext_id(in_str, &id))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -502,7 +502,7 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 
 	if(!parse_std_dlc(dlc_str.data(), &dlc))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 }
@@ -510,20 +510,20 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 	//verify len
 	if(in_str_len != (1U+8U+1U+2U*dlc+1U))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	std::array<uint8_t, 8> data;
 	if(!parse_std_data(in_str+10, dlc, &data))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(!handle_tx_ext(id, dlc, data.data()))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -532,7 +532,7 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 	{
 		case POLL_MODE::MANUAL:
 		{
-			write_string("\r");
+			write_cr();
 			success = true;
 			break;
 		}
@@ -544,7 +544,7 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 		}
 		default:
 		{
-			write_string("\a");
+			write_bell();
 			success = false;
 			break;
 		}
@@ -559,20 +559,20 @@ bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 	//riiil\r
 	if(in_str_len < 6)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 	
 	if(in_str[0] != 'r')
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	uint32_t id = 0;
 	if(!parse_std_id(in_str, &id))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -584,14 +584,14 @@ bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 
 	if(!parse_std_dlc(dlc_str.data(), &dlc))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 }
 
 	if(!handle_tx_rtr_std(id, dlc))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -600,7 +600,7 @@ bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 	{
 		case POLL_MODE::MANUAL:
 		{
-			write_string("\r");
+			write_cr();
 			success = true;
 			break;
 		}
@@ -612,7 +612,7 @@ bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 		}
 		default:
 		{
-			write_string("\a");
+			write_bell();
 			success = false;
 			break;
 		}
@@ -627,20 +627,20 @@ bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 	//Riiiiiiiil\r
 	if(in_str_len < 11)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(in_str[0] != 'R')
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	uint32_t id = 0;
 	if(!parse_ext_id(in_str, &id))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -652,14 +652,14 @@ bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 
 	if(!parse_std_dlc(dlc_str.data(), &dlc))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 }
 
 	if(!handle_tx_rtr_ext(id, dlc))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -668,7 +668,7 @@ bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 	{
 		case POLL_MODE::MANUAL:
 		{
-			write_string("\r");
+			write_cr();
 			success = true;
 			break;
 		}
@@ -680,7 +680,7 @@ bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 		}
 		default:
 		{
-			write_string("\a");
+			write_bell();
 			success = false;
 			break;
 		}
@@ -693,28 +693,28 @@ bool Lawicel_parser::parse_get_flags(const char* in_str)
 	int ret = strncmp("F\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(!handle_get_flags())
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
 	return true;
 }
 
 bool Lawicel_parser::parse_set_accept_code(const char* in_str)
 {
-	write_string("\a");
+	write_bell();
 	return false;
 }
 bool Lawicel_parser::parse_set_accept_mask(const char* in_str)
 {
-	write_string("\a");
+	write_bell();
 	return false;
 }
 
@@ -723,14 +723,14 @@ bool Lawicel_parser::parse_get_version(const char* in_str)
 	const int ret = strncmp("V\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	std::array<uint8_t, 4> ver;
 	if(!handle_get_version(&ver))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -749,14 +749,14 @@ bool Lawicel_parser::parse_get_serial(const char* in_str)
 	const int ret = strncmp("N\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	std::array<uint8_t, 4> sn;
 	if(!handle_get_serial(&sn))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
@@ -778,18 +778,18 @@ bool Lawicel_parser::parse_set_timestamp(const char* in_str)
 		const int ret = sscanf(in_str, "Z%u\r", &timestamp);
 		if(ret != 1)
 		{
-			write_string("\a");
+			write_bell();
 			return false;
 		}
 	}
 
 	if(!handle_set_timestamp(timestamp))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
 	return true;
 }
 
@@ -798,17 +798,17 @@ bool Lawicel_parser::parse_poll_one(const char* in_str)
 	const int ret = strncmp("P\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(!handle_poll_one())
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
 	return true;
 }
 
@@ -817,17 +817,17 @@ bool Lawicel_parser::parse_poll_all(const char* in_str)
 	const int ret = strncmp("A\r", in_str, 2);
 	if(ret != 0)
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
 	if(!handle_poll_all())
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
 	return true;
 }
 
@@ -838,7 +838,7 @@ bool Lawicel_parser::parse_auto_poll(const char* in_str)
 		const int ret = sscanf(in_str, "X%u\r", &auto_poll);
 		if(ret != 1)
 		{
-			write_string("\a");
+			write_bell();
 			return false;
 		}
 	}
@@ -854,10 +854,134 @@ bool Lawicel_parser::parse_auto_poll(const char* in_str)
 
 	if(!handle_auto_poll(auto_poll))
 	{
-		write_string("\a");
+		write_bell();
 		return false;
 	}
 
-	write_string("\r");
+	write_cr();
+	return true;
+}
+
+bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
+{
+	bool success = false;
+	switch(m_poll_mode)
+	{
+		case POLL_MODE::MANUAL:
+		{
+			if(m_rx_packet_buf.size() < MAX_RX_PACKET_BUF_SIZE)
+			{
+				std::lock_guard<Mutex_static> lock(m_rx_packet_buf_mutex);
+
+				m_rx_packet_buf.insert(m_rx_packet_buf.end(), packet_str.begin(), packet_str.end());
+				success = true;
+			}
+			else
+			{
+				success = false;
+			}
+			break;
+		}
+		case POLL_MODE::AUTO:
+		{
+			write_string(packet_str.c_str());
+			success = true;
+			break;
+		}
+		default:
+		{
+			success = false;
+			break;
+		}
+	}
+	return success;	
+}
+
+bool Lawicel_parser::handle_poll_one()
+{
+	if(!m_is_channel_open)
+	{
+		return write_bell();
+	}
+
+	std::string out_line;
+	out_line.reserve(MAX_CAN_PACKET_BUF_SIZE + 1);
+
+	{
+		std::lock_guard<Mutex_static> lock(m_rx_packet_buf_mutex);
+
+		const auto cr_it = std::find(m_rx_packet_buf.begin(), m_rx_packet_buf.end(), '\r');
+
+		if(cr_it == m_rx_packet_buf.end())
+		{
+			return write_cr();
+		}
+
+		//copy the [begin, \r]
+		const auto cr_next_it = std::next(cr_it);
+		out_line.insert(out_line.begin(), m_rx_packet_buf.begin(), cr_next_it);
+
+		//erase the [begin, \r]
+		m_rx_packet_buf.erase(m_rx_packet_buf.begin(), cr_next_it);
+	}
+
+	write_string(out_line.c_str());
+
+	return true;
+	
+}
+bool Lawicel_parser::handle_poll_all()
+{
+	if(!m_is_channel_open)
+	{
+		return write_bell();
+	}
+
+	std::string out_line;
+	out_line.reserve(MAX_CAN_PACKET_BUF_SIZE + 1);
+
+	bool keep_writing = false;
+
+	do
+	{
+		{
+			std::lock_guard<Mutex_static> lock(m_rx_packet_buf_mutex);
+
+			const auto cr_it = std::find(m_rx_packet_buf.begin(), m_rx_packet_buf.end(), '\r');
+
+			if(cr_it == m_rx_packet_buf.end())
+			{
+				keep_writing = false;
+			}
+
+			//copy the [begin, \r]
+			const auto cr_next_it = std::next(cr_it);
+			out_line.insert(out_line.begin(), m_rx_packet_buf.begin(), cr_next_it);
+
+			//erase the [begin, \r]
+			m_rx_packet_buf.erase(m_rx_packet_buf.begin(), cr_next_it);
+		}
+		
+		if(!write_string(out_line.c_str()))
+		{
+			return false;
+		}
+
+	} while(keep_writing);	
+
+	return write_string("A\r");
+}
+
+bool Lawicel_parser::handle_auto_poll(const bool enable)
+{
+	if(enable)
+	{
+		m_poll_mode = POLL_MODE::AUTO;
+	}
+	else
+	{
+		m_poll_mode = POLL_MODE::MANUAL;
+	}
+
 	return true;
 }

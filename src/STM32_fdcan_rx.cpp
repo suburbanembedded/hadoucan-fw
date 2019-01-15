@@ -197,14 +197,6 @@ void STM32_fdcan_rx::work()
 
 	for(;;)
 	{
-		if(!m_usb_tx_buffer)
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "usb_tx_buffer is nullptr");
-			vTaskDelay(pdMS_TO_TICKS(500));
-			continue;	
-		}
-
-
 		//if the fifo is empty, wait for the watermark interrupt or a timeout
 		//once the timeout expires we will poll for packets under the watermark
 		bool queue_set_pk = false;
@@ -307,8 +299,21 @@ void STM32_fdcan_rx::work()
 		}
 		packet_str.push_back('\r');
 
-		//send the packet to a stream, that will try to coalesce a USB HS packet
-		m_usb_tx_buffer->write(packet_str.begin(), packet_str.end());
+		if(m_rx_callback)
+		{
+			//send the packet to a stream, that will try to coalesce a USB HS packet
+			//m_usb_tx_buffer->write(packet_str.begin(), packet_str.end());
+			if(!m_rx_callback(packet_str))
+			{
+				uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "m_rx_callback failed");
+			}
+		}
+		else
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "m_rx_callback is nullptr");
+			vTaskDelay(pdMS_TO_TICKS(500));
+			continue;	
+		}
 	}
 }
 
