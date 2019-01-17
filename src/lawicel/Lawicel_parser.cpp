@@ -802,13 +802,22 @@ bool Lawicel_parser::parse_poll_one(const char* in_str)
 		return false;
 	}
 
-	if(!handle_poll_one())
+	std::string out_line;
+	if(!handle_poll_one(&out_line))
 	{
 		write_bell();
 		return false;
 	}
 
-	write_cr();
+	if(!out_line.empty())
+	{
+		write_string(out_line.c_str());
+	}
+	else
+	{
+		write_cr();
+	}
+
 	return true;
 }
 
@@ -827,7 +836,7 @@ bool Lawicel_parser::parse_poll_all(const char* in_str)
 		return false;
 	}
 
-	write_cr();
+	write_string("A\r");
 	return true;
 }
 
@@ -843,13 +852,10 @@ bool Lawicel_parser::parse_auto_poll(const char* in_str)
 		}
 	}
 
-	if(auto_poll)
+	if(auto_poll > 1)
 	{
-		m_poll_mode = POLL_MODE::AUTO;
-	}
-	else
-	{
-		m_poll_mode = POLL_MODE::MANUAL;
+		write_bell();
+		return false;
 	}
 
 	if(!handle_auto_poll(auto_poll))
@@ -869,11 +875,12 @@ bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
 	{
 		case POLL_MODE::MANUAL:
 		{
-			if(m_rx_packet_buf.size() < MAX_RX_PACKET_BUF_SIZE)
+			if((m_rx_packet_buf.size() + packet_str.size()) < MAX_RX_PACKET_BUF_SIZE)
 			{
 				std::lock_guard<Mutex_static> lock(m_rx_packet_buf_mutex);
 
 				m_rx_packet_buf.insert(m_rx_packet_buf.end(), packet_str.begin(), packet_str.end());
+				
 				success = true;
 			}
 			else
@@ -897,15 +904,20 @@ bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
 	return success;	
 }
 
-bool Lawicel_parser::handle_poll_one()
+bool Lawicel_parser::handle_poll_one(std::string* const out_line)
 {
 	if(!m_is_channel_open)
 	{
-		return write_bell();
+		return false;
 	}
 
-	std::string out_line;
-	out_line.reserve(MAX_CAN_PACKET_BUF_SIZE + 1);
+	if(m_poll_mode != POLL_MODE::MANUAL)
+	{
+		return false;
+	}
+
+	out_line->clear();
+	out_line->reserve(MAX_CAN_PACKET_BUF_SIZE + 1);
 
 	{
 		std::lock_guard<Mutex_static> lock(m_rx_packet_buf_mutex);
@@ -914,18 +926,16 @@ bool Lawicel_parser::handle_poll_one()
 
 		if(cr_it == m_rx_packet_buf.end())
 		{
-			return write_cr();
+			return true;
 		}
 
 		//copy the [begin, \r]
 		const auto cr_next_it = std::next(cr_it);
-		out_line.insert(out_line.begin(), m_rx_packet_buf.begin(), cr_next_it);
+		out_line->insert(out_line->begin(), m_rx_packet_buf.begin(), cr_next_it);
 
 		//erase the [begin, \r]
 		m_rx_packet_buf.erase(m_rx_packet_buf.begin(), cr_next_it);
 	}
-
-	write_string(out_line.c_str());
 
 	return true;
 	
@@ -934,42 +944,39 @@ bool Lawicel_parser::handle_poll_all()
 {
 	if(!m_is_channel_open)
 	{
-		return write_bell();
+		return false;
+	}
+
+	if(m_poll_mode != POLL_MODE::MANUAL)
+	{
+		return false;
 	}
 
 	std::string out_line;
 	out_line.reserve(MAX_CAN_PACKET_BUF_SIZE + 1);
 
-	bool keep_writing = false;
+	bool success = true;
 
-	do
+	for(;;)
 	{
+		if(!handle_poll_one(&out_line))
 		{
-			std::lock_guard<Mutex_static> lock(m_rx_packet_buf_mutex);
-
-			const auto cr_it = std::find(m_rx_packet_buf.begin(), m_rx_packet_buf.end(), '\r');
-
-			if(cr_it == m_rx_packet_buf.end())
-			{
-				keep_writing = false;
-			}
-
-			//copy the [begin, \r]
-			const auto cr_next_it = std::next(cr_it);
-			out_line.insert(out_line.begin(), m_rx_packet_buf.begin(), cr_next_it);
-
-			//erase the [begin, \r]
-			m_rx_packet_buf.erase(m_rx_packet_buf.begin(), cr_next_it);
+			success = false;
+			break;
 		}
-		
+		if(out_line.empty())
+		{
+			break;
+		}
+
 		if(!write_string(out_line.c_str()))
 		{
-			return false;
+			success = false;
+			break;
 		}
+	};
 
-	} while(keep_writing);	
-
-	return write_string("A\r");
+	return true;
 }
 
 bool Lawicel_parser::handle_auto_poll(const bool enable)

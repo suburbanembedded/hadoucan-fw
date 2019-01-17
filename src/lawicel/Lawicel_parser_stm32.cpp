@@ -99,11 +99,13 @@ bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 }
 bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 {
-	return write_string("V0000");
+	ver->fill(0);
+	return true;
 }
 bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
 {
-	return write_string("N0000");
+	sn->fill(0);
+	return true;
 }
 bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
 {

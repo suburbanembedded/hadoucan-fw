@@ -2,6 +2,8 @@
 
 #include "uart1_printf.hpp"
 
+#include "common_util/Byte_util.hpp"
+
 #include "freertos_cpp_util/Critical_section.hpp"
 
 #include <string>
@@ -121,23 +123,18 @@ bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, s
 }
 bool STM32_fdcan_rx::append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std::string* const s)
 {
-	const unsigned int x = rxheader.Identifier;
+	const uint32_t x = rxheader.Identifier;
 
 	if(rxheader.IdType == FDCAN_STANDARD_ID)
 	{
 		std::array<char, 3+1> id;
 
-		const int ret = snprintf(id.data(), id.size(), "%03X", x);
-		
-		if(ret < 0)
+		if(!Byte_util::nibble_to_hex(Byte_util::get_b1(x), id.data() + 0))
 		{
 			return false;
 		}
-
-		if(ret > 3)
-		{
-			return false;
-		}
+		Byte_util::u8_to_hex(Byte_util::get_b0(x), id.data() + 1);
+		id.back() = '\0';
 
 		s->append(id.data());
 	}
@@ -145,17 +142,11 @@ bool STM32_fdcan_rx::append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std
 	{
 		std::array<char, 8+1> id;
 
-		const int ret = snprintf(id.data(), id.size(), "%08X", x);
-
-		if(ret < 0)
-		{
-			return false;
-		}
-		
-		if(ret > 8)
-		{
-			return false;
-		}
+		Byte_util::u8_to_hex(Byte_util::get_b3(x), id.data() + 0);
+		Byte_util::u8_to_hex(Byte_util::get_b2(x), id.data() + 2);
+		Byte_util::u8_to_hex(Byte_util::get_b1(x), id.data() + 4);
+		Byte_util::u8_to_hex(Byte_util::get_b0(x), id.data() + 6);
+		id.back() = '\0';
 
 		s->append(id.data());
 	}
@@ -164,23 +155,13 @@ bool STM32_fdcan_rx::append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std
 }
 bool STM32_fdcan_rx::append_packet_data(const CAN_fd_packet& pk, std::string* const s)
 {
+	std::array<char, 2+1> str;
+
 	const size_t byte_len = get_size_from_stm32_dlc(pk.rxheader.DataLength);
 	for(size_t i = 0; i < byte_len; i++)
 	{
-		std::array<char, 2+1> str;
-
-		const unsigned int x = pk.data[i];
-		const int ret = snprintf(str.data(), str.size(), "%02X", x);
-		if(ret < 0)
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "snprintf failed");
-			return false;
-		}
-		if(ret > 2)
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "snprintf truncated");
-			return false;
-		}
+		Byte_util::u8_to_hex(pk.data[i], str.data());
+		str.back() = '\0';
 
 		s->append(str.data());
 	}

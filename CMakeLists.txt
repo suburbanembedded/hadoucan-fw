@@ -50,6 +50,7 @@ include_directories(
 
 add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
 add_subdirectory(external/freertos_cpp_util)
+add_subdirectory(external/common_util)
 #add_subdirectory(external/googletest)
 
 add_library(gtest_stm32
@@ -132,6 +133,7 @@ target_link_libraries(canusbfdiso
 	freertos_v9
 	freertos_v9_cmsis
 
+	common_util
 	freertos_cpp_util
 )
 

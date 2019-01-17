@@ -69,7 +69,7 @@ class Lawicel_parser
 
 	protected:
 
-	bool handle_poll_one();
+	bool handle_poll_one(std::string* const out_line);
 	bool handle_poll_all();
 
 	bool handle_auto_poll(const bool enable);
