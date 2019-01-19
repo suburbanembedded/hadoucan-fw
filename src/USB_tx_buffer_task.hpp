@@ -56,7 +56,7 @@ public:
 	//will block until space is available
 	void write(const char* str)
 	{
-		size_t len = strlen(str);
+		const size_t len = strlen(str);
 
 		write(str, str + len, len);
 	}
@@ -66,18 +66,14 @@ protected:
 	//insert [first, last) into the internal buffer
 	//len is used to cap ram usage
 	template<typename InputIt>
-	void write(InputIt first, InputIt last, size_t len)
+	void write(InputIt first, InputIt last, const size_t len)
 	{
+		std::function<bool()> enqueue_pred = std::bind(&USB_tx_buffer_task::m_tx_buf_has_space, this, len);
+
 		{
 			std::unique_lock<Mutex_static> lock(m_tx_buf_mutex);
 			
-			if((m_tx_buf.size() + len) > BUFFER_HIGH_WATERMARK)
-			{
-				do
-				{
-					m_tx_buf_drain_condvar.wait(lock);
-				} while((m_tx_buf.size() + len) > BUFFER_LOW_WATERMARK);
-			}
+			m_tx_buf_drain_condvar.wait(lock, std::cref(enqueue_pred));
 
 			m_tx_buf.insert(m_tx_buf.end(), first, last);
 		}
@@ -86,26 +82,32 @@ protected:
 		m_tx_buf_condvar.notify_one();
 	}
 
-	//predicate for m_tx_buf_condvar
+	//predicate for enqueue to m_tx_buf_condvar
+	//m_tx_buf_mutex must be locked
+	bool m_tx_buf_has_space(const size_t len)
+	{
+		//false if keep waiting
+		return (m_tx_buf.size() + len) < BUFFER_HIGH_WATERMARK;
+	}
+
+	//predicate for m_tx_buf_condvar write to usb
 	//m_tx_buf_mutex must be locked
 	bool has_buffer()
 	{
-		if(m_tx_buf.size() >= 512)
-		{
-			//yay, full USB HS packet
-			return true;
-		}
-		else if(m_tx_buf.empty())
+		if(m_tx_buf.empty())
 		{
 			//no point waking other thread
 			//that thread should self-wake to send a 0 len packet after a bit, once
 			return false;
 		}
 
-		//pdTRUE on timeout, send a partial packet since non-empty
-		BaseType_t ret = xTaskCheckForTimeOut(&m_tx_timeout, &m_tx_timeout_ticks_left);
+		if(m_tx_buf.size() >= 512)
+		{
+			//yay, full USB HS packet
+			return true;
+		}
 
-		return ret == pdTRUE;
+		return false;
 	}
 
 	std::deque<uint8_t> m_tx_buf;
