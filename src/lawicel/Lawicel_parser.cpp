@@ -347,6 +347,8 @@ bool Lawicel_parser::parse_open(const char* in_str)
 		return false;
 	}
 
+	m_is_channel_open = true;
+
 	write_cr();
 	return true;
 }
@@ -382,6 +384,8 @@ bool Lawicel_parser::parse_close(const char* in_str)
 		write_bell();
 		return false;
 	}
+
+	m_is_channel_open = false;
 
 	write_cr();
 	return true;
