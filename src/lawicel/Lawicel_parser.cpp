@@ -935,7 +935,7 @@ bool Lawicel_parser::handle_poll_one(std::string* const out_line)
 
 		//copy the [begin, \r]
 		const auto cr_next_it = std::next(cr_it);
-		out_line->insert(out_line->begin(), m_rx_packet_buf.begin(), cr_next_it);
+		out_line->assign(m_rx_packet_buf.begin(), cr_next_it);
 
 		//erase the [begin, \r]
 		m_rx_packet_buf.erase(m_rx_packet_buf.begin(), cr_next_it);
