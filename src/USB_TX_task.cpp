@@ -93,7 +93,13 @@ size_t USB_TX_task::queue_buffer_blocking(const uint8_t* buf, const size_t len)
 		std::copy_n(buf + num_queued, num_to_copy, usb_buf->buf.data() + num_queued);
 		usb_buf->len = num_to_copy;
 	
-		m_pending_tx_buffers.push_back(usb_buf);
+		if(!m_pending_tx_buffers.push_back(usb_buf))
+		{
+			//return it to the queue, and spin around to try again
+			uart1_log<128>(LOG_LEVEL::WARN, "USB_TX_task", "m_pending_tx_buffers enqueue failed, retry");
+			Object_pool_base<USB_buf>::free(usb_buf);
+			continue;
+		}
 	
 		num_queued += num_to_copy;		
 	}
