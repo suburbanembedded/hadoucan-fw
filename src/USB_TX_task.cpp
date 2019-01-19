@@ -38,8 +38,7 @@ void USB_TX_task::work()
 			//this is a hint to the OS to flush buffers / hand data to the application
 			if(m_needs_send_null)
 			{
-				// uart1_print<64>("tx pend is empty for 50 ms\r\n");
-				// uart1_print<64>("tx send null buf\r\n");
+				// uart1_log<128>(LOG_LEVEL::INFO, "USB_TX_task", "tx idle for 50ms, send null buf");
 				send_buffer(nullptr);
 				m_needs_send_null = false;
 			}
