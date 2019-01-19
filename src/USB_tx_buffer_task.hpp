@@ -43,7 +43,7 @@ public:
 	}	
 
 	//insert [first, last) into the internal buffer
-	//will block until space is availible
+	//will block until space is available
 	template<typename InputIt>
 	void write(InputIt first, InputIt last)
 	{
@@ -53,7 +53,7 @@ public:
 	}
 
 	//insert string into the internal buffer
-	//will block until space is availible
+	//will block until space is available
 	void write(const char* str)
 	{
 		size_t len = strlen(str);
