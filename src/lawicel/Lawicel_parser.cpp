@@ -985,6 +985,9 @@ bool Lawicel_parser::handle_poll_all()
 
 bool Lawicel_parser::handle_auto_poll(const bool enable)
 {
+	//TODO: race condition, flush queue while new packets come in
+	//std::lock_guard<Mutex_static> lock(m_rx_packet_buf_mutex);
+
 	if(enable)
 	{
 		m_poll_mode = POLL_MODE::AUTO;
