@@ -32,13 +32,13 @@ void USB_TX_task::work()
 		// uart1_print<64>("tx wait buf\r\n");
 
 		USB_buf* usb_buffer = nullptr;
-		if(!m_pending_tx_buffers.pop_front(&usb_buffer, pdMS_TO_TICKS(50)))
+		if(!m_pending_tx_buffers.pop_front(&usb_buffer, pdMS_TO_TICKS(USB_HS_PACKET_WAIT_MS)))
 		{
 			//if we previously sent data, and don't have more to send we should send a null packet
 			//this is a hint to the OS to flush buffers / hand data to the application
 			if(m_needs_send_null)
 			{
-				// uart1_log<128>(LOG_LEVEL::INFO, "USB_TX_task", "tx idle for 50ms, send null buf");
+				uart1_log<128>(LOG_LEVEL::INFO, "USB_TX_task", "tx idle for 50ms, send null buf");
 				send_buffer(nullptr);
 				m_needs_send_null = false;
 			}
