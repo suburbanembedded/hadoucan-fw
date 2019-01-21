@@ -207,40 +207,58 @@ void STM32_dlc::from_len(uint8_t len)
 
 CAN_dlc STM32_dlc::to_can_dlc() const
 {
-	switch(dlc)
+	CAN_dlc dlc;
+
+	switch(m_dlc)
 	{
 		case FDCAN_DLC_BYTES_0:
-			return 0x00;
+			dlc.set_can_dlc(0x00);
+			return dlc;
 		case FDCAN_DLC_BYTES_1:
-			return 0x01;
+			dlc.set_can_dlc(0x01);
+			return dlc;
 		case FDCAN_DLC_BYTES_2:
-			return 0x02;
+			dlc.set_can_dlc(0x02);
+			return dlc;
 		case FDCAN_DLC_BYTES_3:
-			return 0x03;
+			dlc.set_can_dlc(0x03);
+			return dlc;
 		case FDCAN_DLC_BYTES_4:
-			return 0x04;
+			dlc.set_can_dlc(0x04);
+			return dlc;
 		case FDCAN_DLC_BYTES_5:
-			return 0x05;
+			dlc.set_can_dlc(0x05);
+			return dlc;
 		case FDCAN_DLC_BYTES_6:
-			return 0x06;
+			dlc.set_can_dlc(0x06);
+			return dlc;
 		case FDCAN_DLC_BYTES_7:
-			return 0x07;
+			dlc.set_can_dlc(0x07);
+			return dlc;
 		case FDCAN_DLC_BYTES_8:
-			return 0x08;
+			dlc.set_can_dlc(0x08);
+			return dlc;
 		case FDCAN_DLC_BYTES_12:
-			return 0x09;
+			dlc.set_can_dlc(0x09);
+			return dlc;
 		case FDCAN_DLC_BYTES_16:
-			return 0x0A;
+			dlc.set_can_dlc(0x0A);
+			return dlc;
 		case FDCAN_DLC_BYTES_20:
-			return 0x0B;
+			dlc.set_can_dlc(0x0B);
+			return dlc;
 		case FDCAN_DLC_BYTES_24:
-			return 0x0C;
+			dlc.set_can_dlc(0x0C);
+			return dlc;
 		case FDCAN_DLC_BYTES_32:
-			return 0x0D;
+			dlc.set_can_dlc(0x0D);
+			return dlc;
 		case FDCAN_DLC_BYTES_48:
-			return 0x0E;
+			dlc.set_can_dlc(0x0E);
+			return dlc;
 		case FDCAN_DLC_BYTES_64:
-			return 0x0F;
+			dlc.set_can_dlc(0x0F);
+			return dlc;
 		default:
 			throw std::domain_error("dlc not in bounds");
 	}
@@ -248,9 +266,9 @@ CAN_dlc STM32_dlc::to_can_dlc() const
 	throw std::domain_error("dlc not in bounds");
 }
 
-void STM32_dlc::from_can_dlc(CAN_dlc dlc)
+void STM32_dlc::from_can_dlc(const CAN_dlc& dlc)
 {
-	switch(dlc)
+	switch(dlc.get_can_dlc())
 	{
 		case 0x00:
 			m_dlc = FDCAN_DLC_BYTES_0;

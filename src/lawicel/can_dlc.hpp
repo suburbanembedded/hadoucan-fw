@@ -11,6 +11,16 @@ public:
 	size_t to_len() const;
 	void from_len(uint8_t len);
 
+	void set_can_dlc(uint8_t dlc)
+	{
+		m_dlc = dlc;
+	}
+
+	uint8_t get_can_dlc() const
+	{
+		return m_dlc;
+	}
+
 protected:
 
 	uint8_t m_dlc;
@@ -23,7 +33,7 @@ public:
 	void from_len(uint8_t len);
 
 	CAN_dlc to_can_dlc() const;
-	void from_can_dlc(CAN_dlc dlc);
+	void from_can_dlc(const CAN_dlc& dlc);
 
 protected:
 
