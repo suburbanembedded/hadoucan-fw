@@ -129,10 +129,7 @@ bool STM32_fdcan_rx::append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std
 	{
 		std::array<char, 3+1> id;
 
-		if(!Byte_util::nibble_to_hex(Byte_util::get_b1(x), id.data() + 0))
-		{
-			return false;
-		}
+		Byte_util::nibble_to_hex(Byte_util::get_b1(x), id.data() + 0);
 		Byte_util::u8_to_hex(Byte_util::get_b0(x), id.data() + 1);
 		id.back() = '\0';
 
