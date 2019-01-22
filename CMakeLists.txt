@@ -113,7 +113,8 @@ add_executable(canusbfdiso
 	#src/msg/sm-1301_rpc.c
 	#src/msg/xer.c
 
-	src/lawicel/can_dlc.cpp
+	src/lawicel/CAN_DLC.cpp
+	src/lawicel/STM32_FDCAN_DLC.cpp
 	src/lawicel/Lawicel_parser.cpp
 	src/lawicel/Lawicel_parser_stm32.cpp
 

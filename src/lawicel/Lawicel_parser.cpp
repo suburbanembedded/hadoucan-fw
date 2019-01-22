@@ -1,5 +1,7 @@
 #include "Lawicel_parser.hpp"
 
+#include "CAN_DLC.hpp"
+
 #include <array>
 #include <algorithm>
 
@@ -70,19 +72,18 @@ bool Lawicel_parser::parse_std_dlc(const char* dlc_str, uint8_t* const dlc)
 		return false;
 	}
 
-	unsigned int temp_dlc = 0;
-	const int ret = sscanf(dlc_str, "%u", &temp_dlc);
-	if(ret != 1)
+	CAN_DLC can_dlc;
+	if(!can_dlc.from_ascii(dlc_str[0]))
+	{
+		return false;	
+	}
+
+	if(can_dlc.get_can_dlc() > 8)
 	{
 		return false;
 	}
 
-	if(temp_dlc > 8)
-	{
-		return false;
-	}
-
-	*dlc = temp_dlc;
+	*dlc = can_dlc.get_can_dlc();
 
 	return true;
 }
@@ -116,7 +117,26 @@ bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t dlc, std
 
 bool Lawicel_parser::parse_fd_dlc(const char* dlc_str, uint8_t* const dlc)
 {
-	return parse_std_dlc(dlc_str, dlc);
+	const size_t dlc_str_len = strnlen(dlc_str, 1);
+	if(dlc_str_len < 1)
+	{
+		return false;
+	}
+
+	CAN_DLC can_dlc;
+	if(!can_dlc.from_ascii(dlc_str[0]))
+	{
+		return false;
+	}
+
+	if(can_dlc.get_can_dlc() > 64)
+	{
+		return false;
+	}
+
+	*dlc = can_dlc.get_can_dlc();
+
+	return true;
 }
 bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t dlc, std::array<uint8_t, 64>* const data)
 {
@@ -1116,7 +1136,7 @@ bool Lawicel_parser::handle_poll_all()
 		}
 	};
 
-	return true;
+	return success;
 }
 
 bool Lawicel_parser::handle_auto_poll(const bool enable)
