@@ -108,52 +108,52 @@ bool CAN_DLC::from_ascii(char c)
 	switch(c)
 	{
 		case '0':
-			m_dlc = 0;
+			m_dlc = 0x00;
 			break;
 		case '1': 
-			m_dlc = 1;
+			m_dlc = 0x01;
 			break;
 		case '2': 
-			m_dlc = 2;
+			m_dlc = 0x02;
 			break;
 		case '3':
-			m_dlc = 3;
+			m_dlc = 0x03;
 			break;
 		case '4':
-			m_dlc = 4;
+			m_dlc = 0x04;
 			break;
 		case '5':
-			m_dlc = 5;
+			m_dlc = 0x05;
 			break;
 		case '6':
-			m_dlc = 6;
+			m_dlc = 0x06;
 			break;
 		case '7':
-			m_dlc = 7;
+			m_dlc = 0x07;
 			break;
 		case '8':
-			m_dlc = 8;
+			m_dlc = 0x08;
 			break;
 		case '9':
-			m_dlc = 12;
+			m_dlc = 0x09;
 			break;
 		case 'A':
-			m_dlc = 16;
+			m_dlc = 0x0A;
 			break;
 		case 'B':
-			m_dlc = 20;
+			m_dlc = 0x0B;
 			break;
 		case 'C':
-			m_dlc = 24;
+			m_dlc = 0x0C;
 			break;
 		case 'D':
-			m_dlc = 32;
+			m_dlc = 0x0D;
 			break;
 		case 'E':
-			m_dlc = 48;
+			m_dlc = 0x0E;
 			break;
 		case 'F':
-			m_dlc = 64;
+			m_dlc = 0x0F;
 			break;
 		default:
 			return false;

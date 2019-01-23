@@ -4,6 +4,8 @@
 
 #include "common_util/Byte_util.hpp"
 
+#include "uart1_printf.hpp"
+
 #include <array>
 #include <algorithm>
 
@@ -66,16 +68,10 @@ bool Lawicel_parser::parse_ext_id(const char* in_str, uint32_t* const id)
 	return true;
 }
 
-bool Lawicel_parser::parse_std_dlc(const char* dlc_str, uint8_t* const data_len)
+bool Lawicel_parser::parse_std_dlc(const char dlc_char, uint8_t* const data_len)
 {
-	const size_t dlc_str_len = strnlen(dlc_str, 1);
-	if(dlc_str_len < 1)
-	{
-		return false;
-	}
-
 	CAN_DLC can_dlc;
-	if(!can_dlc.from_ascii(dlc_str[0]))
+	if(!can_dlc.from_ascii(dlc_char))
 	{
 		return false;	
 	}
@@ -117,16 +113,10 @@ bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t data_len
 	return true;
 }
 
-bool Lawicel_parser::parse_fd_dlc(const char* dlc_str, uint8_t* const data_len)
+bool Lawicel_parser::parse_fd_dlc(const char dlc_char, uint8_t* const data_len)
 {
-	const size_t dlc_str_len = strnlen(dlc_str, 1);
-	if(dlc_str_len < 1)
-	{
-		return false;
-	}
-
 	CAN_DLC can_dlc;
-	if(!can_dlc.from_ascii(dlc_str[0]))
+	if(!can_dlc.from_ascii(dlc_char))
 	{
 		return false;
 	}
@@ -165,7 +155,7 @@ bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t data_len,
 		(*data)[i] = d;
 	}
 
-	return false;
+	return true;
 }
 
 bool Lawicel_parser::parse_string(const char* in_str)
@@ -290,6 +280,8 @@ bool Lawicel_parser::parse_string(const char* in_str)
 		}
 		default:
 		{
+			uart1_log<128>(LOG_LEVEL::WARN, "Lawicel_parser::parse_string", "no handler for %c", in_str[0]);
+
 			ret = false;
 			break;
 		}
@@ -490,17 +482,11 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 	}
 
 	uint8_t data_len = 0;
-{
-	std::array<char, 2> dlc_str;
-	dlc_str.fill(0);
-	std::copy_n(in_str+4, 1, dlc_str.data());
-
-	if(!parse_std_dlc(dlc_str.data(), &data_len))
+	if(!parse_std_dlc(in_str[4], &data_len))
 	{
 		write_bell();
 		return false;
 	}
-}
 
 	//verify len
 	if(in_str_len != (1U+3U+1U+2U*data_len+1U))
@@ -572,17 +558,11 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 	}
 
 	uint8_t data_len = 0;
-{
-	std::array<char, 2> dlc_str;
-	dlc_str.fill(0);
-	std::copy_n(in_str+9, 1, dlc_str.data());
-
-	if(!parse_std_dlc(dlc_str.data(), &data_len))
+	if(!parse_std_dlc(in_str[9], &data_len))
 	{
 		write_bell();
 		return false;
 	}
-}
 
 	//verify len
 	if(in_str_len != (1U+8U+1U+2U*data_len+1U))
@@ -654,17 +634,11 @@ bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 	}
 
 	uint8_t data_len = 0;
-{
-	std::array<char, 2> dlc_str;
-	dlc_str.fill(0);
-	std::copy_n(in_str+4, 1, dlc_str.data());
-
-	if(!parse_std_dlc(dlc_str.data(), &data_len))
+	if(!parse_std_dlc(in_str[4], &data_len))
 	{
 		write_bell();
 		return false;
 	}
-}
 
 	if(!handle_tx_rtr_std(id, data_len))
 	{
@@ -722,17 +696,11 @@ bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 	}
 
 	uint8_t data_len = 0;
-{
-	std::array<char, 2> dlc_str;
-	dlc_str.fill(0);
-	std::copy_n(in_str+9, 1, dlc_str.data());
-
-	if(!parse_std_dlc(dlc_str.data(), &data_len))
+	if(!parse_std_dlc(in_str[9], &data_len))
 	{
 		write_bell();
 		return false;
 	}
-}
 
 	if(!handle_tx_rtr_ext(id, data_len))
 	{
@@ -767,21 +735,21 @@ bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 
 bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 {
-	return false;
-	
 	//diiil\r
-
 	const size_t in_str_len = strlen(in_str);
 
-	//riiil\r
 	if(in_str_len < 6)
 	{
+		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "in_str_len < 6  failed");
+
 		write_bell();
 		return false;
 	}
 	
 	if(in_str[0] != 'd')
 	{
+		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "in_str[0] != 'd'  failed");
+
 		write_bell();
 		return false;
 	}
@@ -789,28 +757,28 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 	uint32_t id = 0;
 	if(!parse_std_id(in_str, &id))
 	{
+		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "parse_std_id failed");
+
 		write_bell();
 		return false;
 	}
 
-
+	//diiil
 	uint8_t data_len = 0;
-{
-	//tiiil
-	std::array<char, 2> dlc_str;
-	dlc_str.fill(0);
-	std::copy_n(in_str+4, 1, dlc_str.data());
-
-	if(!parse_fd_dlc(dlc_str.data(), &data_len))
+	if(!parse_fd_dlc(in_str[4], &data_len))
 	{
+		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "parse_fd_dlc failed");
+
 		write_bell();
 		return false;
 	}
-}
 
 	//verify len
-	if(in_str_len != (1U+3U+1U+2U*data_len+1U))
+	const size_t expected_len = 1U+3U+1U+2U*data_len+1U;
+	if(in_str_len != expected_len)
 	{
+		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "len verify failed, expected %u, got %u", expected_len, in_str_len);
+
 		write_bell();
 		return false;
 	}
@@ -818,12 +786,16 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 	std::array<uint8_t, 64> data;
 	if(!parse_fd_data(in_str+5, data_len, &data))
 	{
+		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "parse_fd_data failed");
+
 		write_bell();
 		return false;
 	}
 
 	if(!handle_tx_fd_std(id, data_len, data.data()))
 	{
+		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "handle_tx_fd_std failed");
+
 		write_bell();
 		return false;
 	}
@@ -845,6 +817,8 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 		}
 		default:
 		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_tx_fd_std", "m_poll_mode invalid");
+
 			write_bell();
 			success = false;
 			break;

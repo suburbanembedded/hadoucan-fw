@@ -114,10 +114,10 @@ class Lawicel_parser
 	bool parse_std_id(const char* in_str, uint32_t* const id);
 	bool parse_ext_id(const char* in_str, uint32_t* const id);
 
-	bool parse_std_dlc(const char* dlc_str, uint8_t* const data_len);
+	bool parse_std_dlc(const char dlc_char, uint8_t* const data_len);
 	bool parse_std_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 8>* const data);
 
-	bool parse_fd_dlc(const char* dlc_str, uint8_t* const data_len);
+	bool parse_fd_dlc(const char dlc_char, uint8_t* const data_len);
 	bool parse_fd_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 64>* const data);
 
 	bool write_bell();

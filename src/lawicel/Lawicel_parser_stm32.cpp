@@ -41,7 +41,7 @@ bool Lawicel_parser_stm32::handle_tx_rtr_ext(const uint32_t id, const uint8_t da
 }
 bool Lawicel_parser_stm32::handle_tx_fd_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
-	return false;
+	return m_fdcan->tx_fd_std(id, data_len, data);
 }
 bool Lawicel_parser_stm32::handle_tx_fd_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {

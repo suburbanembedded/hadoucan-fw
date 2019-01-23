@@ -15,7 +15,8 @@ bool STM32_fdcan_tx::init()
 	*m_fdcan_handle = FDCAN_HandleTypeDef();
 
 	m_fdcan_handle->Instance = m_fdcan;
-	m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+	// m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+	m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
 	m_fdcan_handle->Init.Mode = FDCAN_MODE_NORMAL;
 	m_fdcan_handle->Init.AutoRetransmission = ENABLE;
 	m_fdcan_handle->Init.TransmitPause = DISABLE;

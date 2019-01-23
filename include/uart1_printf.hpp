@@ -57,7 +57,7 @@ const char* LOG_LEVEL_to_str(const LOG_LEVEL level);
 template<size_t LEN>
 bool uart1_log(const LOG_LEVEL level, const char* module_name, const char* fmt, ...)
 {
-	if(level > LOG_LEVEL::INFO)
+	if(level > LOG_LEVEL::DEBUG)
 	{
 		return true;
 	}
