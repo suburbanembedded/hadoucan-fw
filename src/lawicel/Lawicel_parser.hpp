@@ -51,16 +51,15 @@ class Lawicel_parser
 	virtual bool handle_open_listen() = 0;
 	virtual bool handle_close() = 0;
 	
-	virtual bool handle_tx_std(const uint32_t id, const uint8_t dlc, const uint8_t* data) = 0;
-	virtual bool handle_tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data) = 0;
+	virtual bool handle_tx_std(const uint32_t id, const uint8_t data_len, const uint8_t* data) = 0;
+	virtual bool handle_tx_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data) = 0;
+	virtual bool handle_tx_rtr_std(const uint32_t id, const uint8_t data_len) = 0;
+	virtual bool handle_tx_rtr_ext(const uint32_t id, const uint8_t data_len) = 0;
 	
-	virtual bool handle_tx_rtr_std(const uint32_t id, const uint8_t dlc) = 0;
-	virtual bool handle_tx_rtr_ext(const uint32_t id, const uint8_t dlc) = 0;
-	
-	virtual bool handle_tx_fd_std(const uint32_t id, const uint8_t dlc, const uint8_t* data) = 0;
-	virtual bool handle_tx_fd_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data) = 0;
-	virtual bool handle_tx_fd_rtr_std(const uint32_t id, const uint8_t dlc) = 0;
-	virtual bool handle_tx_fd_rtr_ext(const uint32_t id, const uint8_t dlc) = 0;
+	virtual bool handle_tx_fd_std(const uint32_t id, const uint8_t data_len, const uint8_t* data) = 0;
+	virtual bool handle_tx_fd_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data) = 0;
+	virtual bool handle_tx_fd_rtr_std(const uint32_t id, const uint8_t data_len) = 0;
+	virtual bool handle_tx_fd_rtr_ext(const uint32_t id, const uint8_t data_len) = 0;
 
 	virtual bool handle_get_flags() = 0;
 	
@@ -115,11 +114,11 @@ class Lawicel_parser
 	bool parse_std_id(const char* in_str, uint32_t* const id);
 	bool parse_ext_id(const char* in_str, uint32_t* const id);
 
-	bool parse_std_dlc(const char* dlc_str, uint8_t* const dlc);
-	bool parse_std_data(const char* data_str, const uint8_t dlc, std::array<uint8_t, 8>* const data);
+	bool parse_std_dlc(const char* dlc_str, uint8_t* const data_len);
+	bool parse_std_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 8>* const data);
 
-	bool parse_fd_dlc(const char* dlc_str, uint8_t* const dlc);
-	bool parse_fd_data(const char* data_str, const uint8_t dlc, std::array<uint8_t, 64>* const data);
+	bool parse_fd_dlc(const char* dlc_str, uint8_t* const data_len);
+	bool parse_fd_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 64>* const data);
 
 	bool write_bell();
 	bool write_cr();

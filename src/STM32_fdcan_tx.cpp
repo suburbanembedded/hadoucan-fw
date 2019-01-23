@@ -1,98 +1,12 @@
 #include "STM32_fdcan_tx.hpp"
 
+#include "lawicel/STM32_FDCAN_DLC.hpp"
+
 #include "uart1_printf.hpp"
 
 #include <array>
 #include <algorithm>
 #include <stdexcept>
-
-namespace
-{
-uint32_t get_stm32_dlc_from_dlc(const uint8_t dlc)
-{
-	switch(dlc)
-	{
-		case 0x0:
-			return FDCAN_DLC_BYTES_0;
-		case 0x1: 
-			return FDCAN_DLC_BYTES_1;
-		case 0x2: 
-			return FDCAN_DLC_BYTES_2;
-		case 0x3:
-			return FDCAN_DLC_BYTES_3;
-		case 0x4:
-			return FDCAN_DLC_BYTES_4;
-		case 0x5:
-			return FDCAN_DLC_BYTES_5;
-		case 0x6:
-			return FDCAN_DLC_BYTES_6;
-		case 0x7:
-			return FDCAN_DLC_BYTES_7;
-		case 0x8:
-			return FDCAN_DLC_BYTES_8;
-		case 0x9:
-			return FDCAN_DLC_BYTES_12;
-		case 0xA:
-			return FDCAN_DLC_BYTES_16;
-		case 0xB:
-			return FDCAN_DLC_BYTES_20;
-		case 0xC:
-			return FDCAN_DLC_BYTES_24;
-		case 0xD:
-			return FDCAN_DLC_BYTES_32;
-		case 0xE:
-			return FDCAN_DLC_BYTES_48;
-		case 0xF:
-			return FDCAN_DLC_BYTES_64;
-		default:
-			throw std::domain_error("dlc not in bounds");
-	}
-
-	throw std::domain_error("dlc not in bounds");
-}
-uint32_t get_size_from_dlc(const uint8_t dlc)
-{
-	switch(dlc)
-	{
-		case 0x0:
-			return 0;
-		case 0x1: 
-			return 1;
-		case 0x2: 
-			return 2;
-		case 0x3:
-			return 3;
-		case 0x4:
-			return 4;
-		case 0x5:
-			return 5;
-		case 0x6:
-			return 6;
-		case 0x7:
-			return 7;
-		case 0x8:
-			return 8;
-		case 0x9:
-			return 12;
-		case 0xA:
-			return 16;
-		case 0xB:
-			return 20;
-		case 0xC:
-			return 24;
-		case 0xD:
-			return 32;
-		case 0xE:
-			return 48;
-		case 0xF:
-			return 64;
-		default:
-			throw std::domain_error("dlc not in bounds");
-	}
-
-	throw std::domain_error("dlc not in bounds");
-}
-}
 
 bool STM32_fdcan_tx::init()
 {
@@ -460,11 +374,17 @@ bool STM32_fdcan_tx::close()
 	return true;
 }
 
-bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
 	if(!m_is_open)
 	{
 		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_std", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
 		return false;
 	}
 
@@ -473,7 +393,7 @@ bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t dlc, const uint8_t*
 	tx_head.Identifier = id;
 	tx_head.IdType = FDCAN_STANDARD_ID;
 	tx_head.TxFrameType = FDCAN_DATA_FRAME;
-	tx_head.DataLength = get_stm32_dlc_from_dlc(dlc);
+	tx_head.DataLength = dlc.get_fdcan_dlc();
 	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_CLASSIC_CAN;
@@ -481,16 +401,22 @@ bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t dlc, const uint8_t*
 	tx_head.MessageMarker = 0;
 
 	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, get_size_from_dlc(dlc), out_data.begin());
+	std::copy_n(data, data_len, out_data.begin());
 
 	return send_packet(tx_head, out_data.data());
 }
 
-bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
 	if(!m_is_open)
 	{
 		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_ext", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
 		return false;
 	}
 
@@ -499,7 +425,7 @@ bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t*
 	tx_head.Identifier = id;
 	tx_head.IdType = FDCAN_EXTENDED_ID;
 	tx_head.TxFrameType = FDCAN_DATA_FRAME;
-	tx_head.DataLength = get_stm32_dlc_from_dlc(dlc);
+	tx_head.DataLength = dlc.get_fdcan_dlc();
 	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_CLASSIC_CAN;
@@ -507,16 +433,22 @@ bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t*
 	tx_head.MessageMarker = 0;
 
 	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, get_size_from_dlc(dlc), out_data.begin());
+	std::copy_n(data, data_len, out_data.begin());
 
 	return send_packet(tx_head, out_data.data());
 }
 
-bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t dlc)
+bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t data_len)
 {
 	if(!m_is_open)
 	{
 		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_std_rtr", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
 		return false;
 	}
 
@@ -525,7 +457,7 @@ bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t dlc)
 	tx_head.Identifier = id;
 	tx_head.IdType = FDCAN_STANDARD_ID;
 	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
-	tx_head.DataLength = get_stm32_dlc_from_dlc(dlc);
+	tx_head.DataLength = dlc.get_fdcan_dlc();
 	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_CLASSIC_CAN;
@@ -534,11 +466,17 @@ bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t dlc)
 
 	return send_packet(tx_head, nullptr);
 }
-bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t dlc)
+bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t data_len)
 {
 	if(!m_is_open)
 	{
 		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_ext_rtr", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
 		return false;
 	}
 
@@ -547,7 +485,7 @@ bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t dlc)
 	tx_head.Identifier = id;
 	tx_head.IdType = FDCAN_EXTENDED_ID;
 	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
-	tx_head.DataLength = get_stm32_dlc_from_dlc(dlc);
+	tx_head.DataLength = dlc.get_fdcan_dlc();
 	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_CLASSIC_CAN;

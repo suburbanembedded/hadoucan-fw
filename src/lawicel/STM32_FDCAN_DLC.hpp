@@ -17,6 +17,11 @@ public:
 	CAN_DLC to_can_dlc() const;
 	bool from_can_dlc(const CAN_DLC& dlc);
 
+	uint32_t get_fdcan_dlc()
+	{
+		return m_dlc;
+	}
+
 protected:
 
 	uint32_t m_dlc;
