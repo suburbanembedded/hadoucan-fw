@@ -15,6 +15,34 @@ class Lawicel_parser
 
 	typedef std::function<bool (const char* str)> WriteStringCallback;
 
+	enum class CAN_NOM_BPS
+	{
+		bps_10k  = 0,
+		bps_20k  = 1,
+		bps_50k  = 2,
+		bps_100k = 3,
+		bps_125k = 4,
+		bps_250k = 5,
+		bps_500k = 6,
+		bps_800k = 7,
+		bps_1M   = 8
+	};
+
+	enum class CAN_BRS_BPS
+	{
+		bps_NO_CHANGE,
+		bps_2M,
+		bps_4M,
+		bps_8M,
+		bps_12M
+	};
+
+	enum class POLL_MODE
+	{
+		MANUAL,
+		AUTO
+	};
+
 	Lawicel_parser()
 	{
 		m_write_str_func = nullptr;
@@ -44,7 +72,7 @@ class Lawicel_parser
 
 	bool parse_string(const char* in_str);
 
-	virtual bool handle_std_baud(const uint8_t baud) = 0;
+	virtual bool handle_std_baud(const CAN_NOM_BPS baud) = 0;
 	virtual bool handle_cust_baud(const uint8_t b0, const uint8_t b1) = 0;
 	
 	virtual bool handle_open() = 0;
@@ -122,33 +150,6 @@ class Lawicel_parser
 
 	bool write_bell();
 	bool write_cr();
-
-	enum class STD_BIT_RATE
-	{
-		NO_BRS_10,
-		NO_BRS_20,
-		NO_BRS_50,
-		NO_BRS_100,
-		NO_BRS_125,
-		NO_BRS_250,
-		NO_BRS_500,
-		NO_BRS_800,
-		NO_BRS_1M
-	};
-
-	enum class FD_BRS_BIT_RATE
-	{
-		BRS_2M,
-		BRS_4M,
-		BRS_8M,
-		BRS_12M
-	};
-
-	enum class POLL_MODE
-	{
-		MANUAL,
-		AUTO
-	};
 
 	WriteStringCallback m_write_str_func;
 

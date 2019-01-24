@@ -324,12 +324,14 @@ bool Lawicel_parser::parse_std_baud(const char* in_str)
 
 	if(baud > 8)
 	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_std_baud", "invalid baud %u", baud);
 		write_bell();
 		return false;
 	}
 
-	if(!handle_std_baud(baud))
+	if(!handle_std_baud(CAN_NOM_BPS(baud)))
 	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_std_baud", "handle_std_baud failed");
 		write_bell();
 		return false;
 	}

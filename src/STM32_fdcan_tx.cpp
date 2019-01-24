@@ -12,8 +12,6 @@ bool STM32_fdcan_tx::init()
 {
 	HAL_StatusTypeDef ret = HAL_OK;
 
-	*m_fdcan_handle = FDCAN_HandleTypeDef();
-
 	m_fdcan_handle->Instance = m_fdcan;
 	// m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_CLASSIC;
 	// m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
@@ -23,9 +21,12 @@ bool STM32_fdcan_tx::init()
 	m_fdcan_handle->Init.TransmitPause = DISABLE;
 	m_fdcan_handle->Init.ProtocolException = ENABLE;
 
-	if(!set_baud(STD_BAUD::B125000, m_fdcan_handle))
+	if(!m_baud_is_set)
 	{
-		return false;
+		if(!set_baud(STD_BAUD::B125000, m_fdcan_handle))
+		{
+			return false;
+		}
 	}
 
 	m_fdcan_handle->Init.MessageRAMOffset = 0;//0 - 2560
@@ -138,6 +139,12 @@ bool STM32_fdcan_tx::init()
 	}
 
 	return true;
+}
+
+bool STM32_fdcan_tx::set_baud(const STD_BAUD baud)
+{
+	m_baud_is_set = true;
+	return set_baud(baud, m_fdcan_handle);
 }
 
 bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const handle)
@@ -257,6 +264,12 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const ha
 	}
 
 	return true;
+}
+
+bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud)
+{
+	m_baud_is_set = true;
+	return set_baud(std_baud, fd_baud, m_fdcan_handle);
 }
 bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FDCAN_HandleTypeDef* const handle)
 {
@@ -561,11 +574,59 @@ bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const uint8_t data_len, const 
 }
 bool STM32_fdcan_tx::tx_fd_rtr_std(const uint32_t id, const uint8_t data_len)
 {
-	return false;
+	if(!m_is_open)
+	{
+		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_rtr_std", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
+		return false;
+	}
+
+	FDCAN_TxHeaderTypeDef tx_head;
+
+	tx_head.Identifier = id;
+	tx_head.IdType = FDCAN_STANDARD_ID;
+	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
+	tx_head.DataLength = dlc.get_fdcan_dlc();
+	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
+	tx_head.FDFormat = FDCAN_FD_CAN;
+	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	tx_head.MessageMarker = 0;
+
+	return send_packet(tx_head, nullptr);
 }
 bool STM32_fdcan_tx::tx_fd_rtr_ext(const uint32_t id, const uint8_t data_len)
 {
-	return false;
+	if(!m_is_open)
+	{
+		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_rtr_ext", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
+		return false;
+	}
+
+	FDCAN_TxHeaderTypeDef tx_head;
+
+	tx_head.Identifier = id;
+	tx_head.IdType = FDCAN_EXTENDED_ID;
+	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
+	tx_head.DataLength = dlc.get_fdcan_dlc();
+	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
+	tx_head.FDFormat = FDCAN_FD_CAN;
+	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	tx_head.MessageMarker = 0;
+
+	return send_packet(tx_head, nullptr);
 }
 
 bool STM32_fdcan_tx::send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data)

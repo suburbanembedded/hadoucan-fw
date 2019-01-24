@@ -3,9 +3,68 @@
 #include <algorithm>
 #include <stdexcept>
 
-bool Lawicel_parser_stm32::handle_std_baud(const uint8_t baud)
+bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
 {
-	return false;
+	STM32_fdcan_tx::STD_BAUD stm32_baud;
+	switch(baud)
+	{
+		case CAN_NOM_BPS::bps_10k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B10000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_20k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B20000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_50k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B50000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_100k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B100000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_125k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B125000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_250k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B250000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_500k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B500000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_800k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B800000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_1M:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B1000000;
+			break;
+		}
+		default:
+		{
+			return false;
+		}
+	}
+	
+	if(!m_fdcan->set_baud(stm32_baud))
+	{
+		return false;
+	}
+
+	return true;
 }
 bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t b0, const uint8_t b1)
 {
@@ -45,15 +104,15 @@ bool Lawicel_parser_stm32::handle_tx_fd_std(const uint32_t id, const uint8_t dat
 }
 bool Lawicel_parser_stm32::handle_tx_fd_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
-	return false;
+	return m_fdcan->tx_fd_ext(id, data_len, data);
 }
 bool Lawicel_parser_stm32::handle_tx_fd_rtr_std(const uint32_t id, const uint8_t data_len)
 {
-	return false;
+	return m_fdcan->tx_fd_rtr_std(id, data_len);
 }
 bool Lawicel_parser_stm32::handle_tx_fd_rtr_ext(const uint32_t id, const uint8_t data_len)
 {
-	return false;
+	return m_fdcan->tx_fd_rtr_ext(id, data_len);
 }
 bool Lawicel_parser_stm32::handle_get_flags()
 {

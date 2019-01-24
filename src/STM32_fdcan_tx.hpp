@@ -8,9 +8,10 @@ class STM32_fdcan_tx
 public:
 
 	STM32_fdcan_tx()
-	{
+	{		
 		m_is_open = false;
 		m_fdcan = nullptr;
+		m_baud_is_set = false;
 	}
 
 	void set_can_instance(FDCAN_GlobalTypeDef* can)
@@ -41,11 +42,13 @@ public:
 	enum class STD_BAUD
 	{
 		B10000,
+		B20000,
 		B50000,
 		B100000,
 		B125000,
 		B250000,
 		B500000,
+		B800000,
 		B1000000,
 	};
 
@@ -58,12 +61,15 @@ public:
 		B12000000
 	};
 
+	bool set_baud(const STD_BAUD baud);
 	static bool set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const handle);
+	bool set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud);
 	static bool set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FDCAN_HandleTypeDef* const handle);
 
 protected:
 
 	bool m_is_open;
+	bool m_baud_is_set;
 
 	bool send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data);
 
