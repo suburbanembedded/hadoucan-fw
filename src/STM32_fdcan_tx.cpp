@@ -12,6 +12,9 @@ bool STM32_fdcan_tx::init()
 {
 	HAL_StatusTypeDef ret = HAL_OK;
 
+	//TODO: store the baud rate and always reconfigure it here
+	// m_fdcan_handle = FDCAN_HandleTypeDef();
+
 	m_fdcan_handle->Instance = m_fdcan;
 	// m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_CLASSIC;
 	// m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
@@ -21,12 +24,13 @@ bool STM32_fdcan_tx::init()
 	m_fdcan_handle->Init.TransmitPause = DISABLE;
 	m_fdcan_handle->Init.ProtocolException = ENABLE;
 
-	if(!m_baud_is_set)
+	m_std_baud = STD_BAUD::B125000;
+	m_fd_brs_baud = FD_BAUD::B2000000;
+	// m_std_baud =    STD_BAUD::B1000000;
+	// m_fd_brs_baud = FD_BAUD::B12000000;
+	if(!set_baud(m_std_baud, m_fd_brs_baud, m_fdcan_handle))
 	{
-		if(!set_baud(STD_BAUD::B125000, m_fdcan_handle))
-		{
-			return false;
-		}
+		return false;
 	}
 
 	m_fdcan_handle->Init.MessageRAMOffset = 0;//0 - 2560
@@ -54,6 +58,24 @@ bool STM32_fdcan_tx::init()
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_Init failed");
 		return false;
 	}
+
+/*
+	ret = HAL_FDCAN_ConfigTxDelayCompensation(m_fdcan_handle, 9, 4);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTxDelayCompensation failed");
+		return false;
+	}
+	ret = HAL_FDCAN_EnableTxDelayCompensation(m_fdcan_handle);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTxDelayCompensation failed");
+		return false;
+	}
+*/
+	
+	FDCAN_ErrorCountersTypeDef error_counters;
+	const HAL_StatusTypeDef errcnt_ret = HAL_FDCAN_GetErrorCounters(m_fdcan_handle, &error_counters);
 
 	// Configure Rx Std filter
 	FDCAN_FilterTypeDef sFilter0;
@@ -319,7 +341,7 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FD
 		case FD_BAUD::B12000000:
 		{
 			handle->Init.DataPrescaler = 1;//1-32
-			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataSyncJumpWidth = 2;//1-16
 			handle->Init.DataTimeSeg1 = 8;//1-32
 			handle->Init.DataTimeSeg2 = 1;//1-16
 
@@ -510,7 +532,7 @@ bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t data_len)
 	return send_packet(tx_head, nullptr);
 }
 
-bool STM32_fdcan_tx::tx_fd_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
+bool STM32_fdcan_tx::tx_fd_std(const uint32_t id, const bool brs, const bool esi, const uint8_t data_len, const uint8_t* data)
 {
 	if(!m_is_open)
 	{
@@ -530,8 +552,8 @@ bool STM32_fdcan_tx::tx_fd_std(const uint32_t id, const uint8_t data_len, const 
 	tx_head.IdType = FDCAN_STANDARD_ID;
 	tx_head.TxFrameType = FDCAN_DATA_FRAME;
 	tx_head.DataLength = dlc.get_fdcan_dlc();
-	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
+	tx_head.ErrorStateIndicator = (esi) ? FDCAN_ESI_ACTIVE : FDCAN_ESI_PASSIVE;
+	tx_head.BitRateSwitch = (brs) ? FDCAN_BRS_ON : FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_FD_CAN;
 	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	tx_head.MessageMarker = 0;
@@ -541,7 +563,7 @@ bool STM32_fdcan_tx::tx_fd_std(const uint32_t id, const uint8_t data_len, const 
 
 	return send_packet(tx_head, out_data.data());
 }
-bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
+bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const bool brs, const bool esi, const uint8_t data_len, const uint8_t* data)
 {
 	if(!m_is_open)
 	{
@@ -561,8 +583,8 @@ bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const uint8_t data_len, const 
 	tx_head.IdType = FDCAN_EXTENDED_ID;
 	tx_head.TxFrameType = FDCAN_DATA_FRAME;
 	tx_head.DataLength = dlc.get_fdcan_dlc();
-	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
+	tx_head.ErrorStateIndicator = (esi) ? FDCAN_ESI_ACTIVE : FDCAN_ESI_PASSIVE;
+	tx_head.BitRateSwitch = (brs) ? FDCAN_BRS_ON : FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_FD_CAN;
 	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	tx_head.MessageMarker = 0;
@@ -572,7 +594,7 @@ bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const uint8_t data_len, const 
 
 	return send_packet(tx_head, out_data.data());
 }
-bool STM32_fdcan_tx::tx_fd_rtr_std(const uint32_t id, const uint8_t data_len)
+bool STM32_fdcan_tx::tx_fd_rtr_std(const uint32_t id, const bool esi, const uint8_t data_len)
 {
 	if(!m_is_open)
 	{
@@ -592,7 +614,7 @@ bool STM32_fdcan_tx::tx_fd_rtr_std(const uint32_t id, const uint8_t data_len)
 	tx_head.IdType = FDCAN_STANDARD_ID;
 	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
 	tx_head.DataLength = dlc.get_fdcan_dlc();
-	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	tx_head.ErrorStateIndicator = (esi) ? FDCAN_ESI_ACTIVE : FDCAN_ESI_PASSIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_FD_CAN;
 	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
@@ -600,7 +622,7 @@ bool STM32_fdcan_tx::tx_fd_rtr_std(const uint32_t id, const uint8_t data_len)
 
 	return send_packet(tx_head, nullptr);
 }
-bool STM32_fdcan_tx::tx_fd_rtr_ext(const uint32_t id, const uint8_t data_len)
+bool STM32_fdcan_tx::tx_fd_rtr_ext(const uint32_t id, const bool esi, const uint8_t data_len)
 {
 	if(!m_is_open)
 	{
@@ -620,7 +642,7 @@ bool STM32_fdcan_tx::tx_fd_rtr_ext(const uint32_t id, const uint8_t data_len)
 	tx_head.IdType = FDCAN_EXTENDED_ID;
 	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
 	tx_head.DataLength = dlc.get_fdcan_dlc();
-	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	tx_head.ErrorStateIndicator = (esi) ? FDCAN_ESI_ACTIVE : FDCAN_ESI_PASSIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_FD_CAN;
 	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;

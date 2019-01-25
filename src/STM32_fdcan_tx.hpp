@@ -11,7 +11,8 @@ public:
 	{		
 		m_is_open = false;
 		m_fdcan = nullptr;
-		m_baud_is_set = false;
+		m_std_baud = STD_BAUD::B125000;
+		m_fd_brs_baud = FD_BAUD::B4000000;
 	}
 
 	void set_can_instance(FDCAN_GlobalTypeDef* can)
@@ -34,10 +35,10 @@ public:
 	bool tx_std_rtr(const uint32_t id, const uint8_t data_len);
 	bool tx_ext_rtr(const uint32_t id, const uint8_t data_len);
 
-	bool tx_fd_std(const uint32_t id, const uint8_t data_len, const uint8_t* data);
-	bool tx_fd_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data);
-	bool tx_fd_rtr_std(const uint32_t id, const uint8_t data_len);
-	bool tx_fd_rtr_ext(const uint32_t id, const uint8_t data_len);
+	bool tx_fd_std(const uint32_t id, const bool brs, const bool esi, const uint8_t data_len, const uint8_t* data);
+	bool tx_fd_ext(const uint32_t id, const bool brs, const bool esi, const uint8_t data_len, const uint8_t* data);
+	bool tx_fd_rtr_std(const uint32_t id, const bool esi, const uint8_t data_len);
+	bool tx_fd_rtr_ext(const uint32_t id, const bool esi, const uint8_t data_len);
 
 	enum class STD_BAUD
 	{
@@ -70,6 +71,9 @@ protected:
 
 	bool m_is_open;
 	bool m_baud_is_set;
+
+	STD_BAUD m_std_baud;
+	FD_BAUD m_fd_brs_baud;
 
 	bool send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data);
 
