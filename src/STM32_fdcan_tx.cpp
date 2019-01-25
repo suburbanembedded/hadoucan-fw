@@ -60,6 +60,12 @@ bool STM32_fdcan_tx::init()
 	}
 
 /*
+	//units of mtq, ie kernel clock - 120MHz -> 8.3333ns
+	//ADM3055E - TXD->BUS R->D 35 - 60ns
+	//ADM3055E - TXD->BUS D->E 46 - 70ns
+	//ADM3055E - TXD->RXD Falling 150ns full, 300ns slope ctrl
+	//ADM3055E - TXD->RXD Rising 150ns full, 300ns slope ctrl
+	//150ns is 18 mtq
 	ret = HAL_FDCAN_ConfigTxDelayCompensation(m_fdcan_handle, 9, 4);
 	if(ret != HAL_OK)
 	{
@@ -73,7 +79,7 @@ bool STM32_fdcan_tx::init()
 		return false;
 	}
 */
-	
+
 	FDCAN_ErrorCountersTypeDef error_counters;
 	const HAL_StatusTypeDef errcnt_ret = HAL_FDCAN_GetErrorCounters(m_fdcan_handle, &error_counters);
 
@@ -306,7 +312,7 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FD
 		case FD_BAUD::B1000000:
 		{
 			handle->Init.DataPrescaler = 5;//1-32
-			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataSyncJumpWidth = 4;//1-16
 			handle->Init.DataTimeSeg1 = 20;//1-32
 			handle->Init.DataTimeSeg2 = 3;//1-16
 
@@ -315,7 +321,7 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FD
 		case FD_BAUD::B2000000:
 		{
 			handle->Init.DataPrescaler = 2;//1-32
-			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataSyncJumpWidth = 4;//1-16
 			handle->Init.DataTimeSeg1 = 25;//1-32
 			handle->Init.DataTimeSeg2 = 4;//1-16
 
@@ -324,7 +330,7 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FD
 		case FD_BAUD::B4000000:
 		{
 			handle->Init.DataPrescaler = 2;//1-32
-			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataSyncJumpWidth = 4;//1-16
 			handle->Init.DataTimeSeg1 = 12;//1-32
 			handle->Init.DataTimeSeg2 = 2;//1-16
 			break;
@@ -332,7 +338,7 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FD
 		case FD_BAUD::B8000000:
 		{
 			handle->Init.DataPrescaler = 1;//1-32
-			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataSyncJumpWidth = 4;//1-16
 			handle->Init.DataTimeSeg1 = 12;//1-32
 			handle->Init.DataTimeSeg2 = 2;//1-16
 
@@ -341,7 +347,7 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FD
 		case FD_BAUD::B12000000:
 		{
 			handle->Init.DataPrescaler = 1;//1-32
-			handle->Init.DataSyncJumpWidth = 2;//1-16
+			handle->Init.DataSyncJumpWidth = 4;//1-16
 			handle->Init.DataTimeSeg1 = 8;//1-32
 			handle->Init.DataTimeSeg2 = 1;//1-16
 
