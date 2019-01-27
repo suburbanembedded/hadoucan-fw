@@ -1,0 +1,121 @@
+1) Need cool name for can thing. Many are taken.
+2) Do we want Pro and non-pro version, with difference being the time sync feature and ~$20-$50?
+	Price ideas
+	Base | Pro
+	75$  | 99$
+	99$  | 150$
+3) Need to write protocol manual
+4) Need firmware update tool
+5) Need Windows UI
+6) Need TM disclaimer for Lawicel
+7) Need TM for Suburban Marine & SM Logo
+8) Need TM for Suburban Marine's connectivity product line
+9) Need TM for Suburban Marine's CAN bus product line
+
+
+
+
+Suburban Marine CAN-USB
+SM-1301 revB
+
+USB 2.0 High Speed
+	USB Type B connector
+	USB/text protocol, presents as ACM (serial modem) tty device
+	Individual serial number
+
+Lawicel AG CAN232 compatible with extensions
+	Polling mode
+	Auto-polling mode
+	Extensions for CAN FD
+	Seamless transmission and reception of 2.0A, 2.0B, and FD packets
+	On-board configuration storage
+
+Windows support
+	pyCAN
+
+Linux support
+	pyCAN
+	slcan
+	Wireshark via slcan
+
+CAN Standards
+	CAN Open and J1939 compatible (this means nothing, but is true i guess?)
+
+CAN Connector
+	XX kV electrical isolation between CANGND and USB/SMA ground
+	DE9 female jack (should we cross name DB9 since that is what ppl often incorrectly call it)
+	XX jacknut (4-40?)
+	Industry standard DE9 pinout
+		CANH
+		CANL
+		CANGND
+	User selectable 120ohm termination jumpers
+	Recommended mating parts
+		Solder Cup
+			DSub Plug
+				Assmann WSW Components A-DF 09 LL/Z
+			Backshell
+				Assmann WSW Components A-FT 09
+		IDC
+			DSub Plug
+				Assmann WSW Components A-DFF 09LPIII/Z
+			Backshell
+				Assmann WSW Components AGP-09/IDC
+
+
+CAN 2.0A and 2.0B
+	11 bit and 29 bit address modes
+	Normal and RTR packets
+	Up to 8 data bytes
+	Automatic slew rate control for low EMI
+
+CAN FD
+	11 bit and 29 bit address modes
+	Normal and RTR packets
+	Data rate up to and including 8 Mbps
+	Up to 64 data bytes
+	Both ISO and legacy Bosche packet format
+	Loop time delay compensation
+	Automatic slew rate control for high speed
+
+Time synchronization
+	Able to time sync several units to a master unit or other time pulse source
+	Selectable master mode via software command
+	XX +/- YY us precision
+	XX +/- YY us unit-unit error
+	XX +/- YY us jitter
+	Time pulse is 3.3V 50 ohm single ended
+	Active on falling edge
+	SMA Jack
+	Ground is common with USB
+
+Field upgradeable firmware
+	Custom integration on contract basis
+	Possibility for protocol offloading, custom sync behavior
+
+Mechanical
+	Aluminum case
+	XXg
+	xx x yy x zz mm excluding cables
+
+Electrical
+	5V +/- xxV
+	XXXma typ XXXma max
+	Active inrush limit
+	Aux debug serial port
+
+Hardware Changelog
+
+	RevB
+		Increased clearance
+		Time sync support
+		External config / boot flash
+		DE9 Jack
+
+	RevA
+		Initial release
+
+Software Changelog
+
+	Version 0.1.0
+		Initial release		
