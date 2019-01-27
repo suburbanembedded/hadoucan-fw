@@ -7,7 +7,7 @@
 3) Need to write protocol manual
 4) Need firmware update tool
 5) Need Windows UI
-6) Need TM disclaimer for Lawicel
+6) Need TM disclaimer for Lawicel, CAN232
 7) Need TM for Suburban Marine & SM Logo
 8) Need TM for Suburban Marine's connectivity product line
 9) Need TM for Suburban Marine's CAN bus product line
@@ -39,11 +39,15 @@ Linux support
 	Wireshark via slcan
 
 CAN Standards
+	ISOxxyyzz (CAN2.0A)
+	ISOxxyyzz (CAN2.0B)
+	ISOxxyyzz (CANFD)
+	Boschexxyyzz (pre-iso fd)
 	CAN Open and J1939 compatible (this means nothing, but is true i guess?)
 
 CAN Connector
 	XX kV electrical isolation between CANGND and USB/SMA ground
-	DE9 female jack (should we cross name DB9 since that is what ppl often incorrectly call it)
+	DE9 male jack (should we cross name DB9 since that is what ppl often incorrectly call it)
 	XX jacknut (4-40?)
 	Industry standard DE9 pinout
 		CANH
@@ -92,6 +96,14 @@ Time synchronization
 Field upgradeable firmware
 	Custom integration on contract basis
 	Possibility for protocol offloading, custom sync behavior
+	Cool Possibilities
+		Automatic response to certain messages
+		Complex packet filtering
+		Data-based packet filtering
+		External device bootloading
+			We store your firmware in our data flash, bootload your devices
+		GPS PPS support for global accurate time sync
+		IRIG timecode support for time sync to other instruments (may require demodulation hardware, but i /might/ be able to do it in sw...)
 
 Mechanical
 	Aluminum case
@@ -118,4 +130,4 @@ Hardware Changelog
 Software Changelog
 
 	Version 0.1.0
-		Initial release		
+		Initial release
