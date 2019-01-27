@@ -1,10 +1,10 @@
 #include "USB_TX_task.hpp"
 
 #include "main.h"
+#include "hal_inst.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 
-#include "hal_inst.hpp"
 #include "uart1_printf.hpp"
 
 #include <algorithm>
@@ -32,14 +32,13 @@ void USB_TX_task::work()
 		// uart1_print<64>("tx wait buf\r\n");
 
 		USB_buf* usb_buffer = nullptr;
-		if(!m_pending_tx_buffers.pop_front(&usb_buffer, pdMS_TO_TICKS(50)))
+		if(!m_pending_tx_buffers.pop_front(&usb_buffer, pdMS_TO_TICKS(USB_HS_PACKET_WAIT_MS)))
 		{
-			//if we previously sent data, we should send a nullpacket
-			//this is a hint to the OS to release buffers
+			//if we previously sent data, and don't have more to send we should send a null packet
+			//this is a hint to the OS to flush buffers / hand data to the application
 			if(m_needs_send_null)
 			{
-				// uart1_print<64>("tx pend is empty for 50 ms\r\n");
-				// uart1_print<64>("tx send null buf\r\n");
+				uart1_log<128>(LOG_LEVEL::INFO, "USB_TX_task", "tx idle for 50ms, send null buf");
 				send_buffer(nullptr);
 				m_needs_send_null = false;
 			}
@@ -93,7 +92,13 @@ size_t USB_TX_task::queue_buffer_blocking(const uint8_t* buf, const size_t len)
 		std::copy_n(buf + num_queued, num_to_copy, usb_buf->buf.data() + num_queued);
 		usb_buf->len = num_to_copy;
 	
-		m_pending_tx_buffers.push_back(usb_buf);
+		if(!m_pending_tx_buffers.push_back(usb_buf))
+		{
+			//return it to the queue, and spin around to try again
+			uart1_log<128>(LOG_LEVEL::WARN, "USB_TX_task", "m_pending_tx_buffers enqueue failed, retry");
+			Object_pool_base<USB_buf>::free(usb_buf);
+			continue;
+		}
 	
 		num_queued += num_to_copy;		
 	}

@@ -3,55 +3,68 @@
 #include <algorithm>
 #include <stdexcept>
 
-namespace
+bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
 {
-	uint32_t stm32_get_dlc_from_dlc(const uint8_t dlc)
-{
-	switch(dlc)
+	STM32_fdcan_tx::STD_BAUD stm32_baud;
+	switch(baud)
 	{
-		case 0x0:
-			return FDCAN_DLC_BYTES_0;
-		case 0x1: 
-			return FDCAN_DLC_BYTES_1;
-		case 0x2: 
-			return FDCAN_DLC_BYTES_2;
-		case 0x3:
-			return FDCAN_DLC_BYTES_3;
-		case 0x4:
-			return FDCAN_DLC_BYTES_4;
-		case 0x5:
-			return FDCAN_DLC_BYTES_5;
-		case 0x6:
-			return FDCAN_DLC_BYTES_6;
-		case 0x7:
-			return FDCAN_DLC_BYTES_7;
-		case 0x8:
-			return FDCAN_DLC_BYTES_8;
-		case 0x9:
-			return FDCAN_DLC_BYTES_12;
-		case 0xA:
-			return FDCAN_DLC_BYTES_16;
-		case 0xB:
-			return FDCAN_DLC_BYTES_20;
-		case 0xC:
-			return FDCAN_DLC_BYTES_24;
-		case 0xD:
-			return FDCAN_DLC_BYTES_32;
-		case 0xE:
-			return FDCAN_DLC_BYTES_48;
-		case 0xF:
-			return FDCAN_DLC_BYTES_64;
+		case CAN_NOM_BPS::bps_10k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B10000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_20k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B20000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_50k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B50000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_100k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B100000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_125k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B125000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_250k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B250000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_500k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B500000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_800k:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B800000;
+			break;
+		}
+		case CAN_NOM_BPS::bps_1M:
+		{
+			stm32_baud = STM32_fdcan_tx::STD_BAUD::B1000000;
+			break;
+		}
 		default:
-			throw std::domain_error("dlc not in bounds");
+		{
+			return false;
+		}
+	}
+	
+	if(!m_fdcan->set_baud(stm32_baud))
+	{
+		return false;
 	}
 
-	throw std::domain_error("dlc not in bounds");
-}
-}
-
-bool Lawicel_parser_stm32::handle_std_baud(const uint8_t baud)
-{
-	return false;
+	return true;
 }
 bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t b0, const uint8_t b1)
 {
@@ -61,25 +74,45 @@ bool Lawicel_parser_stm32::handle_open()
 {
 	return m_fdcan->open();
 }
+bool Lawicel_parser_stm32::handle_open_listen()
+{
+	return false;
+}
 bool Lawicel_parser_stm32::handle_close()
 {
 	return m_fdcan->close();
 }
-bool Lawicel_parser_stm32::handle_tx_std(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool Lawicel_parser_stm32::handle_tx_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
-	return m_fdcan->tx_std(id, dlc, data);
+	return m_fdcan->tx_std(id, data_len, data);
 }
-bool Lawicel_parser_stm32::handle_tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool Lawicel_parser_stm32::handle_tx_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
-	return m_fdcan->tx_ext(id, dlc, data);;
+	return m_fdcan->tx_ext(id, data_len, data);
 }
-bool Lawicel_parser_stm32::handle_tx_rtr_std(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool Lawicel_parser_stm32::handle_tx_rtr_std(const uint32_t id, const uint8_t data_len)
 {
-	return m_fdcan->tx_std_rtr(id, dlc, data);
+	return m_fdcan->tx_std_rtr(id, data_len);
 }
-bool Lawicel_parser_stm32::handle_tx_rtr_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool Lawicel_parser_stm32::handle_tx_rtr_ext(const uint32_t id, const uint8_t data_len)
 {
-	return m_fdcan->tx_ext_rtr(id, dlc, data);
+	return m_fdcan->tx_ext_rtr(id, data_len);
+}
+bool Lawicel_parser_stm32::handle_tx_fd_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
+{
+	return m_fdcan->tx_fd_std(id, true, true, data_len, data);
+}
+bool Lawicel_parser_stm32::handle_tx_fd_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
+{
+	return m_fdcan->tx_fd_ext(id, true, true, data_len, data);
+}
+bool Lawicel_parser_stm32::handle_tx_fd_rtr_std(const uint32_t id, const uint8_t data_len)
+{
+	return m_fdcan->tx_fd_rtr_std(id, true, data_len);
+}
+bool Lawicel_parser_stm32::handle_tx_fd_rtr_ext(const uint32_t id, const uint8_t data_len)
+{
+	return m_fdcan->tx_fd_rtr_ext(id, true, data_len);
 }
 bool Lawicel_parser_stm32::handle_get_flags()
 {
@@ -93,16 +126,17 @@ bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 {
 	return false;
 }
-bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* ver)
+bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
+{
+	ver->fill(0);
+	return true;
+}
+bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
+{
+	sn->fill(0);
+	return true;
+}
+bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
 {
 	return false;
 }
-bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* sn)
-{
-	return false;
-}
-bool Lawicel_parser_stm32::handle_set_timestamp(bool enable)
-{
-	return false;
-}
-

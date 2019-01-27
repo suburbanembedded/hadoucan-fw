@@ -7,3 +7,6 @@
 [submodule "external/googletest"]
 	path = external/googletest
 	url = git@github.com:jacobschloss/googletest.git
+[submodule "external/common_util"]
+	path = external/common_util
+	url = git@bitbucket.org:suburbanmarine/common_util.git

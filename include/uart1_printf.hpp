@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal_inst.hpp"
+#include "hal_inst.h"
 #include "stm32h7xx_hal.h"
 
 #include "freertos_cpp_util/Mutex_static.hpp"
@@ -9,6 +9,8 @@
 #include <cinttypes>
 #include <mutex>
 #include <string>
+
+extern Mutex_static m_uart1_mutex;
 
 template<size_t LEN>
 bool uart1_printf(const char* fmt, ...)
@@ -55,7 +57,7 @@ const char* LOG_LEVEL_to_str(const LOG_LEVEL level);
 template<size_t LEN>
 bool uart1_log(const LOG_LEVEL level, const char* module_name, const char* fmt, ...)
 {
-	if(level > LOG_LEVEL::INFO)
+	if(level > LOG_LEVEL::DEBUG)
 	{
 		return true;
 	}

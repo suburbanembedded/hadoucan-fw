@@ -14,15 +14,15 @@ class USB_rx_buffer_task : public Task_static<1024>
 {
 public:
 
-  USB_rx_buffer_task()
-  {
-    m_usb_rx_task = nullptr;
-  }
-
   //if an insertion would put us over this limit
   const size_t BUFFER_HIGH_WATERMARK = 1024 * 16;
   //block until it is below this limit
   const size_t BUFFER_LOW_WATERMARK = 1024 * 12;
+
+  USB_rx_buffer_task()
+  {
+    m_usb_rx_task = nullptr;
+  }
 
   void set_usb_rx(USB_RX_task* const usb_rx_task)
   {

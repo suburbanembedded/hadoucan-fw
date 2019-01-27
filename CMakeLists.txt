@@ -50,6 +50,7 @@ include_directories(
 
 add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
 add_subdirectory(external/freertos_cpp_util)
+add_subdirectory(external/common_util)
 #add_subdirectory(external/googletest)
 
 add_library(gtest_stm32
@@ -85,7 +86,7 @@ add_executable(canusbfdiso
 	
 	src/main.cpp
 	src/main_cube.c
-	src/hal_inst.cpp
+	src/hal_inst.c
 
 	src/USB_RX_task.cpp
 	src/USB_TX_task.cpp
@@ -112,6 +113,8 @@ add_executable(canusbfdiso
 	#src/msg/sm-1301_rpc.c
 	#src/msg/xer.c
 
+	src/lawicel/CAN_DLC.cpp
+	src/lawicel/STM32_FDCAN_DLC.cpp
 	src/lawicel/Lawicel_parser.cpp
 	src/lawicel/Lawicel_parser_stm32.cpp
 
@@ -132,6 +135,7 @@ target_link_libraries(canusbfdiso
 	freertos_v9
 	freertos_v9_cmsis
 
+	common_util
 	freertos_cpp_util
 )
 

@@ -101,7 +101,7 @@
 #define configMAX_PRIORITIES              (16)
 
 #define configMINIMAL_STACK_SIZE          ((uint16_t)128U)
-#define configTOTAL_HEAP_SIZE             ((size_t)(48U * 1024U))
+#define configTOTAL_HEAP_SIZE             ((size_t)(64U * 1024U))
 #define configAPPLICATION_ALLOCATED_HEAP  1
 #define configSUPPORT_STATIC_ALLOCATION   1
 
@@ -172,7 +172,8 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
  
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
-#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); } 
+void handle_config_assert(const char* file, const int line, const char* msg);
+#define configASSERT( x ) if( ( x ) == 0 ) { handle_config_assert(__FILE__, __LINE__, #x); taskDISABLE_INTERRUPTS(); for( ;; ); } 
  
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
    standard names. */

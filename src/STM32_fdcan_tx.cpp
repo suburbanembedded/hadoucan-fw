@@ -1,148 +1,87 @@
 #include "STM32_fdcan_tx.hpp"
 
+#include "lawicel/STM32_FDCAN_DLC.hpp"
+
 #include "uart1_printf.hpp"
 
 #include <array>
 #include <algorithm>
 #include <stdexcept>
 
-namespace
-{
-uint32_t get_stm32_dlc_from_dlc(const uint8_t dlc)
-{
-	switch(dlc)
-	{
-		case 0x0:
-			return FDCAN_DLC_BYTES_0;
-		case 0x1: 
-			return FDCAN_DLC_BYTES_1;
-		case 0x2: 
-			return FDCAN_DLC_BYTES_2;
-		case 0x3:
-			return FDCAN_DLC_BYTES_3;
-		case 0x4:
-			return FDCAN_DLC_BYTES_4;
-		case 0x5:
-			return FDCAN_DLC_BYTES_5;
-		case 0x6:
-			return FDCAN_DLC_BYTES_6;
-		case 0x7:
-			return FDCAN_DLC_BYTES_7;
-		case 0x8:
-			return FDCAN_DLC_BYTES_8;
-		case 0x9:
-			return FDCAN_DLC_BYTES_12;
-		case 0xA:
-			return FDCAN_DLC_BYTES_16;
-		case 0xB:
-			return FDCAN_DLC_BYTES_20;
-		case 0xC:
-			return FDCAN_DLC_BYTES_24;
-		case 0xD:
-			return FDCAN_DLC_BYTES_32;
-		case 0xE:
-			return FDCAN_DLC_BYTES_48;
-		case 0xF:
-			return FDCAN_DLC_BYTES_64;
-		default:
-			throw std::domain_error("dlc not in bounds");
-	}
-
-	throw std::domain_error("dlc not in bounds");
-}
-uint32_t get_size_from_dlc(const uint8_t dlc)
-{
-	switch(dlc)
-	{
-		case 0x0:
-			return 0;
-		case 0x1: 
-			return 1;
-		case 0x2: 
-			return 2;
-		case 0x3:
-			return 3;
-		case 0x4:
-			return 4;
-		case 0x5:
-			return 5;
-		case 0x6:
-			return 6;
-		case 0x7:
-			return 7;
-		case 0x8:
-			return 8;
-		case 0x9:
-			return 12;
-		case 0xA:
-			return 16;
-		case 0xB:
-			return 20;
-		case 0xC:
-			return 24;
-		case 0xD:
-			return 32;
-		case 0xE:
-			return 48;
-		case 0xF:
-			return 64;
-		default:
-			throw std::domain_error("dlc not in bounds");
-	}
-
-	throw std::domain_error("dlc not in bounds");
-}
-}
-
 bool STM32_fdcan_tx::init()
 {
 	HAL_StatusTypeDef ret = HAL_OK;
 
-	m_hfdcan = FDCAN_HandleTypeDef();
+	//TODO: store the baud rate and always reconfigure it here
+	// m_fdcan_handle = FDCAN_HandleTypeDef();
 
-	m_hfdcan.Instance = m_fdcan;
-	m_hfdcan.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-	m_hfdcan.Init.Mode = FDCAN_MODE_NORMAL;
-	m_hfdcan.Init.AutoRetransmission = ENABLE;
-	m_hfdcan.Init.TransmitPause = DISABLE;
-	m_hfdcan.Init.ProtocolException = ENABLE;
+	m_fdcan_handle->Instance = m_fdcan;
+	// m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+	// m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+	m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_FD_BRS;
+	m_fdcan_handle->Init.Mode = FDCAN_MODE_NORMAL;
+	m_fdcan_handle->Init.AutoRetransmission = ENABLE;
+	m_fdcan_handle->Init.TransmitPause = DISABLE;
+	m_fdcan_handle->Init.ProtocolException = ENABLE;
 
-	// 100 MHz CAN Clk
-	// tq = NominalPrescaler x (1/fdcan_ker_ck)
-	// tq = 5 x (1/100MHz) = 50ns
+	m_std_baud = STD_BAUD::B125000;
+	m_fd_brs_baud = FD_BAUD::B2000000;
+	// m_std_baud =    STD_BAUD::B1000000;
+	// m_fd_brs_baud = FD_BAUD::B12000000;
+	if(!set_baud(m_std_baud, m_fd_brs_baud, m_fdcan_handle))
+	{
+		return false;
+	}
 
-	m_hfdcan.Init.NominalPrescaler = 5;//1-512
-	m_hfdcan.Init.NominalSyncJumpWidth = 8;//1-128
-	// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-	m_hfdcan.Init.NominalTimeSeg1 = 139;  //1-256 
-	m_hfdcan.Init.NominalTimeSeg2 = 20;   //1-128
+	m_fdcan_handle->Init.MessageRAMOffset = 0;//0 - 2560
+	m_fdcan_handle->Init.StdFiltersNbr = 1;
+	m_fdcan_handle->Init.ExtFiltersNbr = 1;
+	// m_fdcan_handle->Init.RxFifo0ElmtsNbr = 16;
+	// m_fdcan_handle->Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
+	// m_fdcan_handle->Init.RxFifo1ElmtsNbr = 0;
+	// m_fdcan_handle->Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
+	m_fdcan_handle->Init.RxFifo0ElmtsNbr = 64;
+	m_fdcan_handle->Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_64;
+	m_fdcan_handle->Init.RxFifo1ElmtsNbr = 0;
+	m_fdcan_handle->Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_64;
+	m_fdcan_handle->Init.RxBuffersNbr = 0;
 
-	m_hfdcan.Init.DataPrescaler = 5;//1-32
-	m_hfdcan.Init.DataSyncJumpWidth = 8;//1-16
-	m_hfdcan.Init.DataTimeSeg1 = 32;//1-32
-	m_hfdcan.Init.DataTimeSeg2 = 16;//1-16
+	m_fdcan_handle->Init.TxEventsNbr = 0;
+	m_fdcan_handle->Init.TxBuffersNbr = 0;
+	m_fdcan_handle->Init.TxFifoQueueElmtsNbr = 32;
+	m_fdcan_handle->Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+	m_fdcan_handle->Init.TxElmtSize = FDCAN_DATA_BYTES_64;
 
-	m_hfdcan.Init.MessageRAMOffset = 0;//0 - 2560
-	m_hfdcan.Init.StdFiltersNbr = 1;
-	m_hfdcan.Init.ExtFiltersNbr = 1;
-	m_hfdcan.Init.RxFifo0ElmtsNbr = 4;
-	m_hfdcan.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
-	m_hfdcan.Init.RxFifo1ElmtsNbr = 0;
-	m_hfdcan.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-	m_hfdcan.Init.RxBuffersNbr = 0;
-
-	m_hfdcan.Init.TxEventsNbr = 0;
-	m_hfdcan.Init.TxBuffersNbr = 0;
-	m_hfdcan.Init.TxFifoQueueElmtsNbr = 32;
-	m_hfdcan.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-	m_hfdcan.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
-
-	ret = HAL_FDCAN_Init(&m_hfdcan);
+	ret = HAL_FDCAN_Init(m_fdcan_handle);
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_Init failed");
 		return false;
 	}
+
+/*
+	//units of mtq, ie kernel clock - 120MHz -> 8.3333ns
+	//ADM3055E - TXD->BUS R->D 35 - 60ns
+	//ADM3055E - TXD->BUS D->E 46 - 70ns
+	//ADM3055E - TXD->RXD Falling 150ns full, 300ns slope ctrl
+	//ADM3055E - TXD->RXD Rising 150ns full, 300ns slope ctrl
+	//150ns is 18 mtq
+	ret = HAL_FDCAN_ConfigTxDelayCompensation(m_fdcan_handle, 9, 4);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTxDelayCompensation failed");
+		return false;
+	}
+	ret = HAL_FDCAN_EnableTxDelayCompensation(m_fdcan_handle);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTxDelayCompensation failed");
+		return false;
+	}
+*/
+
+	FDCAN_ErrorCountersTypeDef error_counters;
+	const HAL_StatusTypeDef errcnt_ret = HAL_FDCAN_GetErrorCounters(m_fdcan_handle, &error_counters);
 
 	// Configure Rx Std filter
 	FDCAN_FilterTypeDef sFilter0;
@@ -153,7 +92,7 @@ bool STM32_fdcan_tx::init()
 	sFilter0.FilterID1 = 0x000;//filter
 	// sFilter0.FilterID2 = 0x7FF;//mask all
 	sFilter0.FilterID2 = 0x000;//mask none, match all
-	ret = HAL_FDCAN_ConfigFilter(&m_hfdcan, &sFilter0);
+	ret = HAL_FDCAN_ConfigFilter(m_fdcan_handle, &sFilter0);
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter failed");
@@ -169,63 +108,255 @@ bool STM32_fdcan_tx::init()
 	sFilter1.FilterID1 = 0x00000000;//filter
 	// sFilter1.FilterID2 = 0x1FFFFFFF;//mask
 	sFilter1.FilterID2 = 0x00000000;//mask none, match all
-	ret = HAL_FDCAN_ConfigFilter(&m_hfdcan, &sFilter1);
+	ret = HAL_FDCAN_ConfigFilter(m_fdcan_handle, &sFilter1);
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter failed");
 		return false;
 	}
 
-	// ret = HAL_FDCAN_ConfigFifoWatermark(&m_hfdcan, FDCAN_CFG_RX_FIFO0, 2);
-	// if(ret != HAL_OK)
-	// {
-	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigFifoWatermark for FIFO0 failed");
-	// 	return false;
-	// }
+	ret = HAL_FDCAN_ConfigFifoWatermark(m_fdcan_handle, FDCAN_CFG_RX_FIFO0, 16);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigFifoWatermark for FIFO0 failed");
+		return false;
+	}
 
-	// ret = HAL_FDCAN_ConfigRxFifoOverwrite(&m_hfdcan, FDCAN_CFG_RX_FIFO0, FDCAN_RX_FIFO_OVERWRITE);
-	// if(ret != HAL_OK)
-	// {
-	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigRxFifoOverwrite for FIFO0 failed");
-	// 	return false;
-	// }
+	ret = HAL_FDCAN_ConfigRxFifoOverwrite(m_fdcan_handle, FDCAN_CFG_RX_FIFO0, FDCAN_RX_FIFO_OVERWRITE);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigRxFifoOverwrite for FIFO0 failed");
+		return false;
+	}
 
-	// ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK | FDCAN_IT_RX_FIFO0_FULL | FDCAN_IT_RX_FIFO0_MESSAGE_LOST, 0);
-	// ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK, 0);
-	// if(ret != HAL_OK)
-	// {
-	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ActivateNotification for FIFO0 failed");
-	// 	return false;
-	// }
+	ret = HAL_FDCAN_ActivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO0_WATERMARK | FDCAN_IT_RX_FIFO0_FULL | FDCAN_IT_RX_FIFO0_MESSAGE_LOST, 0);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ActivateNotification for FIFO0 failed");
+		return false;
+	}
 
-	// ret = HAL_FDCAN_ConfigFifoWatermark(&m_hfdcan, FDCAN_CFG_RX_FIFO1, 2);
+	// ret = HAL_FDCAN_ConfigFifoWatermark(m_fdcan_handle, FDCAN_CFG_RX_FIFO1, 2);
 	// if(ret != HAL_OK)
 	// {
 	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigFifoWatermark for FIFO1 failed");
 	// 	return false;
 	// }
 
-	// ret = HAL_FDCAN_ConfigRxFifoOverwrite(&m_hfdcan, FDCAN_CFG_RX_FIFO1, FDCAN_RX_FIFO_OVERWRITE);
+	// ret = HAL_FDCAN_ConfigRxFifoOverwrite(m_fdcan_handle, FDCAN_CFG_RX_FIFO1, FDCAN_RX_FIFO_OVERWRITE);
 	// if(ret != HAL_OK)
 	// {
 	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigRxFifoOverwrite for FIFO1 failed");
 	// 	return false;
 	// }
 
-	// ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO1_WATERMARK | FDCAN_IT_RX_FIFO1_FULL | FDCAN_IT_RX_FIFO1_MESSAGE_LOST, 0);
-	// ret = HAL_FDCAN_ActivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO1_WATERMARK, 0);
+	// ret = HAL_FDCAN_ActivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO1_WATERMARK | FDCAN_IT_RX_FIFO1_FULL | FDCAN_IT_RX_FIFO1_MESSAGE_LOST, 0);
+	// ret = HAL_FDCAN_ActivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO1_WATERMARK, 0);
 	// if(ret != HAL_OK)
 	// {
 	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ActivateNotification for FIFO1 failed");
 	// 	return false;
 	// }
 
-	// ret = HAL_FDCAN_ConfigGlobalFilter(&m_hfdcan, FDCAN_ACCEPT_IN_RX_FIFO0, FDCAN_ACCEPT_IN_RX_FIFO1, DISABLE, DISABLE);
-	ret = HAL_FDCAN_ConfigGlobalFilter(&m_hfdcan, FDCAN_REJECT, FDCAN_REJECT, DISABLE, DISABLE);
+	// ret = HAL_FDCAN_ConfigGlobalFilter(m_fdcan_handle, FDCAN_ACCEPT_IN_RX_FIFO0, FDCAN_ACCEPT_IN_RX_FIFO1, DISABLE, DISABLE);
+	ret = HAL_FDCAN_ConfigGlobalFilter(m_fdcan_handle, FDCAN_REJECT, FDCAN_REJECT, DISABLE, DISABLE);
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_ConfigGlobalFilter failed");
 		return false;
+	}
+
+	return true;
+}
+
+bool STM32_fdcan_tx::set_baud(const STD_BAUD baud)
+{
+	m_baud_is_set = true;
+	return set_baud(baud, m_fdcan_handle);
+}
+
+bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const handle)
+{
+	//120MHz CAN Clk
+	switch(baud)
+	{
+		case STD_BAUD::B10000:
+		{
+			handle->Init.NominalPrescaler = 48;		//1-512
+			handle->Init.NominalSyncJumpWidth = 8;	//1-128
+			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+			handle->Init.NominalTimeSeg1 = 218;		//1-256 
+			handle->Init.NominalTimeSeg2 = 31;		//1-128
+
+			handle->Init.DataPrescaler = 0;//1-32
+			handle->Init.DataSyncJumpWidth = 0;//1-16
+			handle->Init.DataTimeSeg1 = 0;//1-32
+			handle->Init.DataTimeSeg2 = 0;//1-16
+
+			break;
+		}
+		case STD_BAUD::B50000:
+		{
+			handle->Init.NominalPrescaler = 48;		//1-512
+			handle->Init.NominalSyncJumpWidth = 8;	//1-128
+			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+			handle->Init.NominalTimeSeg1 = 43;		//1-256 
+			handle->Init.NominalTimeSeg2 = 6;		//1-128
+
+			handle->Init.DataPrescaler = 0;//1-32
+			handle->Init.DataSyncJumpWidth = 0;//1-16
+			handle->Init.DataTimeSeg1 = 0;//1-32
+			handle->Init.DataTimeSeg2 = 0;//1-16
+
+			break;
+		}
+		case STD_BAUD::B100000:
+		{
+			handle->Init.NominalPrescaler = 48;		//1-512
+			handle->Init.NominalSyncJumpWidth = 8;	//1-128
+			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+			handle->Init.NominalTimeSeg1 = 21;		//1-256 
+			handle->Init.NominalTimeSeg2 = 3;		//1-128
+
+			handle->Init.DataPrescaler = 0;//1-32
+			handle->Init.DataSyncJumpWidth = 0;//1-16
+			handle->Init.DataTimeSeg1 = 0;//1-32
+			handle->Init.DataTimeSeg2 = 0;//1-16
+
+			break;
+		}
+		case STD_BAUD::B125000:
+		{
+			handle->Init.NominalPrescaler = 5;		//1-512
+			handle->Init.NominalSyncJumpWidth = 8;	//1-128
+			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+			handle->Init.NominalTimeSeg1 = 167;		//1-256 
+			handle->Init.NominalTimeSeg2 = 24;		//1-128
+
+			handle->Init.DataPrescaler = 0;//1-32
+			handle->Init.DataSyncJumpWidth = 0;//1-16
+			handle->Init.DataTimeSeg1 = 0;//1-32
+			handle->Init.DataTimeSeg2 = 0;//1-16
+
+			break;
+		}
+		case STD_BAUD::B250000:
+		{
+			handle->Init.NominalPrescaler = 5;		//1-512
+			handle->Init.NominalSyncJumpWidth = 8;	//1-128
+			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+			handle->Init.NominalTimeSeg1 = 83;		//1-256 
+			handle->Init.NominalTimeSeg2 = 12;		//1-128
+
+			handle->Init.DataPrescaler = 0;//1-32
+			handle->Init.DataSyncJumpWidth = 0;//1-16
+			handle->Init.DataTimeSeg1 = 0;//1-32
+			handle->Init.DataTimeSeg2 = 0;//1-16
+
+			break;
+		}
+		case STD_BAUD::B500000:
+		{
+			handle->Init.NominalPrescaler = 5;		//1-512
+			handle->Init.NominalSyncJumpWidth = 8;	//1-128
+			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+			handle->Init.NominalTimeSeg1 = 41;		//1-256 
+			handle->Init.NominalTimeSeg2 = 6;		//1-128
+
+			handle->Init.DataPrescaler = 0;//1-32
+			handle->Init.DataSyncJumpWidth = 0;//1-16
+			handle->Init.DataTimeSeg1 = 0;//1-32
+			handle->Init.DataTimeSeg2 = 0;//1-16
+
+			break;
+		}
+		case STD_BAUD::B1000000:
+		{
+			handle->Init.NominalPrescaler = 5;		//1-512
+			handle->Init.NominalSyncJumpWidth = 8;	//1-128
+			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+			handle->Init.NominalTimeSeg1 = 20;		//1-256 
+			handle->Init.NominalTimeSeg2 = 3;		//1-128
+
+			handle->Init.DataPrescaler = 0;//1-32
+			handle->Init.DataSyncJumpWidth = 0;//1-16
+			handle->Init.DataTimeSeg1 = 0;//1-32
+			handle->Init.DataTimeSeg2 = 0;//1-16
+
+			break;
+		}
+		default:
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud)
+{
+	m_baud_is_set = true;
+	return set_baud(std_baud, fd_baud, m_fdcan_handle);
+}
+bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FDCAN_HandleTypeDef* const handle)
+{
+	if(!set_baud(std_baud, handle))
+	{
+		return false;
+	}
+
+	//120MHz CAN Clk
+	switch(fd_baud)
+	{
+		case FD_BAUD::B1000000:
+		{
+			handle->Init.DataPrescaler = 5;//1-32
+			handle->Init.DataSyncJumpWidth = 4;//1-16
+			handle->Init.DataTimeSeg1 = 20;//1-32
+			handle->Init.DataTimeSeg2 = 3;//1-16
+
+			break;
+		}
+		case FD_BAUD::B2000000:
+		{
+			handle->Init.DataPrescaler = 2;//1-32
+			handle->Init.DataSyncJumpWidth = 4;//1-16
+			handle->Init.DataTimeSeg1 = 25;//1-32
+			handle->Init.DataTimeSeg2 = 4;//1-16
+
+			break;
+		}
+		case FD_BAUD::B4000000:
+		{
+			handle->Init.DataPrescaler = 2;//1-32
+			handle->Init.DataSyncJumpWidth = 4;//1-16
+			handle->Init.DataTimeSeg1 = 12;//1-32
+			handle->Init.DataTimeSeg2 = 2;//1-16
+			break;
+		}
+		case FD_BAUD::B8000000:
+		{
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 4;//1-16
+			handle->Init.DataTimeSeg1 = 12;//1-32
+			handle->Init.DataTimeSeg2 = 2;//1-16
+
+			break;
+		}
+		case FD_BAUD::B12000000:
+		{
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 4;//1-16
+			handle->Init.DataTimeSeg1 = 8;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
+
+			break;
+		}
+		default:
+		{
+			return false;
+		}
 	}
 
 	return true;
@@ -241,14 +372,14 @@ bool STM32_fdcan_tx::open()
 		return false;
 	}
 
-	ret = HAL_FDCAN_Start(&m_hfdcan);
+	ret = HAL_FDCAN_Start(m_fdcan_handle);
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_Start failed");
 		return false;
 	}
 
-	if(HAL_FDCAN_IsRestrictedOperationMode(&m_hfdcan))
+	if(HAL_FDCAN_IsRestrictedOperationMode(m_fdcan_handle))
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "FDCAN is in Restricted Mode");
 		return false;	
@@ -261,19 +392,21 @@ bool STM32_fdcan_tx::open()
 }
 bool STM32_fdcan_tx::close()
 {
-	if(HAL_FDCAN_DeactivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK | FDCAN_IT_RX_FIFO0_FULL | FDCAN_IT_RX_FIFO0_MESSAGE_LOST) != HAL_OK)
+	// if(HAL_FDCAN_DeactivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO0_WATERMARK | FDCAN_IT_RX_FIFO0_FULL | FDCAN_IT_RX_FIFO0_MESSAGE_LOST) != HAL_OK)
+	if(HAL_FDCAN_DeactivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO0_WATERMARK) != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::close", "HAL_FDCAN_DeactivateNotification for FIFO0 failed");
 		return false;	
 	}
-
-	if(HAL_FDCAN_DeactivateNotification(&m_hfdcan, FDCAN_IT_RX_FIFO1_WATERMARK | FDCAN_IT_RX_FIFO1_FULL | FDCAN_IT_RX_FIFO1_MESSAGE_LOST) != HAL_OK)
+/*
+	// if(HAL_FDCAN_DeactivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO1_WATERMARK | FDCAN_IT_RX_FIFO1_FULL | FDCAN_IT_RX_FIFO1_MESSAGE_LOST) != HAL_OK)
+	if(HAL_FDCAN_DeactivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO1_WATERMARK) != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::close", "HAL_FDCAN_DeactivateNotification for FIFO1 failed");
 		return false;	
 	}
-
-	if(HAL_FDCAN_Stop(&m_hfdcan) != HAL_OK)
+*/
+	if(HAL_FDCAN_Stop(m_fdcan_handle) != HAL_OK)
 	{
 		return false;
 	}
@@ -284,7 +417,7 @@ bool STM32_fdcan_tx::close()
 	return true;
 }
 
-bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
 	if(!m_is_open)
 	{
@@ -292,12 +425,18 @@ bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t dlc, const uint8_t*
 		return false;
 	}
 
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
+		return false;
+	}
+
 	FDCAN_TxHeaderTypeDef tx_head;
 
 	tx_head.Identifier = id;
 	tx_head.IdType = FDCAN_STANDARD_ID;
 	tx_head.TxFrameType = FDCAN_DATA_FRAME;
-	tx_head.DataLength = get_stm32_dlc_from_dlc(dlc);
+	tx_head.DataLength = dlc.get_fdcan_dlc();
 	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_CLASSIC_CAN;
@@ -305,12 +444,12 @@ bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t dlc, const uint8_t*
 	tx_head.MessageMarker = 0;
 
 	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, get_size_from_dlc(dlc), out_data.begin());
+	std::copy_n(data, data_len, out_data.begin());
 
 	return send_packet(tx_head, out_data.data());
 }
 
-bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
 	if(!m_is_open)
 	{
@@ -318,12 +457,18 @@ bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t*
 		return false;
 	}
 
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
+		return false;
+	}
+
 	FDCAN_TxHeaderTypeDef tx_head;
 
 	tx_head.Identifier = id;
 	tx_head.IdType = FDCAN_EXTENDED_ID;
 	tx_head.TxFrameType = FDCAN_DATA_FRAME;
-	tx_head.DataLength = get_stm32_dlc_from_dlc(dlc);
+	tx_head.DataLength = dlc.get_fdcan_dlc();
 	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_CLASSIC_CAN;
@@ -331,16 +476,22 @@ bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t dlc, const uint8_t*
 	tx_head.MessageMarker = 0;
 
 	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, get_size_from_dlc(dlc), out_data.begin());
+	std::copy_n(data, data_len, out_data.begin());
 
 	return send_packet(tx_head, out_data.data());
 }
 
-bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t data_len)
 {
 	if(!m_is_open)
 	{
 		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_std_rtr", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
 		return false;
 	}
 
@@ -349,23 +500,26 @@ bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t dlc, const uint
 	tx_head.Identifier = id;
 	tx_head.IdType = FDCAN_STANDARD_ID;
 	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
-	tx_head.DataLength = get_stm32_dlc_from_dlc(dlc);
+	tx_head.DataLength = dlc.get_fdcan_dlc();
 	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_CLASSIC_CAN;
 	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	tx_head.MessageMarker = 0;
 
-	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, get_size_from_dlc(dlc), out_data.begin());
-
-	return send_packet(tx_head, out_data.data());
+	return send_packet(tx_head, nullptr);
 }
-bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t dlc, const uint8_t* data)
+bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t data_len)
 {
 	if(!m_is_open)
 	{
 		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_ext_rtr", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
 		return false;
 	}
 
@@ -374,17 +528,133 @@ bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t dlc, const uint
 	tx_head.Identifier = id;
 	tx_head.IdType = FDCAN_EXTENDED_ID;
 	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
-	tx_head.DataLength = get_stm32_dlc_from_dlc(dlc);
+	tx_head.DataLength = dlc.get_fdcan_dlc();
 	tx_head.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
 	tx_head.FDFormat = FDCAN_CLASSIC_CAN;
 	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	tx_head.MessageMarker = 0;
 
-	std::array<uint8_t, 8> out_data;
-	std::copy_n(data, get_size_from_dlc(dlc), out_data.begin());
+	return send_packet(tx_head, nullptr);
+}
+
+bool STM32_fdcan_tx::tx_fd_std(const uint32_t id, const bool brs, const bool esi, const uint8_t data_len, const uint8_t* data)
+{
+	if(!m_is_open)
+	{
+		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_std", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
+		return false;
+	}
+
+	FDCAN_TxHeaderTypeDef tx_head;
+
+	tx_head.Identifier = id;
+	tx_head.IdType = FDCAN_STANDARD_ID;
+	tx_head.TxFrameType = FDCAN_DATA_FRAME;
+	tx_head.DataLength = dlc.get_fdcan_dlc();
+	tx_head.ErrorStateIndicator = (esi) ? FDCAN_ESI_ACTIVE : FDCAN_ESI_PASSIVE;
+	tx_head.BitRateSwitch = (brs) ? FDCAN_BRS_ON : FDCAN_BRS_OFF;
+	tx_head.FDFormat = FDCAN_FD_CAN;
+	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	tx_head.MessageMarker = 0;
+
+	std::array<uint8_t, 64> out_data;
+	std::copy_n(data, data_len, out_data.begin());
 
 	return send_packet(tx_head, out_data.data());
+}
+bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const bool brs, const bool esi, const uint8_t data_len, const uint8_t* data)
+{
+	if(!m_is_open)
+	{
+		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_ext", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
+		return false;
+	}
+
+	FDCAN_TxHeaderTypeDef tx_head;
+	
+	tx_head.Identifier = id;
+	tx_head.IdType = FDCAN_EXTENDED_ID;
+	tx_head.TxFrameType = FDCAN_DATA_FRAME;
+	tx_head.DataLength = dlc.get_fdcan_dlc();
+	tx_head.ErrorStateIndicator = (esi) ? FDCAN_ESI_ACTIVE : FDCAN_ESI_PASSIVE;
+	tx_head.BitRateSwitch = (brs) ? FDCAN_BRS_ON : FDCAN_BRS_OFF;
+	tx_head.FDFormat = FDCAN_FD_CAN;
+	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	tx_head.MessageMarker = 0;
+
+	std::array<uint8_t, 64> out_data;
+	std::copy_n(data, data_len, out_data.begin());
+
+	return send_packet(tx_head, out_data.data());
+}
+bool STM32_fdcan_tx::tx_fd_rtr_std(const uint32_t id, const bool esi, const uint8_t data_len)
+{
+	if(!m_is_open)
+	{
+		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_rtr_std", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
+		return false;
+	}
+
+	FDCAN_TxHeaderTypeDef tx_head;
+
+	tx_head.Identifier = id;
+	tx_head.IdType = FDCAN_STANDARD_ID;
+	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
+	tx_head.DataLength = dlc.get_fdcan_dlc();
+	tx_head.ErrorStateIndicator = (esi) ? FDCAN_ESI_ACTIVE : FDCAN_ESI_PASSIVE;
+	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
+	tx_head.FDFormat = FDCAN_FD_CAN;
+	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	tx_head.MessageMarker = 0;
+
+	return send_packet(tx_head, nullptr);
+}
+bool STM32_fdcan_tx::tx_fd_rtr_ext(const uint32_t id, const bool esi, const uint8_t data_len)
+{
+	if(!m_is_open)
+	{
+		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_rtr_ext", "Tried to send with closed interface");
+		return false;
+	}
+
+	STM32_FDCAN_DLC dlc;
+	if(!dlc.from_len(data_len))
+	{
+		return false;
+	}
+
+	FDCAN_TxHeaderTypeDef tx_head;
+
+	tx_head.Identifier = id;
+	tx_head.IdType = FDCAN_EXTENDED_ID;
+	tx_head.TxFrameType = FDCAN_REMOTE_FRAME;
+	tx_head.DataLength = dlc.get_fdcan_dlc();
+	tx_head.ErrorStateIndicator = (esi) ? FDCAN_ESI_ACTIVE : FDCAN_ESI_PASSIVE;
+	tx_head.BitRateSwitch = FDCAN_BRS_OFF;
+	tx_head.FDFormat = FDCAN_FD_CAN;
+	tx_head.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	tx_head.MessageMarker = 0;
+
+	return send_packet(tx_head, nullptr);
 }
 
 bool STM32_fdcan_tx::send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data)
@@ -393,7 +663,7 @@ bool STM32_fdcan_tx::send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data)
 	HAL_StatusTypeDef ret = HAL_OK;
 	do
 	{
-		ret = HAL_FDCAN_AddMessageToTxFifoQ(&m_hfdcan, &tx_head, data);
+		ret = HAL_FDCAN_AddMessageToTxFifoQ(m_fdcan_handle, &tx_head, data);
 
 		if(ret != HAL_OK)
 		{

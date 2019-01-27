@@ -34,6 +34,8 @@ protected:
 
 	uint8_t send_buffer(USB_buf* const buf);
 
+	static const uint32_t USB_HS_PACKET_WAIT_MS = 50;
+
 	bool m_needs_send_null;
 	BSema_static m_init_complete;
 	BSema_static m_tx_idle;
