@@ -12,7 +12,7 @@ public:
 		m_is_open = false;
 		m_fdcan = nullptr;
 		m_std_baud = STD_BAUD::B125000;
-		m_fd_brs_baud = FD_BAUD::B4000000;
+		m_fd_brs_baud = FD_BRS_BAUD::B4000000;
 	}
 
 	void set_can_instance(FDCAN_GlobalTypeDef* can)
@@ -53,19 +53,17 @@ public:
 		B1000000,
 	};
 
-	enum class FD_BAUD
+	enum class FD_BRS_BAUD
 	{
-		B1000000,
 		B2000000,
 		B4000000,
 		B8000000,
-		B12000000
 	};
 
 	bool set_baud(const STD_BAUD baud);
 	static bool set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const handle);
-	bool set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud);
-	static bool set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FDCAN_HandleTypeDef* const handle);
+	bool set_baud(const STD_BAUD std_baud, const FD_BRS_BAUD fd_baud);
+	static bool set_baud(const STD_BAUD std_baud, const FD_BRS_BAUD fd_baud, FDCAN_HandleTypeDef* const handle);
 
 protected:
 
@@ -73,7 +71,7 @@ protected:
 	bool m_baud_is_set;
 
 	STD_BAUD m_std_baud;
-	FD_BAUD m_fd_brs_baud;
+	FD_BRS_BAUD m_fd_brs_baud;
 
 	bool send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data);
 

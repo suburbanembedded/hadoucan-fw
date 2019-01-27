@@ -13,7 +13,7 @@ bool STM32_fdcan_tx::init()
 	HAL_StatusTypeDef ret = HAL_OK;
 
 	//TODO: store the baud rate and always reconfigure it here
-	// m_fdcan_handle = FDCAN_HandleTypeDef();
+	*m_fdcan_handle = FDCAN_HandleTypeDef();
 
 	m_fdcan_handle->Instance = m_fdcan;
 	// m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_CLASSIC;
@@ -24,10 +24,10 @@ bool STM32_fdcan_tx::init()
 	m_fdcan_handle->Init.TransmitPause = DISABLE;
 	m_fdcan_handle->Init.ProtocolException = ENABLE;
 
-	m_std_baud = STD_BAUD::B125000;
-	m_fd_brs_baud = FD_BAUD::B2000000;
-	// m_std_baud =    STD_BAUD::B1000000;
-	// m_fd_brs_baud = FD_BAUD::B12000000;
+	// m_std_baud = STD_BAUD::B125000;
+	// m_fd_brs_baud = FD_BRS_BAUD::B2000000;
+	m_std_baud =    STD_BAUD::B1000000;
+	m_fd_brs_baud = FD_BRS_BAUD::B8000000;
 	if(!set_baud(m_std_baud, m_fd_brs_baud, m_fdcan_handle))
 	{
 		return false;
@@ -60,13 +60,13 @@ bool STM32_fdcan_tx::init()
 	}
 
 /*
-	//units of mtq, ie kernel clock - 120MHz -> 8.3333ns
+	//units of mtq, ie kernel clock - 80MHz -> 12.5ns
 	//ADM3055E - TXD->BUS R->D 35 - 60ns
 	//ADM3055E - TXD->BUS D->E 46 - 70ns
 	//ADM3055E - TXD->RXD Falling 150ns full, 300ns slope ctrl
 	//ADM3055E - TXD->RXD Rising 150ns full, 300ns slope ctrl
-	//150ns is 18 mtq
-	ret = HAL_FDCAN_ConfigTxDelayCompensation(m_fdcan_handle, 9, 4);
+	//150ns is 12 mtq
+	ret = HAL_FDCAN_ConfigTxDelayCompensation(m_fdcan_handle, 2, 1);
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTxDelayCompensation failed");
@@ -78,10 +78,28 @@ bool STM32_fdcan_tx::init()
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTxDelayCompensation failed");
 		return false;
 	}
-*/
 
+	FDCAN_ClkCalUnitTypeDef cal_config;
+	cal_config.ClockCalibration = DISABLE;
+	cal_config.ClockDivider = FDCAN_CLOCK_DIV1;
+	cal_config.MinOscClkPeriods = 0x00;
+	cal_config.CalFieldLength = FDCAN_CALIB_FIELD_LENGTH_32;
+	cal_config.TimeQuantaPerBitTime = 25;
+	cal_config.WatchdogStartValue = 0;
+	ret = HAL_FDCAN_ConfigClockCalibration(m_fdcan_handle, &cal_config);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigClockCalibration failed");
+		return false;
+	}
+*/
 	FDCAN_ErrorCountersTypeDef error_counters;
-	const HAL_StatusTypeDef errcnt_ret = HAL_FDCAN_GetErrorCounters(m_fdcan_handle, &error_counters);
+	ret = HAL_FDCAN_GetErrorCounters(m_fdcan_handle, &error_counters);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_GetErrorCounters failed");
+		return false;
+	}
 
 	// Configure Rx Std filter
 	FDCAN_FilterTypeDef sFilter0;
@@ -177,51 +195,66 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD baud)
 
 bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const handle)
 {
-	//120MHz CAN Clk
+	//80MHz CAN Clk
 	switch(baud)
 	{
 		case STD_BAUD::B10000:
 		{
-			handle->Init.NominalPrescaler = 48;		//1-512
+			handle->Init.NominalPrescaler = 40;		//1-512
 			handle->Init.NominalSyncJumpWidth = 8;	//1-128
 			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-			handle->Init.NominalTimeSeg1 = 218;		//1-256 
-			handle->Init.NominalTimeSeg2 = 31;		//1-128
+			handle->Init.NominalTimeSeg1 = 174;		//1-256 
+			handle->Init.NominalTimeSeg2 = 25;		//1-128
 
-			handle->Init.DataPrescaler = 0;//1-32
-			handle->Init.DataSyncJumpWidth = 0;//1-16
-			handle->Init.DataTimeSeg1 = 0;//1-32
-			handle->Init.DataTimeSeg2 = 0;//1-16
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 1;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
+
+			break;
+		}
+		case STD_BAUD::B20000:
+		{
+			handle->Init.NominalPrescaler = 40;		//1-512
+			handle->Init.NominalSyncJumpWidth = 8;	//1-128
+			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+			handle->Init.NominalTimeSeg1 = 87;		//1-256 
+			handle->Init.NominalTimeSeg2 = 12;		//1-128
+
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 1;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
 
 			break;
 		}
 		case STD_BAUD::B50000:
 		{
-			handle->Init.NominalPrescaler = 48;		//1-512
+			handle->Init.NominalPrescaler = 20;		//1-512
 			handle->Init.NominalSyncJumpWidth = 8;	//1-128
 			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-			handle->Init.NominalTimeSeg1 = 43;		//1-256 
-			handle->Init.NominalTimeSeg2 = 6;		//1-128
+			handle->Init.NominalTimeSeg1 = 69;		//1-256 
+			handle->Init.NominalTimeSeg2 = 10;		//1-128
 
-			handle->Init.DataPrescaler = 0;//1-32
-			handle->Init.DataSyncJumpWidth = 0;//1-16
-			handle->Init.DataTimeSeg1 = 0;//1-32
-			handle->Init.DataTimeSeg2 = 0;//1-16
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 1;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
 
 			break;
 		}
 		case STD_BAUD::B100000:
 		{
-			handle->Init.NominalPrescaler = 48;		//1-512
+			handle->Init.NominalPrescaler = 5;		//1-512
 			handle->Init.NominalSyncJumpWidth = 8;	//1-128
 			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-			handle->Init.NominalTimeSeg1 = 21;		//1-256 
-			handle->Init.NominalTimeSeg2 = 3;		//1-128
+			handle->Init.NominalTimeSeg1 = 139;		//1-256 
+			handle->Init.NominalTimeSeg2 = 20;		//1-128
 
-			handle->Init.DataPrescaler = 0;//1-32
-			handle->Init.DataSyncJumpWidth = 0;//1-16
-			handle->Init.DataTimeSeg1 = 0;//1-32
-			handle->Init.DataTimeSeg2 = 0;//1-16
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 1;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
 
 			break;
 		}
@@ -230,13 +263,13 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const ha
 			handle->Init.NominalPrescaler = 5;		//1-512
 			handle->Init.NominalSyncJumpWidth = 8;	//1-128
 			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-			handle->Init.NominalTimeSeg1 = 167;		//1-256 
-			handle->Init.NominalTimeSeg2 = 24;		//1-128
+			handle->Init.NominalTimeSeg1 = 111;		//1-256 
+			handle->Init.NominalTimeSeg2 = 20;		//1-128
 
-			handle->Init.DataPrescaler = 0;//1-32
-			handle->Init.DataSyncJumpWidth = 0;//1-16
-			handle->Init.DataTimeSeg1 = 0;//1-32
-			handle->Init.DataTimeSeg2 = 0;//1-16
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 1;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
 
 			break;
 		}
@@ -245,43 +278,58 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const ha
 			handle->Init.NominalPrescaler = 5;		//1-512
 			handle->Init.NominalSyncJumpWidth = 8;	//1-128
 			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-			handle->Init.NominalTimeSeg1 = 83;		//1-256 
-			handle->Init.NominalTimeSeg2 = 12;		//1-128
+			handle->Init.NominalTimeSeg1 = 55;		//1-256 
+			handle->Init.NominalTimeSeg2 = 8;		//1-128
 
-			handle->Init.DataPrescaler = 0;//1-32
-			handle->Init.DataSyncJumpWidth = 0;//1-16
-			handle->Init.DataTimeSeg1 = 0;//1-32
-			handle->Init.DataTimeSeg2 = 0;//1-16
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 1;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
 
 			break;
 		}
 		case STD_BAUD::B500000:
 		{
-			handle->Init.NominalPrescaler = 5;		//1-512
+			handle->Init.NominalPrescaler = 1;		//1-512
 			handle->Init.NominalSyncJumpWidth = 8;	//1-128
 			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-			handle->Init.NominalTimeSeg1 = 41;		//1-256 
-			handle->Init.NominalTimeSeg2 = 6;		//1-128
+			handle->Init.NominalTimeSeg1 = 139;		//1-256 
+			handle->Init.NominalTimeSeg2 = 20;		//1-128
 
-			handle->Init.DataPrescaler = 0;//1-32
-			handle->Init.DataSyncJumpWidth = 0;//1-16
-			handle->Init.DataTimeSeg1 = 0;//1-32
-			handle->Init.DataTimeSeg2 = 0;//1-16
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 1;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
+
+			break;
+		}
+		case STD_BAUD::B800000:
+		{
+			handle->Init.NominalPrescaler = 1;		//1-512
+			handle->Init.NominalSyncJumpWidth = 8;	//1-128
+			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+			handle->Init.NominalTimeSeg1 = 87;		//1-256 
+			handle->Init.NominalTimeSeg2 = 12;		//1-128
+
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 1;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
 
 			break;
 		}
 		case STD_BAUD::B1000000:
 		{
-			handle->Init.NominalPrescaler = 5;		//1-512
+			handle->Init.NominalPrescaler = 1;		//1-512
 			handle->Init.NominalSyncJumpWidth = 8;	//1-128
 			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-			handle->Init.NominalTimeSeg1 = 20;		//1-256 
-			handle->Init.NominalTimeSeg2 = 3;		//1-128
+			handle->Init.NominalTimeSeg1 = 69;		//1-256 
+			handle->Init.NominalTimeSeg2 = 10;		//1-128
 
-			handle->Init.DataPrescaler = 0;//1-32
-			handle->Init.DataSyncJumpWidth = 0;//1-16
-			handle->Init.DataTimeSeg1 = 0;//1-32
-			handle->Init.DataTimeSeg2 = 0;//1-16
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 1;//1-32
+			handle->Init.DataTimeSeg2 = 1;//1-16
 
 			break;
 		}
@@ -294,62 +342,44 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const ha
 	return true;
 }
 
-bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud)
+bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BRS_BAUD fd_baud)
 {
 	m_baud_is_set = true;
 	return set_baud(std_baud, fd_baud, m_fdcan_handle);
 }
-bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BAUD fd_baud, FDCAN_HandleTypeDef* const handle)
+bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BRS_BAUD fd_baud, FDCAN_HandleTypeDef* const handle)
 {
 	if(!set_baud(std_baud, handle))
 	{
 		return false;
 	}
 
-	//120MHz CAN Clk
+	//80MHz CAN Clk
 	switch(fd_baud)
 	{
-		case FD_BAUD::B1000000:
-		{
-			handle->Init.DataPrescaler = 5;//1-32
-			handle->Init.DataSyncJumpWidth = 4;//1-16
-			handle->Init.DataTimeSeg1 = 20;//1-32
-			handle->Init.DataTimeSeg2 = 3;//1-16
-
-			break;
-		}
-		case FD_BAUD::B2000000:
+		case FD_BRS_BAUD::B2000000:
 		{
 			handle->Init.DataPrescaler = 2;//1-32
 			handle->Init.DataSyncJumpWidth = 4;//1-16
-			handle->Init.DataTimeSeg1 = 25;//1-32
+			handle->Init.DataTimeSeg1 = 32;//1-32
+			handle->Init.DataTimeSeg2 = 7;//1-16
+
+			break;
+		}
+		case FD_BRS_BAUD::B4000000:
+		{
+			handle->Init.DataPrescaler = 2;//1-32
+			handle->Init.DataSyncJumpWidth = 3;//1-16
+			handle->Init.DataTimeSeg1 = 15;//1-32
 			handle->Init.DataTimeSeg2 = 4;//1-16
-
 			break;
 		}
-		case FD_BAUD::B4000000:
-		{
-			handle->Init.DataPrescaler = 2;//1-32
-			handle->Init.DataSyncJumpWidth = 4;//1-16
-			handle->Init.DataTimeSeg1 = 12;//1-32
-			handle->Init.DataTimeSeg2 = 2;//1-16
-			break;
-		}
-		case FD_BAUD::B8000000:
+		case FD_BRS_BAUD::B8000000:
 		{
 			handle->Init.DataPrescaler = 1;//1-32
-			handle->Init.DataSyncJumpWidth = 4;//1-16
-			handle->Init.DataTimeSeg1 = 12;//1-32
-			handle->Init.DataTimeSeg2 = 2;//1-16
-
-			break;
-		}
-		case FD_BAUD::B12000000:
-		{
-			handle->Init.DataPrescaler = 1;//1-32
-			handle->Init.DataSyncJumpWidth = 4;//1-16
-			handle->Init.DataTimeSeg1 = 8;//1-32
-			handle->Init.DataTimeSeg2 = 1;//1-16
+			handle->Init.DataSyncJumpWidth = 2;//1-16
+			handle->Init.DataTimeSeg1 = 6;//1-32
+			handle->Init.DataTimeSeg2 = 3;//1-16
 
 			break;
 		}
