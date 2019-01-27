@@ -1,0 +1,19 @@
+
+Send CAN 2.0A and 2.0B packets at full bus utilization*
+Send CAN FD packets with up to 64 payload bytes at full bus utilization*
+	CAN FD bit rate switch up to 8Mbps supported
+
+Send and receive all can packet formats without reconfiguration
+	Able to send or receive 2.0A, 2.0B, CAN FD packets, switching formats on a packet-by-packet basis
+
+CAN isolation protects sensitive electronics from industrial transients
+CAN isolation allows for fault isolation between busses
+
+Multi-bus time sync feature allows traffic monitoring on several independent networks**
+
+USB 2.0 High speed allows can bus networks with full bus utilization to be monitored
+
+Lawicel AG CAN232 protocol compatible, with extensions for CAN FD
+
+* Test this
+** Pro version only

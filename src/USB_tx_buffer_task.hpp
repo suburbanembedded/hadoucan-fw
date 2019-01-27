@@ -16,7 +16,7 @@ class USB_tx_buffer_task : public Task_static<1024>
 public:
 
   //if an insertion would put us over this limit, block until there is space
-  const size_t BUFFER_HIGH_WATERMARK = 1024 * 16;
+  static constexpr size_t BUFFER_HIGH_WATERMARK = 1024 * 16;
 
 	USB_tx_buffer_task()
 	{
@@ -110,8 +110,8 @@ protected:
 		return false;
 	}
 
-	static const uint32_t USB_HS_PACKET_WAIT_MS = 50;
-	static const uint32_t USB_HS_PACKET_MAX_LEN = 512;
+	static constexpr uint32_t USB_HS_PACKET_WAIT_MS = 50;
+	static constexpr uint32_t USB_HS_PACKET_MAX_LEN = 512;
 
 	std::deque<uint8_t> m_tx_buf;
 	Mutex_static m_tx_buf_mutex;
