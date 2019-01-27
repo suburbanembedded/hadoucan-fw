@@ -2,6 +2,11 @@
 
 #include "uart1_printf.hpp"
 
+constexpr size_t USB_tx_buffer_task::BUFFER_HIGH_WATERMARK;
+
+constexpr uint32_t USB_tx_buffer_task::USB_HS_PACKET_WAIT_MS;
+constexpr uint32_t USB_tx_buffer_task::USB_HS_PACKET_MAX_LEN;
+
 void USB_tx_buffer_task::work()
 {
 	std::vector<uint8_t> m_packet_buf;
