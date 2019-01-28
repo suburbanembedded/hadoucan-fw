@@ -78,21 +78,21 @@ bool STM32_fdcan_tx::init()
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTxDelayCompensation failed");
 		return false;
 	}
+*/
 
-	FDCAN_ClkCalUnitTypeDef cal_config;
+	//bypass clock calibration
+	// fdcan_ker_ck = 80MHz
+	// fdcan_tq_ck  = 20MHz must be in [0.5, 25] MHz
+	FDCAN_ClkCalUnitTypeDef cal_config = FDCAN_ClkCalUnitTypeDef();
 	cal_config.ClockCalibration = DISABLE;
-	cal_config.ClockDivider = FDCAN_CLOCK_DIV1;
-	cal_config.MinOscClkPeriods = 0x00;
-	cal_config.CalFieldLength = FDCAN_CALIB_FIELD_LENGTH_32;
-	cal_config.TimeQuantaPerBitTime = 25;
-	cal_config.WatchdogStartValue = 0;
+	cal_config.ClockDivider = FDCAN_CLOCK_DIV4;
 	ret = HAL_FDCAN_ConfigClockCalibration(m_fdcan_handle, &cal_config);
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigClockCalibration failed");
 		return false;
 	}
-*/
+
 	FDCAN_ErrorCountersTypeDef error_counters;
 	ret = HAL_FDCAN_GetErrorCounters(m_fdcan_handle, &error_counters);
 	if(ret != HAL_OK)
@@ -195,7 +195,7 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD baud)
 
 bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const handle)
 {
-	//80MHz CAN Clk
+	//80MHz fdcan_ker_ck
 	switch(baud)
 	{
 		case STD_BAUD::B10000:
@@ -354,7 +354,7 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BRS_BAUD fd_baud
 		return false;
 	}
 
-	//80MHz CAN Clk
+	//80MHz CAN fdcan_ker_ck
 	switch(fd_baud)
 	{
 		case FD_BRS_BAUD::B2000000:
