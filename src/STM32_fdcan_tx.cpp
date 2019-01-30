@@ -26,8 +26,8 @@ bool STM32_fdcan_tx::init()
 
 	// m_std_baud = STD_BAUD::B125000;
 	// m_fd_brs_baud = FD_BRS_BAUD::B2000000;
-	m_std_baud =    STD_BAUD::B1000000;
-	m_fd_brs_baud = FD_BRS_BAUD::B8000000;
+	m_std_baud =       STD_BAUD::B1000000;
+	m_fd_brs_baud = FD_BRS_BAUD::B5000000;
 	if(!set_baud(m_std_baud, m_fd_brs_baud, m_fdcan_handle))
 	{
 		return false;
@@ -59,14 +59,26 @@ bool STM32_fdcan_tx::init()
 		return false;
 	}
 
-/*
-	//units of mtq, ie kernel clock - 80MHz -> 12.5ns
+	//bypass clock calibration
+	// fdcan_ker_ck = 80MHz
+	// fdcan_tq_ck  = fdcan_ker_ck / 1
+	FDCAN_ClkCalUnitTypeDef cal_config = FDCAN_ClkCalUnitTypeDef();
+	cal_config.ClockCalibration = DISABLE;
+	cal_config.ClockDivider = FDCAN_CLOCK_DIV1;
+	ret = HAL_FDCAN_ConfigClockCalibration(m_fdcan_handle, &cal_config);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigClockCalibration failed");
+		return false;
+	}
+
+	//units of mtq - fdcan_tq_ck - 80MHz -> 12.5ns
 	//ADM3055E - TXD->BUS R->D 35 - 60ns
 	//ADM3055E - TXD->BUS D->E 46 - 70ns
 	//ADM3055E - TXD->RXD Falling 150ns full, 300ns slope ctrl
 	//ADM3055E - TXD->RXD Rising 150ns full, 300ns slope ctrl
 	//150ns is 12 mtq
-	ret = HAL_FDCAN_ConfigTxDelayCompensation(m_fdcan_handle, 2, 1);
+	ret = HAL_FDCAN_ConfigTxDelayCompensation(m_fdcan_handle, 12, 0);
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTxDelayCompensation failed");
@@ -76,20 +88,6 @@ bool STM32_fdcan_tx::init()
 	if(ret != HAL_OK)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTxDelayCompensation failed");
-		return false;
-	}
-*/
-
-	//bypass clock calibration
-	// fdcan_ker_ck = 80MHz
-	// fdcan_tq_ck  = 20MHz must be in [0.5, 25] MHz
-	FDCAN_ClkCalUnitTypeDef cal_config = FDCAN_ClkCalUnitTypeDef();
-	cal_config.ClockCalibration = DISABLE;
-	cal_config.ClockDivider = FDCAN_CLOCK_DIV4;
-	ret = HAL_FDCAN_ConfigClockCalibration(m_fdcan_handle, &cal_config);
-	if(ret != HAL_OK)
-	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigClockCalibration failed");
 		return false;
 	}
 
@@ -368,18 +366,26 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BRS_BAUD fd_baud
 		}
 		case FD_BRS_BAUD::B4000000:
 		{
-			handle->Init.DataPrescaler = 2;//1-32
-			handle->Init.DataSyncJumpWidth = 3;//1-16
-			handle->Init.DataTimeSeg1 = 15;//1-32
-			handle->Init.DataTimeSeg2 = 4;//1-16
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 4;//1-16
+			handle->Init.DataTimeSeg1 = 14;//1-32
+			handle->Init.DataTimeSeg2 = 5;//1-16
+			break;
+		}
+		case FD_BRS_BAUD::B5000000:
+		{
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 4;//1-16
+			handle->Init.DataTimeSeg1 = 10;//1-32
+			handle->Init.DataTimeSeg2 = 5;//1-16
 			break;
 		}
 		case FD_BRS_BAUD::B8000000:
 		{
 			handle->Init.DataPrescaler = 1;//1-32
-			handle->Init.DataSyncJumpWidth = 2;//1-16
-			handle->Init.DataTimeSeg1 = 6;//1-32
-			handle->Init.DataTimeSeg2 = 3;//1-16
+			handle->Init.DataSyncJumpWidth = 3;//1-16
+			handle->Init.DataTimeSeg1 = 5;//1-32
+			handle->Init.DataTimeSeg2 = 4;//1-16
 
 			break;
 		}
