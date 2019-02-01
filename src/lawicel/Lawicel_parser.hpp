@@ -86,8 +86,6 @@ class Lawicel_parser
 	
 	virtual bool handle_tx_fd_std(const uint32_t id, const uint8_t data_len, const uint8_t* data) = 0;
 	virtual bool handle_tx_fd_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data) = 0;
-	virtual bool handle_tx_fd_rtr_std(const uint32_t id, const uint8_t data_len) = 0;
-	virtual bool handle_tx_fd_rtr_ext(const uint32_t id, const uint8_t data_len) = 0;
 
 	virtual bool handle_get_flags() = 0;
 	
@@ -122,9 +120,6 @@ class Lawicel_parser
 	bool parse_tx_fd_std(const char* in_str);
 	bool parse_tx_fd_ext(const char* in_str);
 	
-	bool parse_tx_fd_rtr_std(const char* in_str);
-	bool parse_tx_fd_rtr_ext(const char* in_str);
-
 	bool parse_get_flags(const char* in_str);
 
 	bool parse_set_accept_code(const char* in_str);
