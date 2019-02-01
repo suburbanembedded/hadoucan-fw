@@ -233,16 +233,6 @@ bool Lawicel_parser::parse_string(const char* in_str)
 			ret = parse_tx_fd_ext(in_str);
 			break;
 		}
-		case 'u':
-		{
-			ret = parse_tx_fd_rtr_std(in_str);
-			break;
-		}
-		case 'U':
-		{
-			ret = parse_tx_fd_rtr_ext(in_str);
-			break;
-		}
 		case 'F':
 		{
 			ret = parse_get_flags(in_str);
@@ -922,15 +912,6 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 	}
 
 	return success;
-}
-
-bool Lawicel_parser::parse_tx_fd_rtr_std(const char* in_str)
-{
-	return false;
-}
-bool Lawicel_parser::parse_tx_fd_rtr_ext(const char* in_str)
-{
-	return false;
 }
 
 bool Lawicel_parser::parse_get_flags(const char* in_str)

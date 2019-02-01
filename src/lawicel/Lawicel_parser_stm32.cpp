@@ -106,14 +106,6 @@ bool Lawicel_parser_stm32::handle_tx_fd_ext(const uint32_t id, const uint8_t dat
 {
 	return m_fdcan->tx_fd_ext(id, STM32_fdcan_tx::BRS::ON, STM32_fdcan_tx::ESI::ACTIVE, data_len, data);
 }
-bool Lawicel_parser_stm32::handle_tx_fd_rtr_std(const uint32_t id, const uint8_t data_len)
-{
-	return m_fdcan->tx_fd_rtr_std(id, STM32_fdcan_tx::ESI::ACTIVE, data_len);
-}
-bool Lawicel_parser_stm32::handle_tx_fd_rtr_ext(const uint32_t id, const uint8_t data_len)
-{
-	return m_fdcan->tx_fd_rtr_ext(id, STM32_fdcan_tx::ESI::ACTIVE, data_len);
-}
 bool Lawicel_parser_stm32::handle_get_flags()
 {
 	return false;

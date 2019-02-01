@@ -49,8 +49,6 @@ public:
 
 	bool tx_fd_std(const uint32_t id, const BRS brs, const ESI esi, const uint8_t data_len, const uint8_t* data);
 	bool tx_fd_ext(const uint32_t id, const BRS brs, const ESI esi, const uint8_t data_len, const uint8_t* data);
-	bool tx_fd_rtr_std(const uint32_t id, const ESI esi, const uint8_t data_len);
-	bool tx_fd_rtr_ext(const uint32_t id, const ESI esi, const uint8_t data_len);
 
 	enum class STD_BAUD
 	{
