@@ -7,6 +7,18 @@ class STM32_fdcan_tx
 {
 public:
 
+	enum class BRS
+	{
+		OFF,
+		ON
+	};
+
+	enum class ESI
+	{
+		ACTIVE,//DOM, def
+		PASSIVE//recessive, means error
+	};
+
 	STM32_fdcan_tx()
 	{		
 		m_is_open = false;
@@ -35,10 +47,10 @@ public:
 	bool tx_std_rtr(const uint32_t id, const uint8_t data_len);
 	bool tx_ext_rtr(const uint32_t id, const uint8_t data_len);
 
-	bool tx_fd_std(const uint32_t id, const bool brs, const bool esi, const uint8_t data_len, const uint8_t* data);
-	bool tx_fd_ext(const uint32_t id, const bool brs, const bool esi, const uint8_t data_len, const uint8_t* data);
-	bool tx_fd_rtr_std(const uint32_t id, const bool esi, const uint8_t data_len);
-	bool tx_fd_rtr_ext(const uint32_t id, const bool esi, const uint8_t data_len);
+	bool tx_fd_std(const uint32_t id, const BRS brs, const ESI esi, const uint8_t data_len, const uint8_t* data);
+	bool tx_fd_ext(const uint32_t id, const BRS brs, const ESI esi, const uint8_t data_len, const uint8_t* data);
+	bool tx_fd_rtr_std(const uint32_t id, const ESI esi, const uint8_t data_len);
+	bool tx_fd_rtr_ext(const uint32_t id, const ESI esi, const uint8_t data_len);
 
 	enum class STD_BAUD
 	{
