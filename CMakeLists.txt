@@ -21,8 +21,10 @@ add_definitions(
 	-DSTM32H750xx
 	-D__weak=__attribute__\(\(weak\)\)
 	-D__packed=__attribute__\(\(__packed__\)\)
+
 	-DUSE_HAL_DRIVER
 	-DWORD_SIZE=4
+
 	-DGTEST_HAS_PTHREAD=0
 	-DGTEST_HAS_CLONE=0
 	-DGTEST_HAS_POSIX_RE=0
@@ -87,6 +89,8 @@ add_executable(canusbfdiso
 	src/main.cpp
 	src/main_cube.c
 	src/hal_inst.c
+
+	src/boot_qspi.cpp
 
 	src/USB_RX_task.cpp
 	src/USB_TX_task.cpp

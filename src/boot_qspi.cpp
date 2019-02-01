@@ -5,7 +5,7 @@ bool Boot_qspi::init()
 
 	*m_qspi_handle = QSPI_HandleTypeDef();
 
-	m_qspi_handle->Instance = &QUADSPI;
+	m_qspi_handle->Instance = QUADSPI;
 
 	m_qspi_handle->Init = QSPI_InitTypeDef();
 
@@ -20,18 +20,20 @@ bool Boot_qspi::init()
 	m_qspi_handle->Init.FlashID = QSPI_FLASH_ID_2;
 	m_qspi_handle->Init.DualFlash = QSPI_DUALFLASH_DISABLE;
 
-	m_qspi_handle->pTxBuffPtr
-	m_qspi_handle->TxXferSize
-	m_qspi_handle->TxXferCount
+	// m_qspi_handle->pTxBuffPtr
+	// m_qspi_handle->TxXferSize
+	// m_qspi_handle->TxXferCount
 
-	m_qspi_handle->pRxBuffPtr
-	m_qspi_handle->RxXferSize
-	m_qspi_handle->RxXferCount
+	// m_qspi_handle->pRxBuffPtr
+	// m_qspi_handle->RxXferSize
+	// m_qspi_handle->RxXferCount
 
 	HAL_QSPI_Init(m_qspi_handle);
+
+	return true;
 }
 
-void Boot_qspi_mmap::config_mmap_read()
+bool Boot_qspi_mmap::config_mmap_read()
 {
 	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
 	cmd_cfg.Instruction//?
@@ -53,7 +55,9 @@ void Boot_qspi_mmap::config_mmap_read()
 	mm_cfg.TimeOutPeriod = 0xFFFF;//TODO enable this, for lower power, in clk cycles
 	mm_cfg.TimeOutActivation = QSPI_TIMEOUT_COUNTER_DISABLE;//TODO enable this, for lower power
 	
-	HAL_QSPI_MemoryMapped(m_qspi_handle, &cmd_cfg, &mm_cfg);	
+	HAL_QSPI_MemoryMapped(m_qspi_handle, &cmd_cfg, &mm_cfg);
+
+	return true;
 }
 
 bool Boot_qspi_indirect::config_indirect_read()
@@ -79,6 +83,8 @@ bool Boot_qspi_indirect::config_indirect_read()
 	HAL_QSPI_Command(m_qspi_handle, &cmd_cfg, 0xFFFF);
 	HAL_QSPI_Transmit();
 	HAL_QSPI_Receive();
+
+	return true;
 }
 bool Boot_qspi_indirect::config_indirect_write()
 {
@@ -101,6 +107,8 @@ bool Boot_qspi_indirect::config_indirect_write()
 	//indirect mode
 	//timeout in ticks
 	HAL_QSPI_Command(m_qspi_handle, &cmd_cfg, 10);
+
+	return true;
 }
 
 extern "C"
