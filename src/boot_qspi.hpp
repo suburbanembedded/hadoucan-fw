@@ -15,8 +15,10 @@ class W25Q16JV
 	static constexpr size_t BLOCK1_LEN = 32*1024;
 	static constexpr size_t BLOCK2_LEN = 64*1024;
 
-	static constexpr size_t BLOCK1_COUNT = 128;
-	static constexpr size_t BLOCK2_COUNT = 256;
+	static constexpr size_t PAGE_COUNT   = 8192;
+	static constexpr size_t SECTOR_COUNT = 512;
+	static constexpr size_t BLOCK1_COUNT = 64;
+	static constexpr size_t BLOCK2_COUNT = 32;
 
 	static constexpr size_t RESET_ASSERT_US = 1;
 	static constexpr size_t RESET_DELAY_US = 30;
