@@ -212,6 +212,97 @@ void STM32_fdcan_rx::work()
 			}
 		}
 
+		//check PSR for RX errors
+		{
+			const uint32_t psr_reg = READ_REG(m_fdcan_handle->Instance->PSR);
+
+			const uint32_t dlec = (psr_reg & 0x00000700) >> 8;
+			const uint32_t lec  = (psr_reg & 0x00000007) >> 0;
+			
+			switch(lec)
+			{
+				case 0:
+				{
+					break;
+				}
+				case 1:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec stuff error");
+					break;
+				}
+				case 2:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec form error");
+					break;
+				}
+				case 3:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec ack error");
+					break;
+				}
+				case 4:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec bit1 error error");
+					break;
+				}
+				case 5:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec bit0 error error");
+					break;
+				}
+				case 6:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec crc error");
+					break;
+				}
+				case 7:
+				{
+					break;
+				}
+			}
+			switch(dlec)
+			{
+				case 0:
+				{
+					break;
+				}
+				case 1:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec stuff error");
+					break;
+				}
+				case 2:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec form error");
+					break;
+				}
+				case 3:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec ack error");
+					break;
+				}
+				case 4:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec bit1 error error");
+					break;
+				}
+				case 5:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec bit0 error error");
+					break;
+				}
+				case 6:
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec crc error");
+					break;
+				}
+				case 7:
+				{
+					break;
+				}
+			}
+		}
+
 		//if we didn't sleep because we should poll, or we woke up due to timeout, check the fifo
 		if(!queue_set_pk)
 		{
