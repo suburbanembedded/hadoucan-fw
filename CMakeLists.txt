@@ -90,7 +90,7 @@ add_executable(canusbfdiso
 	src/main_cube.c
 	src/hal_inst.c
 
-	#src/boot_qspi.cpp
+	src/boot_qspi.cpp
 
 	src/USB_RX_task.cpp
 	src/USB_TX_task.cpp

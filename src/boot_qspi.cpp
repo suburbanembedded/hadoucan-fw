@@ -1,5 +1,328 @@
 #include "boot_qspi.hpp"
 
+QSPI_CommandTypeDef W25Q16JV::get_write_enable_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::WRITE_ENABLE;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_NONE;
+	cmd_cfg.NbData = 0;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_volatile_write_enable_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::WRITE_ENABLE_VSR;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_NONE;
+	cmd_cfg.NbData = 0;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_volatile_write_enable_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::WRITE_DISABLE;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_NONE;
+	cmd_cfg.NbData = 0;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_read_status_reg1_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::READ_STATUS_1;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_1_LINE;
+	cmd_cfg.NbData = 2;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_write_status_reg1_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::WRITE_STATUS_1;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_1_LINE;
+	cmd_cfg.NbData = 2;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_read_data_cmd(const uint32_t addr, const size_t len)
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::READ_DATA;
+	cmd_cfg.Address = addr;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_1_LINE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_1_LINE;
+	cmd_cfg.NbData = len;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+bool W25Q16JV::get_page_prgm_cmd(const uint32_t addr, const size_t len, QSPI_CommandTypeDef* const cmd_cfg)
+{
+	if(len > 256)
+	{
+		return false;
+	}
+
+	*cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg->Instruction = STD_CMD::PAGE_PRGM;
+	cmd_cfg->Address = addr;
+	cmd_cfg->AlternateBytes = 0;
+	cmd_cfg->AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg->AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg->DummyCycles = 0;
+	cmd_cfg->InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg->AddressMode = QSPI_ADDRESS_1_LINE;
+	cmd_cfg->AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg->DataMode = QSPI_DATA_1_LINE;
+	cmd_cfg->NbData = len;
+	cmd_cfg->DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg->DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg->SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return true;
+}
+
+bool W25Q16JV::get_sector_erase_cmd(const uint32_t sector_num, QSPI_CommandTypeDef* const cmd_cfg)
+{
+	if(sector_num > SECTOR_COUNT)
+	{
+		return false;
+	}
+
+	*cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg->Instruction = STD_CMD::SECTOR_ERASE;
+	cmd_cfg->Address = sector_num;
+	cmd_cfg->AlternateBytes = 0;
+	cmd_cfg->AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg->AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg->DummyCycles = 0;
+	cmd_cfg->InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg->AddressMode = QSPI_ADDRESS_1_LINE;
+	cmd_cfg->AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg->DataMode = QSPI_DATA_NONE;
+	cmd_cfg->NbData = 0;
+	cmd_cfg->DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg->DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg->SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return true;
+}
+
+bool W25Q16JV::get_block64_erase_cmd(const uint32_t block64_num, QSPI_CommandTypeDef* const cmd_cfg)
+{
+	if(block_num > BLOCK1_COUNT)
+	{
+		return false;
+	}
+
+	*cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg->Instruction = STD_CMD::BLOCK_64K_ERASE;
+	cmd_cfg->Address = sector_num;
+	cmd_cfg->AlternateBytes = 0;
+	cmd_cfg->AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg->AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg->DummyCycles = 0;
+	cmd_cfg->InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg->AddressMode = QSPI_ADDRESS_1_LINE;
+	cmd_cfg->AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg->DataMode = QSPI_DATA_NONE;
+	cmd_cfg->NbData = 0;
+	cmd_cfg->DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg->DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg->SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return true;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_chip_erase_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::CHIP_ERASE;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_NONE;
+	cmd_cfg.NbData = 0;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_power_down_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::POWER_DOWN;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_NONE;
+	cmd_cfg.NbData = 0;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_release_power_down_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::RELEASE_POWER_DOWN;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_NONE;
+	cmd_cfg.NbData = 0;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_read_mfg_dev_id_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::MFG_DEV_ID;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_1_LINE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_1_LINE;
+	cmd_cfg.NbData = 2;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
+QSPI_CommandTypeDef W25Q16JV::get_unique_id_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = STD_CMD::UNIQUE_ID;
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_32_BITS;//use address as 4 dummy bytes
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_1_LINE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_1_LINE;
+	cmd_cfg.NbData = 8;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
 bool Boot_qspi::init()
 {
 
@@ -35,21 +358,11 @@ bool Boot_qspi::init()
 
 bool Boot_qspi_mmap::config_mmap_read()
 {
-	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
-	cmd_cfg.Instruction//?
-	cmd_cfg.Address//?
-	cmd_cfg.AlternateBytes//0
-	cmd_cfg.AddressSize//QSPI_ADDRESS_24_BITS
-	cmd_cfg.AlternateBytesSize//QSPI_ALTERNATE_BYTES_8_BITS?
-	cmd_cfg.DummyCycles//0 - 31
-	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;//QSPI_INSTRUCTION_4_LINE
-	cmd_cfg.AddressMode = QSPI_ADDRESS_1_LINE;//later QSPI_ADDRESS_4_LINE
-	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_1_LINE;//later QSPI_ALTERNATE_BYTES_4_LINE
-	cmd_cfg.DataMode = QSPI_DATA_1_LINE;//later, QSPI_DATA_4_LINE
-	cmd_cfg.NbData//0 - FFFFFFFF
-	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
-	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
-	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;//might want QSPI_SIOO_INST_ONLY_FIRST_CMD, dep on flash
+	QSPI_CommandTypeDef cmd_cfg;
+	if(!W25Q16JV::get_read_data_cmd(0, 0, &cmd_cfg))
+	{
+		return false;
+	}
 
 	QSPI_MemoryMappedTypeDef mm_cfg = QSPI_MemoryMappedTypeDef();
 	mm_cfg.TimeOutPeriod = 0xFFFF;//TODO enable this, for lower power, in clk cycles
@@ -62,21 +375,11 @@ bool Boot_qspi_mmap::config_mmap_read()
 
 bool Boot_qspi_indirect::config_indirect_read()
 {
-	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
-	cmd_cfg.Instruction//?
-	cmd_cfg.Address//?
-	cmd_cfg.AlternateBytes//0
-	cmd_cfg.AddressSize//QSPI_ADDRESS_24_BITS
-	cmd_cfg.AlternateBytesSize//QSPI_ALTERNATE_BYTES_8_BITS?
-	cmd_cfg.DummyCycles//0 - 31
-	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;//QSPI_INSTRUCTION_4_LINE
-	cmd_cfg.AddressMode = QSPI_ADDRESS_1_LINE;//later QSPI_ADDRESS_4_LINE
-	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_1_LINE;//later QSPI_ALTERNATE_BYTES_4_LINE
-	cmd_cfg.DataMode = QSPI_DATA_1_LINE;//later, QSPI_DATA_4_LINE
-	cmd_cfg.NbData//0 - FFFFFFFF
-	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
-	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
-	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;//might want QSPI_SIOO_INST_ONLY_FIRST_CMD, dep on flash
+	QSPI_CommandTypeDef cmd_cfg;
+	if(!W25Q16JV::get_read_data_cmd(0, 0, &cmd_cfg))
+	{
+		return false;
+	}
 
 	//indirect mode
 	//timeout in ticks
@@ -88,22 +391,12 @@ bool Boot_qspi_indirect::config_indirect_read()
 }
 bool Boot_qspi_indirect::config_indirect_write()
 {
-	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
-	cmd_cfg.Instruction//?
-	cmd_cfg.Address//?
-	cmd_cfg.AlternateBytes//0
-	cmd_cfg.AddressSize//QSPI_ADDRESS_24_BITS
-	cmd_cfg.AlternateBytesSize//QSPI_ALTERNATE_BYTES_8_BITS?
-	cmd_cfg.DummyCycles//0 - 31
-	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;//QSPI_INSTRUCTION_4_LINE
-	cmd_cfg.AddressMode = QSPI_ADDRESS_1_LINE;//later QSPI_ADDRESS_4_LINE
-	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_1_LINE;//later QSPI_ALTERNATE_BYTES_4_LINE
-	cmd_cfg.DataMode = QSPI_DATA_1_LINE;//later, QSPI_DATA_4_LINE
-	cmd_cfg.NbData//0 - FFFFFFFF
-	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
-	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
-	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;//might want QSPI_SIOO_INST_ONLY_FIRST_CMD, dep on flash
-	
+	QSPI_CommandTypeDef cmd_cfg;
+	if(!W25Q16JV::get_page_prgm_cmd(0, 0, &cmd_cfg))
+	{
+		return false;
+	}
+
 	//indirect mode
 	//timeout in ticks
 	HAL_QSPI_Command(m_qspi_handle, &cmd_cfg, 10);

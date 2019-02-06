@@ -88,14 +88,14 @@ class W25Q16JV
 	};
 
 	//SPI CMD
-	enum class STD_CMD
+	enum class STD_CMD : uint8_t
 	{
 		WRITE_ENABLE  = 0x06,
 		WRITE_ENABLE_VSR  = 0x50,
 		WRITE_DISABLE = 0x04,
 
 		RELEASE_POWER_DOWN = 0xAB,
-		MFG_ID = 0x60,
+		MFG_DEV_ID = 0x90,
 		JEDEC_ID = 0x9F,
 		UNIQUE_ID = 0x4B,
 
@@ -127,6 +127,20 @@ class W25Q16JV
 	{
 
 	};
+
+	static QSPI_CommandTypeDef get_write_enable_cmd();
+	static QSPI_CommandTypeDef get_volatile_write_enable_cmd();
+	static QSPI_CommandTypeDef get_read_status_reg1_cmd();
+	static QSPI_CommandTypeDef get_write_status_reg1_cmd();
+	static QSPI_CommandTypeDef get_read_data_cmd(const uint32_t addr, const size_t len);
+	static bool get_page_prgm_cmd(const uint32_t addr, const size_t len, QSPI_CommandTypeDef* const cmd_cfg);
+	static bool get_sector_erase_cmd(const uint32_t sector_num, QSPI_CommandTypeDef* const cmd_cfg);
+	static bool get_block64_erase_cmd(const uint32_t block64_num, QSPI_CommandTypeDef* const cmd_cfg);
+	static QSPI_CommandTypeDef get_chip_erase_cmd();
+	static QSPI_CommandTypeDef get_power_down_cmd();
+	static QSPI_CommandTypeDef get_release_power_down_cmd();
+	static QSPI_CommandTypeDef get_read_mfg_dev_id_cmd();
+	static QSPI_CommandTypeDef get_unique_id_cmd();
 };
 
 class Boot_qspi
@@ -138,6 +152,14 @@ class Boot_qspi
 
 protected:
 	QSPI_HandleTypeDef* m_qspi_handle;
+};
+
+class QSPI_iface
+{
+public:
+
+protected:
+
 };
 
 class Boot_qspi_mmap
