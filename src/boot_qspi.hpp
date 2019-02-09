@@ -5,6 +5,7 @@
 
 class W25Q16JV
 {
+public:
 	static constexpr uint8_t MFG_ID = 0xEF;
 	static constexpr uint16_t JEDEC_ID = 0x4015;
 
@@ -130,6 +131,7 @@ class W25Q16JV
 
 	static QSPI_CommandTypeDef get_write_enable_cmd();
 	static QSPI_CommandTypeDef get_volatile_write_enable_cmd();
+	static QSPI_CommandTypeDef get_write_disable_cmd();
 	static QSPI_CommandTypeDef get_read_status_reg1_cmd();
 	static QSPI_CommandTypeDef get_write_status_reg1_cmd();
 	static QSPI_CommandTypeDef get_read_data_cmd(const uint32_t addr, const size_t len);
@@ -154,7 +156,7 @@ protected:
 	QSPI_HandleTypeDef* m_qspi_handle;
 };
 
-class QSPI_iface
+class QSPI_iface : public Boot_qspi
 {
 public:
 
@@ -162,7 +164,7 @@ protected:
 
 };
 
-class Boot_qspi_mmap
+class Boot_qspi_mmap : public Boot_qspi
 {
 
 	Boot_qspi_mmap();
@@ -174,7 +176,7 @@ protected:
 	bool config_mmap_read();
 };
 
-class Boot_qspi_indirect
+class Boot_qspi_indirect : public Boot_qspi
 {
 
 	Boot_qspi_indirect();
