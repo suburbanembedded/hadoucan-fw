@@ -93,6 +93,8 @@ void MX_CRC_Init(void);
 void MX_HASH_Init(void);
 void MX_RTC_Init(void);
 void MX_RNG_Init(void);
+void MX_TIM3_Init(void);
+void MX_QUADSPI_Init(void);
 
 /* USER CODE END EFP */
 
@@ -101,6 +103,8 @@ void MX_RNG_Init(void);
 #define ULPI_CLK_EN_GPIO_Port GPIOA
 #define ULPI_nRESET_Pin GPIO_PIN_1
 #define ULPI_nRESET_GPIO_Port GPIOA
+#define MASTER_TIMESYNC_nOE_Pin GPIO_PIN_4
+#define MASTER_TIMESYNC_nOE_GPIO_Port GPIOC
 #define CAN_SILENT_Pin GPIO_PIN_14
 #define CAN_SILENT_GPIO_Port GPIOB
 #define CAN_STDBY_Pin GPIO_PIN_15
@@ -113,6 +117,8 @@ void MX_RNG_Init(void);
 #define RED2_GPIO_Port GPIOD
 #define GREEN2_Pin GPIO_PIN_15
 #define GREEN2_GPIO_Port GPIOD
+#define CAN_SLOPE_Pin GPIO_PIN_8
+#define CAN_SLOPE_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
