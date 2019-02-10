@@ -19,6 +19,7 @@
 #include "freertos_cpp_util/Mutex_static.hpp"
 #include "freertos_cpp_util/Condition_variable.hpp"
 #include "freertos_cpp_util/object_pool/Object_pool.hpp"
+#include "common_util/Byte_util.hpp"
 
 #include <array>
 #include <deque>
@@ -335,8 +336,8 @@ public:
 				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Receive jdec_id_cmd failed: %u", ret);
 			}
 
-			uint8_t mfg_id = flash_jdec_id[0];
-			uint16_t flash_pn = (uint16_t(flash_jdec_id[1]) << 8) | uint16_t(flash_jdec_id[2]);
+			const uint8_t mfg_id = flash_jdec_id[0];
+			const uint16_t flash_pn = Byte_util::make_u16(flash_jdec_id[1], flash_jdec_id[2]);
 			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
 			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
 			vTaskDelay(500);
@@ -356,13 +357,10 @@ public:
 				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Receive unique_id_cmd failed: %u", ret);
 			}
 
-			uint32_t flash_sn1 = 0;
-			uint32_t flash_sn2 = 0;
-			memcpy(&flash_sn1, flash_unique_id.data(), 4);
-			memcpy(&flash_sn2, flash_unique_id.data() + 4, 4);
+			const uint32_t flash_sn1 = Byte_util::make_u32(flash_unique_id[0], flash_unique_id[1], flash_unique_id[2], flash_unique_id[3]);
+			const uint32_t flash_sn2 = Byte_util::make_u32(flash_unique_id[4], flash_unique_id[5], flash_unique_id[6], flash_unique_id[7]);
 			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, flash_sn1, flash_sn2);
 			vTaskDelay(500);
-			// vTaskSuspend(nullptr);
 		}
 	}
 protected:
