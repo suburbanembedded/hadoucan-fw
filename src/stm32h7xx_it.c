@@ -54,21 +54,6 @@ void DebugMon_Handler(void)
 
 }
 
-void OTG_HS_IRQHandler(void)
-{
-  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
-}
-
-void TIM17_IRQHandler(void)
-{
-  HAL_TIM_IRQHandler(&htim17);
-}
-
-void FDCAN_CAL_IRQHandler(void)
-{
-  HAL_FDCAN_IRQHandler(&hfdcan1);
-}
-
 void FDCAN1_IT0_IRQHandler(void)
 {
   HAL_FDCAN_IRQHandler(&hfdcan1);
@@ -77,4 +62,24 @@ void FDCAN1_IT0_IRQHandler(void)
 void FDCAN1_IT1_IRQHandler(void)
 {
   HAL_FDCAN_IRQHandler(&hfdcan1);
+}
+
+void FDCAN_CAL_IRQHandler(void)
+{
+  HAL_FDCAN_IRQHandler(&hfdcan1);
+}
+
+void OTG_HS_IRQHandler(void)
+{
+  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+}
+
+void QUADSPI_IRQHandler(void)
+{
+  HAL_QSPI_IRQHandler(&hqspi);
+}
+
+void TIM17_IRQHandler(void)
+{
+  HAL_TIM_IRQHandler(&htim17);
 }

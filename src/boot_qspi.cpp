@@ -279,21 +279,21 @@ QSPI_CommandTypeDef W25Q16JV::get_release_power_down_cmd()
 	return cmd_cfg;
 }
 
-QSPI_CommandTypeDef W25Q16JV::get_read_mfg_dev_id_cmd()
+QSPI_CommandTypeDef W25Q16JV::get_read_jdec_id_cmd()
 {
 	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
 
-	cmd_cfg.Instruction = uint32_t(STD_CMD::MFG_DEV_ID);
+	cmd_cfg.Instruction = uint32_t(STD_CMD::JEDEC_ID);
 	cmd_cfg.Address = 0;
 	cmd_cfg.AlternateBytes = 0;
 	cmd_cfg.AddressSize = QSPI_ADDRESS_24_BITS;
 	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
 	cmd_cfg.DummyCycles = 0;
 	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
-	cmd_cfg.AddressMode = QSPI_ADDRESS_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
 	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
 	cmd_cfg.DataMode = QSPI_DATA_1_LINE;
-	cmd_cfg.NbData = 2;
+	cmd_cfg.NbData = 3;
 	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
 	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
 	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
@@ -334,10 +334,11 @@ bool Boot_qspi::init()
 
 	//AHB clock divider
 	//AHB clock is 100MHz
-	m_qspi_handle->Init.ClockPrescaler = 20;//5MHz - 200ns
-	m_qspi_handle->Init.FifoThreshold = 32;//1-32, used for timeout in mmap mode
+	// m_qspi_handle->Init.ClockPrescaler = 20;//5MHz  - 200ns
+	m_qspi_handle->Init.ClockPrescaler = 100;//1MHz - 1000ns
+	m_qspi_handle->Init.FifoThreshold = 1;//1-32, used for timeout in mmap mode
 	m_qspi_handle->Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;//or QSPI_SAMPLE_SHIFTING_HALFCYCLE
-	m_qspi_handle->Init.FlashSize = 23 ;
+	m_qspi_handle->Init.FlashSize = 24;
 	m_qspi_handle->Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
 	m_qspi_handle->Init.ClockMode = QSPI_CLOCK_MODE_0;//clk idle low
 	m_qspi_handle->Init.FlashID = QSPI_FLASH_ID_2;
@@ -351,7 +352,11 @@ bool Boot_qspi::init()
 	// m_qspi_handle->RxXferSize
 	// m_qspi_handle->RxXferCount
 
-	HAL_QSPI_Init(m_qspi_handle);
+	HAL_StatusTypeDef ret = HAL_QSPI_Init(m_qspi_handle);
+	if(ret != HAL_OK)
+	{
+		return false;
+	}
 
 	return true;
 }

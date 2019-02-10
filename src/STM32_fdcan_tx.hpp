@@ -69,6 +69,7 @@ public:
 		B4000000,
 		B5000000,
 		B8000000,
+		B12000000,
 	};
 
 	bool set_baud(const STD_BAUD baud);

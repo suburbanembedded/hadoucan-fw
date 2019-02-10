@@ -141,16 +141,24 @@ public:
 	static QSPI_CommandTypeDef get_chip_erase_cmd();
 	static QSPI_CommandTypeDef get_power_down_cmd();
 	static QSPI_CommandTypeDef get_release_power_down_cmd();
-	static QSPI_CommandTypeDef get_read_mfg_dev_id_cmd();
+	static QSPI_CommandTypeDef get_read_jdec_id_cmd();
 	static QSPI_CommandTypeDef get_unique_id_cmd();
 };
 
 class Boot_qspi
 {
-
-	Boot_qspi();
+public:
+	Boot_qspi()
+	{
+		m_qspi_handle = nullptr;
+	}
 
 	bool init();
+
+	void set_handle(QSPI_HandleTypeDef* const qspi_handle)
+	{
+		m_qspi_handle = qspi_handle;
+	}
 
 protected:
 	QSPI_HandleTypeDef* m_qspi_handle;
@@ -166,10 +174,16 @@ protected:
 
 class Boot_qspi_mmap : public Boot_qspi
 {
+public:
+	Boot_qspi_mmap()
+	{
+		
+	}
 
-	Boot_qspi_mmap();
-
-	bool init();
+	bool init()
+	{
+		return Boot_qspi::init();
+	}
 
 protected:
 
@@ -178,10 +192,16 @@ protected:
 
 class Boot_qspi_indirect : public Boot_qspi
 {
+public:
+	Boot_qspi_indirect()
+	{
 
-	Boot_qspi_indirect();
+	}
 
-	bool init();
+	bool init()
+	{
+		return Boot_qspi::init();
+	}
 
 	void read(uint8_t* ptr, uint32_t len, uint32_t timeout_ms);
 	void write(uint8_t* ptr, uint32_t len, uint32_t timeout_ms);

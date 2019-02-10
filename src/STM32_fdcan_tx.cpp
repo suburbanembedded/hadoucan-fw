@@ -27,7 +27,7 @@ bool STM32_fdcan_tx::init()
 	// m_std_baud = STD_BAUD::B125000;
 	// m_fd_brs_baud = FD_BRS_BAUD::B2000000;
 	m_std_baud =       STD_BAUD::B1000000;
-	m_fd_brs_baud = FD_BRS_BAUD::B4000000;
+	m_fd_brs_baud = FD_BRS_BAUD::B12000000;
 	if(!set_baud(m_std_baud, m_fd_brs_baud, m_fdcan_handle))
 	{
 		return false;
@@ -316,13 +316,30 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const ha
 
 			break;
 		}
+		// case STD_BAUD::B1000000:
+		// {
+		// 	//80 MHz kernel clock
+		// 	handle->Init.NominalPrescaler = 10;		//1-512
+		// 	handle->Init.NominalSyncJumpWidth = 1;	//1-128
+		// 	// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
+		// 	handle->Init.NominalTimeSeg1 = 5;		//1-256 
+		// 	handle->Init.NominalTimeSeg2 = 2;		//1-128
+
+		// 	handle->Init.DataPrescaler = 1;//1-32
+		// 	handle->Init.DataSyncJumpWidth = 1;//1-16
+		// 	handle->Init.DataTimeSeg1 = 1;//1-32
+		// 	handle->Init.DataTimeSeg2 = 1;//1-16
+
+		// 	break;
+		// }
 		case STD_BAUD::B1000000:
 		{
-			handle->Init.NominalPrescaler = 10;		//1-512
+			//60 MHz kernel clock
+			handle->Init.NominalPrescaler = 5;		//1-512
 			handle->Init.NominalSyncJumpWidth = 1;	//1-128
 			// NominalTimeSeg1 = Propagation_segment + Phase_segment_1
-			handle->Init.NominalTimeSeg1 = 5;		//1-256 
-			handle->Init.NominalTimeSeg2 = 2;		//1-128
+			handle->Init.NominalTimeSeg1 = 8;		//1-256 
+			handle->Init.NominalTimeSeg2 = 3;		//1-128
 
 			handle->Init.DataPrescaler = 1;//1-32
 			handle->Init.DataSyncJumpWidth = 1;//1-16
@@ -386,10 +403,21 @@ bool STM32_fdcan_tx::set_baud(const STD_BAUD std_baud, const FD_BRS_BAUD fd_baud
 		}
 		case FD_BRS_BAUD::B8000000:
 		{
+			//80MHz ker clock
 			handle->Init.DataPrescaler = 1;//1-32
 			handle->Init.DataSyncJumpWidth = 3;//1-16
 			handle->Init.DataTimeSeg1 = 5;//1-32
 			handle->Init.DataTimeSeg2 = 4;//1-16
+
+			break;
+		}
+		case FD_BRS_BAUD::B12000000:
+		{
+			//60MHz ker clock
+			handle->Init.DataPrescaler = 1;//1-32
+			handle->Init.DataSyncJumpWidth = 1;//1-16
+			handle->Init.DataTimeSeg1 = 2;//1-32
+			handle->Init.DataTimeSeg2 = 2;//1-16
 
 			break;
 		}

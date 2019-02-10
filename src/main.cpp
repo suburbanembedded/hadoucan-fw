@@ -240,6 +240,138 @@ protected:
 };
 USB_lawicel_task usb_lawicel_task;
 
+class LED_task : public Task_static<512>
+{
+public:
+
+	void work() override
+	{
+		for(;;)
+		{
+			HAL_GPIO_WritePin(GPIOD, RED1_Pin, GPIO_PIN_SET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, RED1_Pin, GPIO_PIN_RESET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, RED1_Pin, GPIO_PIN_SET);
+
+			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_SET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_RESET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_SET);
+
+			HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_SET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_RESET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_SET);
+
+			HAL_GPIO_WritePin(GPIOD, GREEN2_Pin, GPIO_PIN_SET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, GREEN2_Pin, GPIO_PIN_RESET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, GREEN2_Pin, GPIO_PIN_SET);
+		}
+	}
+
+};
+LED_task led_task;
+
+class Timesync_task : public Task_static<512>
+{
+public:
+
+	void work() override
+	{
+		HAL_GPIO_WritePin(MASTER_TIMESYNC_nOE_GPIO_Port, MASTER_TIMESYNC_nOE_Pin, GPIO_PIN_RESET);
+
+		HAL_TIM_Base_Start(&htim3);
+		HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+
+		for(;;)
+		{
+			vTaskDelay(250);
+		}
+	}
+};
+Timesync_task timesync_task;
+
+#include "boot_qspi.hpp"
+class QSPI_task : public Task_static<1024>
+{
+public:
+
+	void work() override
+	{
+		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Ready");
+
+		m_qspi_indirect.set_handle(&hqspi);
+
+		if(!m_qspi_indirect.init())
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi_indirect.init failed");
+
+			for(;;)
+			{
+				vTaskSuspend(nullptr);
+			}
+		}
+
+		HAL_StatusTypeDef ret = HAL_OK;
+		for(;;)
+		{
+			QSPI_CommandTypeDef jdec_id_cmd = W25Q16JV::get_read_jdec_id_cmd();
+			std::array<uint8_t, 3> flash_jdec_id;
+			flash_jdec_id.fill(0);
+			ret = HAL_QSPI_Command(&hqspi, &jdec_id_cmd, 1000);
+			if(ret != HAL_OK)
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Command jdec_id_cmd failed: %u", ret);
+			}
+
+			ret = HAL_QSPI_Receive(&hqspi, flash_jdec_id.data(), 1000);
+			if(ret != HAL_OK)
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Receive jdec_id_cmd failed: %u", ret);
+			}
+
+			uint8_t mfg_id = flash_jdec_id[0];
+			uint16_t flash_pn = (uint16_t(flash_jdec_id[1]) << 8) | uint16_t(flash_jdec_id[2]);
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
+			vTaskDelay(500);
+
+			QSPI_CommandTypeDef unique_id_cmd = W25Q16JV::get_unique_id_cmd();
+			std::array<uint8_t, 8> flash_unique_id;
+			flash_unique_id.fill(0);
+			ret = HAL_QSPI_Command(&hqspi, &unique_id_cmd, 1000);
+			if(ret != HAL_OK)
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Command unique_id_cmd failed: %u", ret);
+			}
+
+			ret = HAL_QSPI_Receive(&hqspi, flash_unique_id.data(), 1000);
+			if(ret != HAL_OK)
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Receive unique_id_cmd failed: %u", ret);
+			}
+
+			uint32_t flash_sn1 = 0;
+			uint32_t flash_sn2 = 0;
+			memcpy(&flash_sn1, flash_unique_id.data(), 4);
+			memcpy(&flash_sn2, flash_unique_id.data() + 4, 4);
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, flash_sn1, flash_sn2);
+			vTaskDelay(500);
+			// vTaskSuspend(nullptr);
+		}
+	}
+protected:
+
+	Boot_qspi_indirect m_qspi_indirect;
+
+};
+QSPI_task qspi_task;
+
 extern "C"
 {
 
@@ -432,11 +564,15 @@ int main(void)
 
 	MX_GPIO_Init();
 	MX_USART1_UART_Init();
-	//MX_FDCAN1_Init();
+	// MX_FDCAN1_Init();
 	MX_CRC_Init();
 	MX_HASH_Init();
 	MX_RTC_Init();
 	MX_RNG_Init();
+	MX_TIM3_Init();
+	// MX_QUADSPI_Init();
+
+  	// HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_SET);
 
 	if(0)
 	{
@@ -465,6 +601,8 @@ int main(void)
 	usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
 	usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
 
+	//TODO: refactor can handle init
+	hfdcan1.Instance = FDCAN1;
 	stm32_fdcan_rx_task.set_packet_callback(&can_rx_to_lawicel);
 	stm32_fdcan_rx_task.set_can_instance(FDCAN1);
 	stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
@@ -482,6 +620,10 @@ int main(void)
 	//actually send usb packets on the wire
 	usb_rx_task.launch("usb_rx", 3);
 	usb_tx_task.launch("usb_tx", 4);
+
+	led_task.launch("led", 1);
+	qspi_task.launch("qspi", 1);
+	timesync_task.launch("timesync", 1);
 
 	uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
 

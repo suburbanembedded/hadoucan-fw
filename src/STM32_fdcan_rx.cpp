@@ -213,6 +213,8 @@ void STM32_fdcan_rx::work()
 		}
 
 		//check PSR for RX errors
+		const uint32_t cccr_reg = READ_REG(m_fdcan_handle->Instance->CCCR);
+		if((cccr_reg & 0x00000001) == 0)//if not in init mode
 		{
 			const uint32_t psr_reg = READ_REG(m_fdcan_handle->Instance->PSR);
 
