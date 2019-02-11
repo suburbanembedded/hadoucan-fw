@@ -412,13 +412,56 @@ QSPI_CommandTypeDef W25Q16JV::get_unique_id_cmd()
 	return cmd_cfg;
 }
 
+QSPI_CommandTypeDef W25Q16JV::get_enable_reset_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = uint32_t(STD_CMD::ENABLE_RESET);
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_32_BITS;//use address as 4 dummy bytes
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_NONE;
+	cmd_cfg.NbData = 0;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+QSPI_CommandTypeDef W25Q16JV::get_reset_cmd()
+{
+	QSPI_CommandTypeDef cmd_cfg = QSPI_CommandTypeDef();
+
+	cmd_cfg.Instruction = uint32_t(STD_CMD::RESET_DEVICE);
+	cmd_cfg.Address = 0;
+	cmd_cfg.AlternateBytes = 0;
+	cmd_cfg.AddressSize = QSPI_ADDRESS_32_BITS;//use address as 4 dummy bytes
+	cmd_cfg.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	cmd_cfg.DummyCycles = 0;
+	cmd_cfg.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	cmd_cfg.AddressMode = QSPI_ADDRESS_NONE;
+	cmd_cfg.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	cmd_cfg.DataMode = QSPI_DATA_NONE;
+	cmd_cfg.NbData = 0;
+	cmd_cfg.DdrMode = QSPI_DDR_MODE_DISABLE;
+	cmd_cfg.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	cmd_cfg.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	return cmd_cfg;
+}
+
 bool W25Q16JV::get_jdec_id(uint8_t* const out_mfg_id, uint16_t* const out_part_id)
 {
 	QSPI_CommandTypeDef cmd = W25Q16JV::get_read_jdec_id_cmd();
 	std::array<uint8_t, 3> flash_jdec_id;
 	flash_jdec_id.fill(0);
 
-	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, 1000);
+	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
 	if(ret != HAL_OK)
 	{
 		return false;
@@ -442,7 +485,7 @@ bool W25Q16JV::get_unique_id(uint64_t* const out_unique_id)
 	std::array<uint8_t, 8> flash_unique_id;
 	flash_unique_id.fill(0);
 
-	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, 1000);
+	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
 	if(ret != HAL_OK)
 	{
 		return false;
@@ -462,10 +505,28 @@ bool W25Q16JV::get_unique_id(uint64_t* const out_unique_id)
 	return true;
 }
 
+bool W25Q16JV::cmd_chip_erase()
+{
+	QSPI_CommandTypeDef cmd = get_chip_erase_cmd();
+	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
+	if(ret != HAL_OK)
+	{
+		return false;
+	}
+
+	//poll for finished status
+	if(!poll_until_busy_clear(CHIP_ERASE_TIME_MAX_MS))
+	{
+		return false;
+	}
+
+	return true;	
+}
+
 bool W25Q16JV::read(const uint32_t addr, const size_t len, uint8_t* const out_data)
 {
 	QSPI_CommandTypeDef cmd = get_read_data_cmd(addr, len);
-	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, 1000);
+	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
 	if(ret != HAL_OK)
 	{
 		return false;
@@ -488,14 +549,19 @@ bool W25Q16JV::write_page(const uint32_t addr, const size_t len, const uint8_t* 
 	}
 
 	//TODO: volatile write enable
-
-	QSPI_CommandTypeDef cmd;
-	if(!get_page_prgm_cmd(addr, len, &cmd))
+	QSPI_CommandTypeDef cmd = get_write_enable_cmd();
+	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
+	if(ret != HAL_OK)
 	{
 		return false;
 	}
 
-	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, 1000);
+
+	if(!get_page_prgm_cmd(addr, len, &cmd))
+	{
+		return false;
+	}
+	ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
 	if(ret != HAL_OK)
 	{
 		return false;
@@ -507,7 +573,11 @@ bool W25Q16JV::write_page(const uint32_t addr, const size_t len, const uint8_t* 
 		return false;
 	}
 
-	//TODO: poll for finished status
+	//poll for finished status
+	if(!poll_until_busy_clear(PAGE_PRGM_TIME_MAX_MS))
+	{
+		return false;
+	}
 
 	return true;
 }

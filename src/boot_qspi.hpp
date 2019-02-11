@@ -29,19 +29,25 @@ public:
 
 	static constexpr size_t PAGE_PRGM_TIME_TYP_US = 400;
 	static constexpr size_t PAGE_PRGM_TIME_MAX_US = 3000;
+	static constexpr size_t PAGE_PRGM_TIME_MAX_MS = 3+1;
 
-	static constexpr size_t BLOCK1_ERASE_TIME_TYP_MS = 120;
-	static constexpr size_t BLOCK1_ERASE_TIME_MAX_MS = 1600;
+	static constexpr size_t SECTOR_ERASE_TIME_TYP_MS = 45+1;
+	static constexpr size_t SECTOR_ERASE_TIME_MAX_MS = 400+1;
 
-	static constexpr size_t BLOCK2_ERASE_TIME_TYP_MS = 150;
-	static constexpr size_t BLOCK2_ERASE_TIME_MAX_MS = 2000;
+	static constexpr size_t BLOCK1_ERASE_TIME_TYP_MS = 120+1;
+	static constexpr size_t BLOCK1_ERASE_TIME_MAX_MS = 1600+1;
 
-	static constexpr size_t CHIP_ERASE_TIME_TYP_MS = 5000;
-	static constexpr size_t CHIP_ERASE_TIME_MAX_MS = 25000;
+	static constexpr size_t BLOCK2_ERASE_TIME_TYP_MS = 150+1;
+	static constexpr size_t BLOCK2_ERASE_TIME_MAX_MS = 2000+1;
+
+	static constexpr size_t CHIP_ERASE_TIME_TYP_MS = 5000+1;
+	static constexpr size_t CHIP_ERASE_TIME_MAX_MS = 25000+1;
 
 	static constexpr uint32_t SECURITY_REG_1_ADDR = 0x001000;
 	static constexpr uint32_t SECURITY_REG_2_ADDR = 0x002000;
 	static constexpr uint32_t SECURITY_REG_3_ADDR = 0x003000;
+
+	static constexpr uint32_t COMMAND_DELAY_MS = 10;
 
 	class STATUS_REG_1
 	{
@@ -123,6 +129,22 @@ public:
 		RESET_DEVICE = 0x99
 	};
 
+	//SPI CMD
+	enum class DUAL_CMD : uint8_t
+	{
+		FAST_READ_DUAL_OUT = 0x3B,
+		FAST_READ_DUAL_IO  = 0xB8
+	};
+
+	//SPI CMD
+	enum class QUAD_CMD : uint8_t
+	{
+		PAGE_PRGM_QUAD_IN = 0x32,
+
+		FAST_READ_QUAD_OUT = 0x6B,
+		FAST_READ_QUAD_IO = 0xEB
+	};
+
 	W25Q16JV()
 	{
 		m_qspi_handle = nullptr;
@@ -140,11 +162,17 @@ public:
 
 	bool cmd_chip_erase();
 
+	bool cmd_enable_quad_mode();
+
+	bool get_status_1(STATUS_REG_1* const reg);
+	bool get_status_2(STATUS_REG_2* const reg);
+	bool get_status_3(STATUS_REG_3* const reg);
+
 	bool read(const uint32_t addr, const size_t len, uint8_t* const out_data);
 	bool write(const uint32_t addr, const size_t len, const uint8_t* data);
 	bool write_page(const uint32_t addr, const size_t len, const uint8_t* data);
 
-	bool setup_status_poll()
+	bool poll_until_busy_clear(const uint32_t timeout)
 	{
 		QSPI_CommandTypeDef cmd = get_read_status_reg1_cmd();
 		QSPI_AutoPollingTypeDef config;
@@ -156,7 +184,7 @@ public:
 		config.AutomaticStop  = QSPI_AUTOMATIC_STOP_ENABLE;
 
 		//HAL_StatusTypeDef ret = HAL_QSPI_AutoPolling_IT(&QSPIHandle, &cmd, &config);
-		HAL_StatusTypeDef ret = HAL_QSPI_AutoPolling(m_qspi_handle, &cmd, &config, 1000);
+		HAL_StatusTypeDef ret = HAL_QSPI_AutoPolling(m_qspi_handle, &cmd, &config, timeout);
 		if(ret != HAL_OK)
   		{
     		return false;
@@ -183,6 +211,8 @@ public:
 	static QSPI_CommandTypeDef get_release_power_down_cmd();
 	static QSPI_CommandTypeDef get_read_jdec_id_cmd();
 	static QSPI_CommandTypeDef get_unique_id_cmd();
+	static QSPI_CommandTypeDef get_enable_reset_cmd();
+	static QSPI_CommandTypeDef get_reset_cmd();
 
 	void handle_FifoThresholdCallback();
 	void handle_StatusMatchCallback();
