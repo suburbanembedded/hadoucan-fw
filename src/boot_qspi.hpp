@@ -123,32 +123,7 @@ public:
 		RESET_DEVICE = 0x99
 	};
 
-	//Dual/Quad SPI CMD
-	enum class DQ_CMD
-	{
-
-	};
-
-	static QSPI_CommandTypeDef get_write_enable_cmd();
-	static QSPI_CommandTypeDef get_volatile_write_enable_cmd();
-	static QSPI_CommandTypeDef get_write_disable_cmd();
-	static QSPI_CommandTypeDef get_read_status_reg1_cmd();
-	static QSPI_CommandTypeDef get_write_status_reg1_cmd();
-	static QSPI_CommandTypeDef get_read_data_cmd(const uint32_t addr, const size_t len);
-	static bool get_page_prgm_cmd(const uint32_t addr, const size_t len, QSPI_CommandTypeDef* const cmd_cfg);
-	static bool get_sector_erase_cmd(const uint32_t sector_num, QSPI_CommandTypeDef* const cmd_cfg);
-	static bool get_block64_erase_cmd(const uint32_t block64_num, QSPI_CommandTypeDef* const cmd_cfg);
-	static QSPI_CommandTypeDef get_chip_erase_cmd();
-	static QSPI_CommandTypeDef get_power_down_cmd();
-	static QSPI_CommandTypeDef get_release_power_down_cmd();
-	static QSPI_CommandTypeDef get_read_jdec_id_cmd();
-	static QSPI_CommandTypeDef get_unique_id_cmd();
-};
-
-class Boot_qspi
-{
-public:
-	Boot_qspi()
+	W25Q16JV()
 	{
 		m_qspi_handle = nullptr;
 	}
@@ -160,54 +135,59 @@ public:
 		m_qspi_handle = qspi_handle;
 	}
 
+	bool get_jdec_id(uint8_t* const out_mfg_id, uint16_t* const out_part_id);
+	bool get_unique_id(uint64_t* const out_unique_id);
+
+	bool cmd_chip_erase();
+
+	bool read(const uint32_t addr, const size_t len, uint8_t* const out_data);
+	bool write(const uint32_t addr, const size_t len, const uint8_t* data);
+	bool write_page(const uint32_t addr, const size_t len, const uint8_t* data);
+
+	bool setup_status_poll()
+	{
+		QSPI_CommandTypeDef cmd = get_read_status_reg1_cmd();
+		QSPI_AutoPollingTypeDef config;
+		config.Match = 0x00;
+		config.Mask  = 0x01;
+		config.MatchMode  = QSPI_MATCH_MODE_AND;
+		config.StatusBytesSize  = 1;
+		config.Interval  = 0x10;
+		config.AutomaticStop  = QSPI_AUTOMATIC_STOP_ENABLE;
+
+		//HAL_StatusTypeDef ret = HAL_QSPI_AutoPolling_IT(&QSPIHandle, &cmd, &config);
+		HAL_StatusTypeDef ret = HAL_QSPI_AutoPolling(m_qspi_handle, &cmd, &config, 1000);
+		if(ret != HAL_OK)
+  		{
+    		return false;
+  		}
+
+  		return true;
+	}
+
+	static QSPI_CommandTypeDef get_write_enable_cmd();
+	static QSPI_CommandTypeDef get_volatile_write_enable_cmd();
+	static QSPI_CommandTypeDef get_write_disable_cmd();
+	static QSPI_CommandTypeDef get_read_status_reg1_cmd();
+	static QSPI_CommandTypeDef get_write_status_reg1_cmd();
+	static QSPI_CommandTypeDef get_read_status_reg2_cmd();
+	static QSPI_CommandTypeDef get_write_status_reg2_cmd();
+	static QSPI_CommandTypeDef get_read_status_reg3_cmd();
+	static QSPI_CommandTypeDef get_write_status_reg3_cmd();
+	static QSPI_CommandTypeDef get_read_data_cmd(const uint32_t addr, const size_t len);
+	static bool get_page_prgm_cmd(const uint32_t addr, const size_t len, QSPI_CommandTypeDef* const cmd_cfg);
+	static bool get_sector_erase_cmd(const uint32_t sector_num, QSPI_CommandTypeDef* const cmd_cfg);
+	static bool get_block64_erase_cmd(const uint32_t block64_num, QSPI_CommandTypeDef* const cmd_cfg);
+	static QSPI_CommandTypeDef get_chip_erase_cmd();
+	static QSPI_CommandTypeDef get_power_down_cmd();
+	static QSPI_CommandTypeDef get_release_power_down_cmd();
+	static QSPI_CommandTypeDef get_read_jdec_id_cmd();
+	static QSPI_CommandTypeDef get_unique_id_cmd();
+
+	void handle_FifoThresholdCallback();
+	void handle_StatusMatchCallback();
+	void handle_TimeOutCallback();
+
 protected:
 	QSPI_HandleTypeDef* m_qspi_handle;
-};
-
-class QSPI_iface : public Boot_qspi
-{
-public:
-
-protected:
-
-};
-
-class Boot_qspi_mmap : public Boot_qspi
-{
-public:
-	Boot_qspi_mmap()
-	{
-		
-	}
-
-	bool init()
-	{
-		return Boot_qspi::init();
-	}
-
-protected:
-
-	bool config_mmap_read();
-};
-
-class Boot_qspi_indirect : public Boot_qspi
-{
-public:
-	Boot_qspi_indirect()
-	{
-
-	}
-
-	bool init()
-	{
-		return Boot_qspi::init();
-	}
-
-	void read(uint8_t* ptr, uint32_t len, uint32_t timeout_ms);
-	void write(uint8_t* ptr, uint32_t len, uint32_t timeout_ms);
-
-protected:
-
-	bool config_indirect_read();
-	bool config_indirect_write();
 };

@@ -306,9 +306,9 @@ public:
 	{
 		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Ready");
 
-		m_qspi_indirect.set_handle(&hqspi);
+		m_qspi.set_handle(&hqspi);
 
-		if(!m_qspi_indirect.init())
+		if(!m_qspi.init())
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi_indirect.init failed");
 
@@ -321,51 +321,36 @@ public:
 		HAL_StatusTypeDef ret = HAL_OK;
 		for(;;)
 		{
-			QSPI_CommandTypeDef jdec_id_cmd = W25Q16JV::get_read_jdec_id_cmd();
-			std::array<uint8_t, 3> flash_jdec_id;
-			flash_jdec_id.fill(0);
-			ret = HAL_QSPI_Command(&hqspi, &jdec_id_cmd, 1000);
-			if(ret != HAL_OK)
+			uint8_t mfg_id = 0;
+			uint16_t flash_pn = 0;
+			if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Command jdec_id_cmd failed: %u", ret);
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
 			}
 
-			ret = HAL_QSPI_Receive(&hqspi, flash_jdec_id.data(), 1000);
-			if(ret != HAL_OK)
+			uint64_t unique_id = 0;
+			if(m_qspi.get_unique_id(&unique_id))
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Receive jdec_id_cmd failed: %u", ret);
+				// uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %016" PRIX64, unique_id);
+				//aparently PRIX64 is broken
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
 			}
 
-			const uint8_t mfg_id = flash_jdec_id[0];
-			const uint16_t flash_pn = Byte_util::make_u16(flash_jdec_id[1], flash_jdec_id[2]);
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
-			vTaskDelay(500);
-
-			QSPI_CommandTypeDef unique_id_cmd = W25Q16JV::get_unique_id_cmd();
-			std::array<uint8_t, 8> flash_unique_id;
-			flash_unique_id.fill(0);
-			ret = HAL_QSPI_Command(&hqspi, &unique_id_cmd, 1000);
-			if(ret != HAL_OK)
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Command unique_id_cmd failed: %u", ret);
-			}
-
-			ret = HAL_QSPI_Receive(&hqspi, flash_unique_id.data(), 1000);
-			if(ret != HAL_OK)
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "HAL_QSPI_Receive unique_id_cmd failed: %u", ret);
-			}
-
-			const uint32_t flash_sn1 = Byte_util::make_u32(flash_unique_id[0], flash_unique_id[1], flash_unique_id[2], flash_unique_id[3]);
-			const uint32_t flash_sn2 = Byte_util::make_u32(flash_unique_id[4], flash_unique_id[5], flash_unique_id[6], flash_unique_id[7]);
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, flash_sn1, flash_sn2);
 			vTaskDelay(500);
 		}
 	}
 protected:
 
-	Boot_qspi_indirect m_qspi_indirect;
+	W25Q16JV m_qspi;
 
 };
 QSPI_task qspi_task;
