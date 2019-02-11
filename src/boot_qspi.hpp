@@ -214,9 +214,10 @@ public:
 	static QSPI_CommandTypeDef get_enable_reset_cmd();
 	static QSPI_CommandTypeDef get_reset_cmd();
 
-	void handle_FifoThresholdCallback();
 	void handle_StatusMatchCallback();
 	void handle_TimeOutCallback();
+	void handle_ErrorCallback();
+	void handle_AbortCpltCallback();
 
 protected:
 	QSPI_HandleTypeDef* m_qspi_handle;
