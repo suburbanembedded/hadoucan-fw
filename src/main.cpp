@@ -115,8 +115,8 @@ protected:
 Pool_test_task pool_test_task;
 #endif
 
-USB_RX_task usb_rx_task __attribute__ (( section(".ram_d1_s0_area") ));
-USB_TX_task usb_tx_task __attribute__ (( section(".ram_d1_s0_area") ));
+USB_RX_task usb_rx_task __attribute__ (( section(".ram_d1_s0_noload_area") ));
+USB_TX_task usb_tx_task __attribute__ (( section(".ram_d1_s0_noload_area") ));
 
 USB_rx_buffer_task usb_rx_buffer_task;
 USB_tx_buffer_task usb_tx_buffer_task;
@@ -553,41 +553,165 @@ int main(void)
 		Peripherals, 0x40000000, 512M
 		*/
 
+		MPU_Region_InitTypeDef mpu_reg;
+		
 		HAL_MPU_Disable();
 
-		MPU_Region_InitTypeDef s0;
-		s0.Enable = MPU_REGION_ENABLE;
-		s0.Number = MPU_REGION_NUMBER0;
-		s0.BaseAddress = 0x24000000;
-		s0.Size = MPU_REGION_SIZE_512KB;
-		s0.SubRegionDisable = 0x00;
-		s0.AccessPermission = MPU_REGION_FULL_ACCESS;
-		
-		// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0646b/BIHIIJDC.html
-		s0.TypeExtField = MPU_TEX_LEVEL0;
-		s0.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
-		s0.IsCacheable = MPU_ACCESS_CACHEABLE;
-		s0.IsBufferable = MPU_ACCESS_BUFFERABLE;
-		s0.IsShareable = MPU_ACCESS_SHAREABLE;
-		HAL_MPU_ConfigRegion(&s0);
+		// ITCMRAM
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER0;
+		mpu_reg.BaseAddress = 0x00000000;
+		mpu_reg.Size = MPU_REGION_SIZE_64KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
 
-		MPU_Region_InitTypeDef s1;
-		s1.Enable = MPU_REGION_ENABLE;
-		s1.Number = MPU_REGION_NUMBER1;
-		s1.BaseAddress = 0x30000000;
-		s1.Size = MPU_REGION_SIZE_128KB;
-		s1.SubRegionDisable = 0x00;
-		s1.AccessPermission = MPU_REGION_FULL_ACCESS;
-		
-		// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0646b/BIHIIJDC.html
-		s1.TypeExtField = MPU_TEX_LEVEL0;
-		s1.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-		s1.IsCacheable = MPU_ACCESS_CACHEABLE; //MPU_ACCESS_NOT_CACHEABLE;
-		s1.IsBufferable = MPU_ACCESS_BUFFERABLE;
-		s1.IsShareable = MPU_ACCESS_SHAREABLE;
-		HAL_MPU_ConfigRegion(&s1);
+		// FLASH
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER1;
+		mpu_reg.BaseAddress = 0x08000000;
+		mpu_reg.Size = MPU_REGION_SIZE_128KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_PRIV_RO_URO;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
 
-		HAL_MPU_Enable();
+		// DTCMRAM
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER2;
+		mpu_reg.BaseAddress = 0x20000000;
+		mpu_reg.Size = MPU_REGION_SIZE_128KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AXI_D1_SRAM
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER3;
+		mpu_reg.BaseAddress = 0x24000000;
+		mpu_reg.Size = MPU_REGION_SIZE_512KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AHB_D2_SRAM1
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER4;
+		mpu_reg.BaseAddress = 0x30000000;
+		mpu_reg.Size = MPU_REGION_SIZE_128KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AHB_D2_SRAM2
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER5;
+		mpu_reg.BaseAddress = 0x30020000;
+		mpu_reg.Size = MPU_REGION_SIZE_128KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AHB_D2_SRAM3
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER6;
+		mpu_reg.BaseAddress = 0x30040000;
+		mpu_reg.Size = MPU_REGION_SIZE_32KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AHB_D3_SRAM4
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER7;
+		mpu_reg.BaseAddress = 0x38000000;
+		mpu_reg.Size = MPU_REGION_SIZE_64KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// BBSRAM
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER8;
+		mpu_reg.BaseAddress = 0x38800000;
+		mpu_reg.Size = MPU_REGION_SIZE_4KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// QUADSPI
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER9;
+		mpu_reg.BaseAddress = 0x90000000;
+		mpu_reg.Size = MPU_REGION_SIZE_16MB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// Peripherals
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER10;
+		mpu_reg.BaseAddress = 0x40000000;
+		mpu_reg.Size = MPU_REGION_SIZE_512MB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 	}
 
 	SCB_EnableICache();

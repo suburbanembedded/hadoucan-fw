@@ -17,6 +17,11 @@ pushd build/flash/release
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_atollic_flash.cmake $BASE_PATH
 popd
 
+mkdir -p build/flash/relwithdebinfo
+pushd build/flash/relwithdebinfo
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_atollic_flash.cmake $BASE_PATH
+popd
+
 mkdir -p build/flash/debug
 pushd build/flash/debug
 cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_atollic_flash.cmake $BASE_PATH

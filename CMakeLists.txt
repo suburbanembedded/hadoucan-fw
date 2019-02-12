@@ -54,7 +54,9 @@ target_link_libraries(gmock_stm32
 	gtest_stm32
 )
 
-add_executable(canusbfdiso
+add_executable(canusbfdiso.elf
+	src/system_stm32h7xx.c
+
 	src/stm32h7xx_it.c
 	src/stm32h7xx_hal_timebase_tim.c
 	src/stm32h7xx_hal_msp.c
@@ -101,7 +103,7 @@ add_executable(canusbfdiso
 	src/STM32_fdcan_rx.cpp
 )
 
-target_link_libraries(canusbfdiso
+target_link_libraries(canusbfdiso.elf
 
 	stm32h7xx_hal
 	stm32h7xx_ll
@@ -140,8 +142,8 @@ target_link_libraries(canusbfdiso
 # Generate intel hex image
 add_custom_command(
 	OUTPUT canusbfdiso.hex
-	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -Oihex canusbfdiso canusbfdiso.hex
-	DEPENDS canusbfdiso
+	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -Oihex canusbfdiso.elf canusbfdiso.hex
+	DEPENDS canusbfdiso.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM	
 )
@@ -155,12 +157,12 @@ add_custom_target(canusbfdiso_hex
 # Print the image size
 add_custom_target(canusbfdiso_size
 	ALL
-	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-size --format=sysv canusbfdiso
-	DEPENDS canusbfdiso
+	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-size --format=sysv canusbfdiso.elf
+	DEPENDS canusbfdiso.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM
 )
 
 add_dependencies(canusbfdiso_size
-	canusbfdiso
+	canusbfdiso.elf
 )
