@@ -564,7 +564,7 @@ int main(void)
 		mpu_reg.Size = MPU_REGION_SIZE_4GB;
 		mpu_reg.SubRegionDisable = 0x00;
 		mpu_reg.AccessPermission = MPU_REGION_NO_ACCESS;
-		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
 		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
 		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
 		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
@@ -723,6 +723,7 @@ int main(void)
 
 		// Peripherals
 		// Strongly Ordered
+		/*
 		mpu_reg.Enable = MPU_REGION_ENABLE;
 		mpu_reg.Number = MPU_REGION_NUMBER11;
 		mpu_reg.BaseAddress = 0x40000000;
@@ -735,8 +736,28 @@ int main(void)
 		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
 		HAL_MPU_ConfigRegion(&mpu_reg);
+		*/
+		// Non-shareable device 
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER11;
+		mpu_reg.BaseAddress = 0x40000000;
+		mpu_reg.Size = MPU_REGION_SIZE_512MB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL2;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
 
+		// Privledged code may use background mem map
 		HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+
+		//No background mem map
+		//MPU enabled during MMI
+		// HAL_MPU_Enable(MPU_HARDFAULT_NMI);
+		
 	}
 
 	SCB_EnableICache();
