@@ -115,8 +115,8 @@ protected:
 Pool_test_task pool_test_task;
 #endif
 
-USB_RX_task usb_rx_task __attribute__ (( section(".ram_d1_s0_noload_area") ));
-USB_TX_task usb_tx_task __attribute__ (( section(".ram_d1_s0_noload_area") ));
+USB_RX_task usb_rx_task __attribute__ (( section(".ram_d2_s2_noload_area") ));
+USB_TX_task usb_tx_task __attribute__ (( section(".ram_d2_s2_noload_area") ));
 
 USB_rx_buffer_task usb_rx_buffer_task;
 USB_tx_buffer_task usb_tx_buffer_task;
@@ -512,7 +512,6 @@ bool can_rx_to_lawicel(const std::string& str)
 
 int main(void)
 {
-
 	{
 		//errata 2.2.9
 		volatile uint32_t* AXI_TARG7_FN_MOD = 
@@ -529,7 +528,7 @@ int main(void)
 	}
 
 	//confg mpu
-	if(0)
+	if(1)
 	{
 		/*
 		ITCMRAM, 0x00000000, 64K
@@ -593,8 +592,8 @@ int main(void)
 		mpu_reg.SubRegionDisable = 0x00;
 		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
 		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
-		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
-		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;//This crashes if set to MPU_ACCESS_NOT_CACHEABLE
 		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
 		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
 		HAL_MPU_ConfigRegion(&mpu_reg);
@@ -716,7 +715,7 @@ int main(void)
 
 	SCB_EnableICache();
 
-	// SCB_EnableDCache();
+	SCB_EnableDCache();
 
 	HAL_Init();
 
