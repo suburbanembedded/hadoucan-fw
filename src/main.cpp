@@ -611,8 +611,7 @@ int main(void)
 		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
 		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
 		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-		// mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;//This crashes if set to MPU_ACCESS_NOT_CACHEABLE
-		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;//This crashes if set to MPU_ACCESS_NOT_CACHEABLE
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
 		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
 		HAL_MPU_ConfigRegion(&mpu_reg);
