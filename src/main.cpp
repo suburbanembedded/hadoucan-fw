@@ -531,7 +531,28 @@ int main(void)
 	//confg mpu
 	if(0)
 	{
-		// MPU_Type m0;
+		/*
+		ITCMRAM, 0x00000000, 64K
+
+		FLASH, 0x08000000, 128K
+
+		DTCMRAM, 0x20000000, 128K
+
+		AXI_D1_SRAM, 0x24000000, 512K,  CPU Inst/Data
+
+		AHB_D2_SRAM1, 0x30000000, 128K, CPU Inst
+		AHB_D2_SRAM2, 0x30020000, 128K, CPU Data
+		AHB_D2_SRAM3, 0x30040000, 32K,  Peripheral Buffers
+
+		AHB_D3_SRAM4, 0x38000000, 64K
+
+		BBRAM, 0x38800000, 4K
+
+		QUADSPI, 0x90000000, 16M
+
+		Peripherals, 0x40000000, 512M
+		*/
+
 		HAL_MPU_Disable();
 
 		MPU_Region_InitTypeDef s0;
@@ -552,11 +573,11 @@ int main(void)
 
 		MPU_Region_InitTypeDef s1;
 		s1.Enable = MPU_REGION_ENABLE;
-		s1.Number = MPU_REGION_NUMBER0;
+		s1.Number = MPU_REGION_NUMBER1;
 		s1.BaseAddress = 0x30000000;
 		s1.Size = MPU_REGION_SIZE_128KB;
 		s1.SubRegionDisable = 0x00;
-		s1.AccessPermission = MPU_REGION_PRIV_RW;
+		s1.AccessPermission = MPU_REGION_FULL_ACCESS;
 		
 		// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0646b/BIHIIJDC.html
 		s1.TypeExtField = MPU_TEX_LEVEL0;
@@ -565,6 +586,8 @@ int main(void)
 		s1.IsBufferable = MPU_ACCESS_BUFFERABLE;
 		s1.IsShareable = MPU_ACCESS_SHAREABLE;
 		HAL_MPU_ConfigRegion(&s1);
+
+		HAL_MPU_Enable();
 	}
 
 	SCB_EnableICache();
