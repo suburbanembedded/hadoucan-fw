@@ -556,23 +556,40 @@ int main(void)
 		
 		HAL_MPU_Disable();
 
-		// ITCMRAM
+		/*
+		// Global
 		mpu_reg.Enable = MPU_REGION_ENABLE;
 		mpu_reg.Number = MPU_REGION_NUMBER0;
+		mpu_reg.BaseAddress = 0x00000000;
+		mpu_reg.Size = MPU_REGION_SIZE_4GB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_NO_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+		*/
+
+		// ITCMRAM
+		// Normal, Non-cacheable
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER1;
 		mpu_reg.BaseAddress = 0x00000000;
 		mpu_reg.Size = MPU_REGION_SIZE_64KB;
 		mpu_reg.SubRegionDisable = 0x00;
 		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
-		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
 		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
 		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
-		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// FLASH
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER1;
+		mpu_reg.Number = MPU_REGION_NUMBER2;
 		mpu_reg.BaseAddress = 0x08000000;
 		mpu_reg.Size = MPU_REGION_SIZE_128KB;
 		mpu_reg.SubRegionDisable = 0x00;
@@ -585,22 +602,25 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// DTCMRAM
+		// Normal, Non-cacheable
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER2;
+		mpu_reg.Number = MPU_REGION_NUMBER3;
 		mpu_reg.BaseAddress = 0x20000000;
 		mpu_reg.Size = MPU_REGION_SIZE_128KB;
 		mpu_reg.SubRegionDisable = 0x00;
 		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
-		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
 		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;//This crashes if set to MPU_ACCESS_NOT_CACHEABLE
-		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		// mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;//This crashes if set to MPU_ACCESS_NOT_CACHEABLE
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;//This crashes if set to MPU_ACCESS_NOT_CACHEABLE
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// AXI_D1_SRAM
+		// Write-back, no write allocate
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER3;
+		mpu_reg.Number = MPU_REGION_NUMBER4;
 		mpu_reg.BaseAddress = 0x24000000;
 		mpu_reg.Size = MPU_REGION_SIZE_512KB;
 		mpu_reg.SubRegionDisable = 0x00;
@@ -613,8 +633,9 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// AHB_D2_SRAM1
+		// Write-back, no write allocate
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER4;
+		mpu_reg.Number = MPU_REGION_NUMBER5;
 		mpu_reg.BaseAddress = 0x30000000;
 		mpu_reg.Size = MPU_REGION_SIZE_128KB;
 		mpu_reg.SubRegionDisable = 0x00;
@@ -627,8 +648,9 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// AHB_D2_SRAM2
+		// Write-back, no write allocate
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER5;
+		mpu_reg.Number = MPU_REGION_NUMBER6;
 		mpu_reg.BaseAddress = 0x30020000;
 		mpu_reg.Size = MPU_REGION_SIZE_128KB;
 		mpu_reg.SubRegionDisable = 0x00;
@@ -641,22 +663,24 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// AHB_D2_SRAM3
+		// Normal, Non-cacheable
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER6;
+		mpu_reg.Number = MPU_REGION_NUMBER7;
 		mpu_reg.BaseAddress = 0x30040000;
 		mpu_reg.Size = MPU_REGION_SIZE_32KB;
 		mpu_reg.SubRegionDisable = 0x00;
 		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
-		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
 		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
 		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
-		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// AHB_D3_SRAM4
+		// Write-back, no write allocate
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER7;
+		mpu_reg.Number = MPU_REGION_NUMBER8;
 		mpu_reg.BaseAddress = 0x38000000;
 		mpu_reg.Size = MPU_REGION_SIZE_64KB;
 		mpu_reg.SubRegionDisable = 0x00;
@@ -669,8 +693,9 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// BBSRAM
+		// Write-back, no write allocate
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER8;
+		mpu_reg.Number = MPU_REGION_NUMBER9;
 		mpu_reg.BaseAddress = 0x38800000;
 		mpu_reg.Size = MPU_REGION_SIZE_4KB;
 		mpu_reg.SubRegionDisable = 0x00;
@@ -683,8 +708,9 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// QUADSPI
+		// Write through, no write allocate
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER9;
+		mpu_reg.Number = MPU_REGION_NUMBER10;
 		mpu_reg.BaseAddress = 0x90000000;
 		mpu_reg.Size = MPU_REGION_SIZE_16MB;
 		mpu_reg.SubRegionDisable = 0x00;
@@ -692,13 +718,14 @@ int main(void)
 		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
 		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
 		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
-		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// Peripherals
+		// Strongly Ordered
 		mpu_reg.Enable = MPU_REGION_ENABLE;
-		mpu_reg.Number = MPU_REGION_NUMBER10;
+		mpu_reg.Number = MPU_REGION_NUMBER11;
 		mpu_reg.BaseAddress = 0x40000000;
 		mpu_reg.Size = MPU_REGION_SIZE_512MB;
 		mpu_reg.SubRegionDisable = 0x00;
