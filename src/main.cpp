@@ -558,6 +558,7 @@ int main(void)
 
 		/*
 		// Global
+		// Normal, no access
 		mpu_reg.Enable = MPU_REGION_ENABLE;
 		mpu_reg.Number = MPU_REGION_NUMBER0;
 		mpu_reg.BaseAddress = 0x00000000;
