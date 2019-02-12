@@ -18,7 +18,7 @@ add_definitions(
 	-DGTEST_LINKED_AS_SHARED_LIBRARY=0
 	-DGTEST_CREATE_SHARED_LIBRARY=0
 
-	-DHSE_VALUE=((uint32_t)24000000)
+	-DHSE_VALUE=\(\(uint32_t\)24000000\)
 )
 
 include_directories(

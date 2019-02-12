@@ -45,9 +45,17 @@ MEMORY
   FLASH   (rx)    : ORIGIN = 0x08000000, LENGTH = 128K
 
   DTCMRAM (xrw)   : ORIGIN = 0x20000000, LENGTH = 128K
-  RAM_D1  (xrw)   : ORIGIN = 0x24000000, LENGTH = 512K
-  RAM_D2  (xrw)   : ORIGIN = 0x30000000, LENGTH = 288K
-  RAM_D3  (xrw)   : ORIGIN = 0x38000000, LENGTH = 64K
+  
+  AXI_D1_SRAM (xrw)  : ORIGIN = 0x24000000, LENGTH = 512K
+
+  /* CPU Inst */
+  AHB_D2_SRAM1 (xrw)  : ORIGIN = 0x30000000, LENGTH = 128K
+  /* CPU Data */
+  AHB_D2_SRAM2 (xrw)  : ORIGIN = 0x30020000, LENGTH = 128K
+  /* Peripheral Buffers */
+  AHB_D2_SRAM3 (xrw)  : ORIGIN = 0x30040000, LENGTH = 32K
+
+  AHB_D3_SRAM4 (xrw)  : ORIGIN = 0x38000000, LENGTH = 64K
   
   BBRAM  (xrx)    : ORIGIN = 0x38800000, LENGTH = 4K
 
@@ -163,53 +171,85 @@ SECTIONS
   } >DTCMRAM
 
   /* RAM sections */
-  .ram_d1_area :
+  .ram_d1_s0_area :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
     . = ALIGN(8);
-  } >RAM_D1
+  } >AXI_D1_SRAM
   
-  .ram_d1_noload_area (NOLOAD) :
+  .ram_d1_s0_noload_area (NOLOAD) :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
     . = ALIGN(8);
-  } >RAM_D1
+  } >AXI_D1_SRAM
 
-  .ram_d2_area :
+  .ram_d2_s1_area :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
     . = ALIGN(8);
-  } >RAM_D2
+  } >AHB_D2_SRAM1
   
-  .ram_d2_noload_area (NOLOAD) :
+  .ram_d2_s1_noload_area (NOLOAD) :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
     . = ALIGN(8);
-  } >RAM_D2
+  } >AHB_D2_SRAM1
 
-  .ram_d3_area :
+  .ram_d2_s2_area :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
     . = ALIGN(8);
-  } >RAM_D3
+  } >AHB_D2_SRAM2
   
-  .ram_d3_noload_area (NOLOAD) :
+  .ram_d2_s2_noload_area (NOLOAD) :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
     . = ALIGN(8);
-  } >RAM_D3
+  } >AHB_D2_SRAM2
+
+  .ram_d2_s3_area :
+  {
+    . = ALIGN(8);
+    PROVIDE ( end = . );
+    PROVIDE ( _end = . );
+    . = ALIGN(8);
+  } >AHB_D2_SRAM3
+  
+  .ram_d2_s3_noload_area (NOLOAD) :
+  {
+    . = ALIGN(8);
+    PROVIDE ( end = . );
+    PROVIDE ( _end = . );
+    . = ALIGN(8);
+  } >AHB_D2_SRAM3
+
+  .ram_d3_s4_area :
+  {
+    . = ALIGN(8);
+    PROVIDE ( end = . );
+    PROVIDE ( _end = . );
+    . = ALIGN(8);
+  } >AHB_D3_SRAM4
+  
+  .ram_d3_s4_noload_area (NOLOAD) :
+  {
+    . = ALIGN(8);
+    PROVIDE ( end = . );
+    PROVIDE ( _end = . );
+    . = ALIGN(8);
+  } >AHB_D3_SRAM4
 
   .bbram_area :
   {

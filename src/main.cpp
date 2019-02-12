@@ -115,8 +115,8 @@ protected:
 Pool_test_task pool_test_task;
 #endif
 
-USB_RX_task usb_rx_task __attribute__ (( section(".ram_d1_area") ));
-USB_TX_task usb_tx_task __attribute__ (( section(".ram_d1_area") ));
+USB_RX_task usb_rx_task __attribute__ (( section(".ram_d1_s0_area") ));
+USB_TX_task usb_tx_task __attribute__ (( section(".ram_d1_s0_area") ));
 
 USB_rx_buffer_task usb_rx_buffer_task;
 USB_tx_buffer_task usb_tx_buffer_task;
@@ -526,6 +526,45 @@ int main(void)
 		uint32_t AXI_TARGx_FN_MOD_WRITE_ISS_OVERRIDE = 0x00000002;
 
 		SET_BIT(*AXI_TARG7_FN_MOD, AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE);
+	}
+
+	//confg mpu
+	if(0)
+	{
+		// MPU_Type m0;
+		HAL_MPU_Disable();
+
+		MPU_Region_InitTypeDef s0;
+		s0.Enable = MPU_REGION_ENABLE;
+		s0.Number = MPU_REGION_NUMBER0;
+		s0.BaseAddress = 0x24000000;
+		s0.Size = MPU_REGION_SIZE_512KB;
+		s0.SubRegionDisable = 0x00;
+		s0.AccessPermission = MPU_REGION_FULL_ACCESS;
+		
+		// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0646b/BIHIIJDC.html
+		s0.TypeExtField = MPU_TEX_LEVEL0;
+		s0.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+		s0.IsCacheable = MPU_ACCESS_CACHEABLE;
+		s0.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		s0.IsShareable = MPU_ACCESS_SHAREABLE;
+		HAL_MPU_ConfigRegion(&s0);
+
+		MPU_Region_InitTypeDef s1;
+		s1.Enable = MPU_REGION_ENABLE;
+		s1.Number = MPU_REGION_NUMBER0;
+		s1.BaseAddress = 0x30000000;
+		s1.Size = MPU_REGION_SIZE_128KB;
+		s1.SubRegionDisable = 0x00;
+		s1.AccessPermission = MPU_REGION_PRIV_RW;
+		
+		// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0646b/BIHIIJDC.html
+		s1.TypeExtField = MPU_TEX_LEVEL0;
+		s1.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		s1.IsCacheable = MPU_ACCESS_CACHEABLE; //MPU_ACCESS_NOT_CACHEABLE;
+		s1.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		s1.IsShareable = MPU_ACCESS_SHAREABLE;
+		HAL_MPU_ConfigRegion(&s1);
 	}
 
 	SCB_EnableICache();
