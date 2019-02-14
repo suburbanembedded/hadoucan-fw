@@ -170,6 +170,16 @@ SECTIONS
   } >DTCMRAM
 
   /* RAM sections */
+  .ram_dtc_area :
+  {
+    *(.ram_dtc_area)
+  } >DTCMRAM
+  
+  .ram_dtc_noload_area (NOLOAD) :
+  {
+    *(.ram_dtc_noload_area)
+  } >DTCMRAM
+  
   .ram_d1_s0_area :
   {
     *(.ram_d1_s0_area)

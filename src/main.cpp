@@ -599,6 +599,24 @@ bool can_rx_to_lawicel(const std::string& str)
 	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
 }
 
+void jump_to_d1_sram()
+{
+	volatile uint32_t* const d1_sram = reinterpret_cast<volatile uint32_t*>(0x24000000);
+
+	uint32_t d1_sram_estack = d1_sram[0];
+	uint32_t d1_sram_reset_handler = d1_sram[1];
+
+	asm volatile( 
+		"DSB\n"
+		"ISB\n"
+		"LDR sp,[%[estack]]\n"
+		"LDR pc,[%[reset_handler]]\n"
+		: /* no out */
+		: [estack] "r" (d1_sram_estack), [reset_handler] "r" (d1_sram_reset_handler)
+		: "memory"
+		);
+}
+
 int main(void)
 {
 	{

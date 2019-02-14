@@ -171,64 +171,102 @@ SECTIONS
   } >DTCMRAM
 
   /* RAM sections */
+  .ram_dtc_area :
+  {
+    . = ALIGN(4);
+    *(.ram_dtc_area)
+    . = ALIGN(4);
+  } >DTCMRAM
+  
+  .ram_dtc_noload_area (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.ram_dtc_noload_area)
+    . = ALIGN(4);
+  } >DTCMRAM
+
   .ram_d1_s0_area :
   {
+    . = ALIGN(4);
     *(.ram_d1_s0_area)
+    . = ALIGN(4);
   } >AXI_D1_SRAM
   
   .ram_d1_s0_noload_area (NOLOAD) :
   {
+    . = ALIGN(4);
     *(.ram_d1_s0_noload_area)
+    . = ALIGN(4);
   } >AXI_D1_SRAM
 
   .ram_d2_s1_area :
   {
+    . = ALIGN(4);
     *(.ram_d2_s1_area)
+    . = ALIGN(4);
   } >AHB_D2_SRAM1
   
   .ram_d2_s1_noload_area (NOLOAD) :
   {
+    . = ALIGN(4);
     *(.ram_d2_s1_noload_area)
+    . = ALIGN(4);
   } >AHB_D2_SRAM1
 
   .ram_d2_s2_area :
   {
+    . = ALIGN(4);
     *(.ram_d2_s2_area)
+    . = ALIGN(4);
   } >AHB_D2_SRAM2
   
   .ram_d2_s2_noload_area (NOLOAD) :
   {
+    . = ALIGN(4);
     *(.ram_d2_s2_area)
+    . = ALIGN(4);
   } >AHB_D2_SRAM2
 
   .ram_d2_s3_area :
   {
+    . = ALIGN(4);
     *(.ram_d2_s3_area)
+    . = ALIGN(4);
   } >AHB_D2_SRAM3
   
   .ram_d2_s3_noload_area (NOLOAD) :
   {
+    . = ALIGN(4);
     *(.ram_d2_s3_area)
+    . = ALIGN(4);
   } >AHB_D2_SRAM3
 
   .ram_d3_s4_area :
   {
+    . = ALIGN(4);
     *(.ram_d3_s4_area)
+    . = ALIGN(4);
   } >AHB_D3_SRAM4
   
   .ram_d3_s4_noload_area (NOLOAD) :
   {
+    . = ALIGN(4);
     *(.ram_d3_s4_noload_area)
+    . = ALIGN(4);
   } >AHB_D3_SRAM4
 
   .bbram_area :
   {
+    . = ALIGN(4);
     *(.bbram_area)
+    . = ALIGN(4);
   } >BBRAM
   
   .bbram_noload_area (NOLOAD) :
   {
+    . = ALIGN(4);
     *(.bbram_noload_area)
+    . = ALIGN(4);
   } >BBRAM
 
   /* Remove information from the standard libraries */
