@@ -310,13 +310,24 @@ public:
 
 		if(!m_qspi.init())
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi_indirect.init failed");
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.init failed");
 
 			for(;;)
 			{
 				vTaskSuspend(nullptr);
 			}
 		}
+
+		/*
+		if(!m_qspi.cmd_chip_erase())
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.cmd_chip_erase failed");
+		}
+		else
+		{
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "m_qspi.cmd_chip_erase success");
+		}
+		*/
 
 		HAL_StatusTypeDef ret = HAL_OK;
 		for(;;)
@@ -343,6 +354,84 @@ public:
 			else
 			{
 				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
+			}
+
+			W25Q16JV::STATUS_REG_1 reg1;
+			if(!m_qspi.get_status_1(&reg1))
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.get_status_1 failed");
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "reg1: 0x%02" PRIX32, uint32_t(reg1.reg));
+			}
+			
+			W25Q16JV::STATUS_REG_2 reg2;
+			if(!m_qspi.get_status_2(&reg2))
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.get_status_2 failed");
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "reg2: 0x%02" PRIX32, uint32_t(reg2.reg));
+			}
+			
+			W25Q16JV::STATUS_REG_3 reg3;
+			if(!m_qspi.get_status_3(&reg3))
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.get_status_3 failed");
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "reg3: 0x%02" PRIX32, uint32_t(reg3.reg));
+			}
+
+			std::array<uint32_t, 4> data1;
+			data1.fill(0);
+			if(m_qspi.read(0, data1.size()*sizeof(uint32_t), (uint8_t*)data1.data()))
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "read1 ok: %08" PRIX32 " %08" PRIX32 " %08" PRIX32 " %08" PRIX32, data1[0], data1[1], data1[2], data1[3]);
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read failed");
+			}
+
+			if(data1[0] == 0xFFFFFFFF)
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "writing page");
+
+				std::array<uint32_t, 4> data = {0xA5A55A5A, 0xA5A55A5A, 0xA5A55A5A, 0xA5A55A5A};
+				if(m_qspi.write_page(0, data.size()*sizeof(uint32_t), (uint8_t*)data.data()))
+				{
+					uart1_log<128>(LOG_LEVEL::INFO, "qspi", "write ok");
+				}
+				else
+				{
+					uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "write failed");
+				}
+			}
+
+			std::array<uint32_t, 4> data2;
+			data2.fill(0);
+			if(m_qspi.read2(0, data2.size()*sizeof(uint32_t), (uint8_t*)data2.data()))
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "read2 ok: %08" PRIX32 " %08" PRIX32 " %08" PRIX32 " %08" PRIX32, data2[0], data2[1], data2[2], data2[3]);
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read2 failed");
+			}
+
+			std::array<uint32_t, 4> data4;
+			data4.fill(0);
+			if(m_qspi.read4(0, data4.size()*sizeof(uint32_t), (uint8_t*)data4.data()))
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "read4 ok: %08" PRIX32 " %08" PRIX32 " %08" PRIX32 " %08" PRIX32, data4[0], data4[1], data4[2], data4[3]);
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read4 failed");
 			}
 
 			vTaskDelay(500);

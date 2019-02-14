@@ -60,7 +60,7 @@ public:
 		bool get_BP0()  const;//b2
 		bool get_WEL()  const;//b1
 		bool get_BUSY() const;//b0
-	protected:
+	
 		uint8_t reg;
 	};
 
@@ -75,7 +75,7 @@ public:
 		bool get_RES2() const;//b2
 		bool get_QE()   const;//b1
 		bool get_SRL()  const;//b0
-	protected:
+	
 		uint8_t reg;
 	};
 
@@ -90,7 +90,7 @@ public:
 		bool get_WPS()  const;//b2
 		bool get_RES1() const;//b1
 		bool get_RES0() const;//b0
-	protected:
+	
 		uint8_t reg;
 	};
 
@@ -133,7 +133,7 @@ public:
 	enum class DUAL_CMD : uint8_t
 	{
 		FAST_READ_DUAL_OUT = 0x3B,
-		FAST_READ_DUAL_IO  = 0xB8
+		FAST_READ_DUAL_IO  = 0xBB
 	};
 
 	//SPI CMD
@@ -169,6 +169,8 @@ public:
 	bool get_status_3(STATUS_REG_3* const reg);
 
 	bool read(const uint32_t addr, const size_t len, uint8_t* const out_data);
+	bool read2(const uint32_t addr, const size_t len, uint8_t* const out_data);
+	bool read4(const uint32_t addr, const size_t len, uint8_t* const out_data);
 	bool write(const uint32_t addr, const size_t len, const uint8_t* data);
 	bool write_page(const uint32_t addr, const size_t len, const uint8_t* data);
 
@@ -203,6 +205,8 @@ public:
 	static QSPI_CommandTypeDef get_read_status_reg3_cmd();
 	static QSPI_CommandTypeDef get_write_status_reg3_cmd();
 	static QSPI_CommandTypeDef get_read_data_cmd(const uint32_t addr, const size_t len);
+	static QSPI_CommandTypeDef get_read2_data_cmd(const uint32_t addr, const size_t len);
+	static QSPI_CommandTypeDef get_read4_data_cmd(const uint32_t addr, const size_t len);
 	static bool get_page_prgm_cmd(const uint32_t addr, const size_t len, QSPI_CommandTypeDef* const cmd_cfg);
 	static bool get_sector_erase_cmd(const uint32_t sector_num, QSPI_CommandTypeDef* const cmd_cfg);
 	static bool get_block64_erase_cmd(const uint32_t block64_num, QSPI_CommandTypeDef* const cmd_cfg);
