@@ -34,7 +34,7 @@ ENTRY(Reset_Handler)
 /* Highest address of the user mode stack */
 _estack = 0x20020000;    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size  = 0x2000; /* required amount of heap  */
+_Min_Heap_Size  = 0x0800; /* required amount of heap  */
 _Min_Stack_Size = 0x0800; /* required amount of stack */
 
 /* Specify the memory areas */
@@ -178,57 +178,57 @@ SECTIONS
   
   .ram_d1_s0_noload_area (NOLOAD) :
   {
-	*(.ram_d1_s0_noload_area)
+    *(.ram_d1_s0_noload_area)
   } >AXI_D1_SRAM
 
   .ram_d2_s1_area :
   {
-	*(.ram_d2_s1_area)
+    *(.ram_d2_s1_area)
   } >AHB_D2_SRAM1
   
   .ram_d2_s1_noload_area (NOLOAD) :
   {
-	*(.ram_d2_s1_noload_area)
+    *(.ram_d2_s1_noload_area)
   } >AHB_D2_SRAM1
 
   .ram_d2_s2_area :
   {
-	*(.ram_d2_s2_area)
+    *(.ram_d2_s2_area)
   } >AHB_D2_SRAM2
   
   .ram_d2_s2_noload_area (NOLOAD) :
   {
-	*(.ram_d2_s2_area)
+    *(.ram_d2_s2_area)
   } >AHB_D2_SRAM2
 
   .ram_d2_s3_area :
   {
-	*(.ram_d2_s3_area)
+    *(.ram_d2_s3_area)
   } >AHB_D2_SRAM3
   
   .ram_d2_s3_noload_area (NOLOAD) :
   {
-	*(.ram_d2_s3_area)
+    *(.ram_d2_s3_area)
   } >AHB_D2_SRAM3
 
   .ram_d3_s4_area :
   {
-	*(.ram_d3_s4_area)
+    *(.ram_d3_s4_area)
   } >AHB_D3_SRAM4
   
   .ram_d3_s4_noload_area (NOLOAD) :
   {
-	*(.ram_d3_s4_noload_area)
+    *(.ram_d3_s4_noload_area)
   } >AHB_D3_SRAM4
 
   .bbram_area :
   {
-	*(.bbram_area)
+    *(.bbram_area)
   } >BBRAM
   
   .bbram_noload_area (NOLOAD) :
   {
-	*(.bbram_noload_area)
+    *(.bbram_noload_area)
   } >BBRAM
 
   /* Remove information from the standard libraries */
