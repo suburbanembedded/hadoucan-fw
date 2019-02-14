@@ -601,10 +601,10 @@ bool can_rx_to_lawicel(const std::string& str)
 
 void jump_to_d1_sram()
 {
-	volatile uint32_t* const d1_sram = reinterpret_cast<volatile uint32_t*>(0x24000000);
+	volatile const uint32_t* d1_sram = reinterpret_cast<volatile uint32_t*>(0x24000000);
 
-	uint32_t d1_sram_estack = d1_sram[0];
-	uint32_t d1_sram_reset_handler = d1_sram[1];
+	const uint32_t d1_sram_estack = d1_sram[0];
+	const uint32_t d1_sram_reset_handler = d1_sram[1];
 
 	asm volatile( 
 		"DSB\n"
@@ -628,8 +628,8 @@ int main(void)
 			0x1000*7U
 		);
 
-		uint32_t AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE  = 0x00000001;
-		uint32_t AXI_TARGx_FN_MOD_WRITE_ISS_OVERRIDE = 0x00000002;
+		const uint32_t AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE  = 0x00000001;
+		const uint32_t AXI_TARGx_FN_MOD_WRITE_ISS_OVERRIDE = 0x00000002;
 
 		SET_BIT(*AXI_TARG7_FN_MOD, AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE);
 	}
