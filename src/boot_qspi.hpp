@@ -133,7 +133,9 @@ public:
 	enum class DUAL_CMD : uint8_t
 	{
 		FAST_READ_DUAL_OUT = 0x3B,
-		FAST_READ_DUAL_IO  = 0xBB
+		FAST_READ_DUAL_IO  = 0xBB,
+
+		MFG_DEV_ID_DUAL = 0x92
 	};
 
 	//SPI CMD
@@ -142,7 +144,9 @@ public:
 		PAGE_PRGM_QUAD_IN = 0x32,
 
 		FAST_READ_QUAD_OUT = 0x6B,
-		FAST_READ_QUAD_IO = 0xEB
+		FAST_READ_QUAD_IO = 0xEB,
+
+		MFG_DEV_ID_QUAD = 0x94
 	};
 
 	W25Q16JV()
@@ -156,6 +160,10 @@ public:
 	{
 		m_qspi_handle = qspi_handle;
 	}
+
+	bool get_mfg_dev_id(uint8_t* const out_mfg_id, uint8_t* const out_dev_id);
+	bool get_mfg_dev_id_dual(uint8_t* const out_mfg_id, uint8_t* const out_dev_id);
+	bool get_mfg_dev_id_quad(uint8_t* const out_mfg_id, uint8_t* const out_dev_id);
 
 	bool get_jdec_id(uint8_t* const out_mfg_id, uint16_t* const out_part_id);
 	bool get_unique_id(uint64_t* const out_unique_id);
@@ -208,11 +216,15 @@ public:
 	static QSPI_CommandTypeDef get_read2_data_cmd(const uint32_t addr, const size_t len);
 	static QSPI_CommandTypeDef get_read4_data_cmd(const uint32_t addr, const size_t len);
 	static bool get_page_prgm_cmd(const uint32_t addr, const size_t len, QSPI_CommandTypeDef* const cmd_cfg);
+	static bool get_quad_page_prgm_cmd(const uint32_t addr, const size_t len, QSPI_CommandTypeDef* const cmd_cfg);
 	static bool get_sector_erase_cmd(const uint32_t sector_num, QSPI_CommandTypeDef* const cmd_cfg);
 	static bool get_block64_erase_cmd(const uint32_t block64_num, QSPI_CommandTypeDef* const cmd_cfg);
 	static QSPI_CommandTypeDef get_chip_erase_cmd();
 	static QSPI_CommandTypeDef get_power_down_cmd();
 	static QSPI_CommandTypeDef get_release_power_down_cmd();
+	static QSPI_CommandTypeDef get_read_mfg_dev_id_cmd();
+	static QSPI_CommandTypeDef get_read_mfg_dev_id_dual_cmd();
+	static QSPI_CommandTypeDef get_read_mfg_dev_id_quad_cmd();
 	static QSPI_CommandTypeDef get_read_jdec_id_cmd();
 	static QSPI_CommandTypeDef get_unique_id_cmd();
 	static QSPI_CommandTypeDef get_enable_reset_cmd();
