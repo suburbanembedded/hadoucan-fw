@@ -297,7 +297,7 @@ public:
 };
 Timesync_task timesync_task;
 
-#include "boot_qspi.hpp"
+#include "W25Q16JV.hpp"
 class QSPI_task : public Task_static<1024>
 {
 public:

@@ -67,7 +67,7 @@ add_executable(canusbfdiso.elf
 	src/main_cube.c
 	src/hal_inst.c
 
-	src/boot_qspi.cpp
+	src/W25Q16JV.cpp
 
 	src/USB_RX_task.cpp
 	src/USB_TX_task.cpp
