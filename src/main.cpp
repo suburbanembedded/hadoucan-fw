@@ -329,6 +329,17 @@ public:
 		}
 		*/
 
+		/*
+		if(!m_qspi.cmd_sector_erase(0))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.cmd_sector_erase failed");
+		}
+		else
+		{
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "m_qspi.cmd_sector_erase success");
+		}
+		*/
+
 		HAL_StatusTypeDef ret = HAL_OK;
 		for(;;)
 		{
@@ -402,7 +413,8 @@ public:
 				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "writing page");
 
 				std::array<uint32_t, 4> data = {0xA5A55A5A, 0xA5A55A5A, 0xA5A55A5A, 0xA5A55A5A};
-				if(m_qspi.write_page(0, data.size()*sizeof(uint32_t), (uint8_t*)data.data()))
+				// if(m_qspi.write_page(0, data.size()*sizeof(uint32_t), (uint8_t*)data.data()))
+				if(m_qspi.write_page4(0, data.size()*sizeof(uint32_t), (uint8_t*)data.data()))
 				{
 					uart1_log<128>(LOG_LEVEL::INFO, "qspi", "write ok");
 				}
@@ -434,7 +446,7 @@ public:
 				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read4 failed");
 			}
 
-			vTaskDelay(500);
+			vTaskDelay(5000);
 		}
 	}
 protected:
@@ -589,10 +601,6 @@ void set_all_gpio_low_power()
 	__HAL_RCC_GPIOJ_CLK_DISABLE();
 	__HAL_RCC_GPIOK_CLK_DISABLE();
 }
-
-extern int RTOS_RAM_START;
-extern int RTOS_ROM_START;
-extern int RTOS_ROM_SIZE;
 
 bool can_rx_to_lawicel(const std::string& str)
 {
@@ -894,8 +902,6 @@ int main(void)
 	MX_RNG_Init();
 	MX_TIM3_Init();
 	// MX_QUADSPI_Init();
-
-  	// HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_SET);
 
 	if(0)
 	{

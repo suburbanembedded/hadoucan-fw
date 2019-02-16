@@ -169,6 +169,7 @@ public:
 	bool get_unique_id(uint64_t* const out_unique_id);
 
 	bool cmd_chip_erase();
+	bool cmd_sector_erase(const uint32_t addr);
 
 	bool cmd_enable_quad_mode();
 
@@ -180,7 +181,9 @@ public:
 	bool read2(const uint32_t addr, const size_t len, uint8_t* const out_data);
 	bool read4(const uint32_t addr, const size_t len, uint8_t* const out_data);
 	bool write(const uint32_t addr, const size_t len, const uint8_t* data);
+	bool write4(const uint32_t addr, const size_t len, const uint8_t* data);
 	bool write_page(const uint32_t addr, const size_t len, const uint8_t* data);
+	bool write_page4(const uint32_t addr, const size_t len, const uint8_t* data);
 
 	bool poll_until_busy_clear(const uint32_t timeout)
 	{

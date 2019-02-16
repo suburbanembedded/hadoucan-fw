@@ -733,7 +733,35 @@ bool W25Q16JV::cmd_chip_erase()
 		return false;
 	}
 
-	return true;	
+	return true;
+}
+
+bool W25Q16JV::cmd_sector_erase(const uint32_t addr)
+{
+	QSPI_CommandTypeDef cmd = get_write_enable_cmd();
+	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
+	if(ret != HAL_OK)
+	{
+		return false;
+	}
+
+	if(!get_sector_erase_cmd(addr, &cmd))
+	{
+		return false;
+	}
+	ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
+	if(ret != HAL_OK)
+	{
+		return false;
+	}
+
+	//poll for finished status
+	if(!poll_until_busy_clear(SECTOR_ERASE_TIME_MAX_MS))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 bool W25Q16JV::get_status_1(STATUS_REG_1* const reg)
@@ -858,6 +886,47 @@ bool W25Q16JV::write_page(const uint32_t addr, const size_t len, const uint8_t* 
 
 
 	if(!get_page_prgm_cmd(addr, len, &cmd))
+	{
+		return false;
+	}
+	ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
+	if(ret != HAL_OK)
+	{
+		return false;
+	}
+
+	ret = HAL_QSPI_Transmit(m_qspi_handle, const_cast<uint8_t*>(data), 1000);
+	if(ret != HAL_OK)
+	{
+		return false;
+	}
+
+	//poll for finished status
+	if(!poll_until_busy_clear(PAGE_PRGM_TIME_MAX_MS))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool W25Q16JV::write_page4(const uint32_t addr, const size_t len, const uint8_t* data)
+{
+	if(len > PAGE_LEN)
+	{
+		return false;
+	}
+
+	//TODO: volatile write enable
+	QSPI_CommandTypeDef cmd = get_write_enable_cmd();
+	HAL_StatusTypeDef ret = HAL_QSPI_Command(m_qspi_handle, &cmd, COMMAND_DELAY_MS);
+	if(ret != HAL_OK)
+	{
+		return false;
+	}
+
+
+	if(!get_quad_page_prgm_cmd(addr, len, &cmd))
 	{
 		return false;
 	}
