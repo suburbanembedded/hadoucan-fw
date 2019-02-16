@@ -149,6 +149,10 @@ uint8_t USB_TX_task::send_buffer(USB_buf* const buf)
 
     if(buf)
     {
+    	//ensure the store buffer is flushed before the next instruction
+    	//the usb buffers are in non-cachable but buffered memory
+    	__DSB();
+
 		USBD_CDC_SetTxBuffer(&hUsbDeviceHS, buf->buf.data(), buf->len);
     }
     else

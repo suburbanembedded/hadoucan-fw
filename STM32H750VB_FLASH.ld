@@ -34,7 +34,7 @@ ENTRY(Reset_Handler)
 /* Highest address of the user mode stack */
 _estack = 0x20020000;    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size  = 0x2000; /* required amount of heap  */
+_Min_Heap_Size  = 0x0800; /* required amount of heap  */
 _Min_Stack_Size = 0x0800; /* required amount of stack */
 
 /* Specify the memory areas */
@@ -45,13 +45,21 @@ MEMORY
   FLASH   (rx)    : ORIGIN = 0x08000000, LENGTH = 128K
 
   DTCMRAM (xrw)   : ORIGIN = 0x20000000, LENGTH = 128K
-  RAM_D1  (xrw)   : ORIGIN = 0x24000000, LENGTH = 512K
-  RAM_D2  (xrw)   : ORIGIN = 0x30000000, LENGTH = 288K
-  RAM_D3  (xrw)   : ORIGIN = 0x38000000, LENGTH = 64K
   
-  BBRAM  (xrx)    : ORIGIN = 0x38800000, LENGTH = 4K
+  AXI_D1_SRAM (xrw)  : ORIGIN = 0x24000000, LENGTH = 512K
 
-  QUADSPI (rx)    : ORIGIN = 0x90000000, LENGTH = 16M
+  /* CPU Inst */
+  AHB_D2_SRAM1 (rw)  : ORIGIN = 0x30000000, LENGTH = 128K
+  /* CPU Data */
+  AHB_D2_SRAM2 (rw)  : ORIGIN = 0x30020000, LENGTH = 128K
+  /* Peripheral Buffers */
+  AHB_D2_SRAM3 (rw)  : ORIGIN = 0x30040000, LENGTH = 32K
+
+  AHB_D3_SRAM4 (rw)  : ORIGIN = 0x38000000, LENGTH = 64K
+  
+  BBRAM  (rx)    : ORIGIN = 0x38800000, LENGTH = 4K
+
+  QUADSPI (rw)    : ORIGIN = 0x90000000, LENGTH = 16M
 }
 
 /* Define output sections */
@@ -163,68 +171,102 @@ SECTIONS
   } >DTCMRAM
 
   /* RAM sections */
-  .ram_d1_area :
+  .ram_dtc_area :
   {
-    . = ALIGN(8);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = ALIGN(8);
-  } >RAM_D1
+    . = ALIGN(4);
+    *(.ram_dtc_area)
+    . = ALIGN(4);
+  } >DTCMRAM
   
-  .ram_d1_noload_area (NOLOAD) :
+  .ram_dtc_noload_area (NOLOAD) :
   {
-    . = ALIGN(8);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = ALIGN(8);
-  } >RAM_D1
+    . = ALIGN(4);
+    *(.ram_dtc_noload_area)
+    . = ALIGN(4);
+  } >DTCMRAM
 
-  .ram_d2_area :
+  .ram_d1_s0_area :
   {
-    . = ALIGN(8);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = ALIGN(8);
-  } >RAM_D2
+    . = ALIGN(4);
+    *(.ram_d1_s0_area)
+    . = ALIGN(4);
+  } >AXI_D1_SRAM
   
-  .ram_d2_noload_area (NOLOAD) :
+  .ram_d1_s0_noload_area (NOLOAD) :
   {
-    . = ALIGN(8);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = ALIGN(8);
-  } >RAM_D2
+    . = ALIGN(4);
+    *(.ram_d1_s0_noload_area)
+    . = ALIGN(4);
+  } >AXI_D1_SRAM
 
-  .ram_d3_area :
+  .ram_d2_s1_area :
   {
-    . = ALIGN(8);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = ALIGN(8);
-  } >RAM_D3
+    . = ALIGN(4);
+    *(.ram_d2_s1_area)
+    . = ALIGN(4);
+  } >AHB_D2_SRAM1
   
-  .ram_d3_noload_area (NOLOAD) :
+  .ram_d2_s1_noload_area (NOLOAD) :
   {
-    . = ALIGN(8);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = ALIGN(8);
-  } >RAM_D3
+    . = ALIGN(4);
+    *(.ram_d2_s1_noload_area)
+    . = ALIGN(4);
+  } >AHB_D2_SRAM1
+
+  .ram_d2_s2_area :
+  {
+    . = ALIGN(4);
+    *(.ram_d2_s2_area)
+    . = ALIGN(4);
+  } >AHB_D2_SRAM2
+  
+  .ram_d2_s2_noload_area (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.ram_d2_s2_area)
+    . = ALIGN(4);
+  } >AHB_D2_SRAM2
+
+  .ram_d2_s3_area :
+  {
+    . = ALIGN(4);
+    *(.ram_d2_s3_area)
+    . = ALIGN(4);
+  } >AHB_D2_SRAM3
+  
+  .ram_d2_s3_noload_area (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.ram_d2_s3_area)
+    . = ALIGN(4);
+  } >AHB_D2_SRAM3
+
+  .ram_d3_s4_area :
+  {
+    . = ALIGN(4);
+    *(.ram_d3_s4_area)
+    . = ALIGN(4);
+  } >AHB_D3_SRAM4
+  
+  .ram_d3_s4_noload_area (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.ram_d3_s4_noload_area)
+    . = ALIGN(4);
+  } >AHB_D3_SRAM4
 
   .bbram_area :
   {
-    . = ALIGN(8);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = ALIGN(8);
+    . = ALIGN(4);
+    *(.bbram_area)
+    . = ALIGN(4);
   } >BBRAM
   
   .bbram_noload_area (NOLOAD) :
   {
-    . = ALIGN(8);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = ALIGN(8);
+    . = ALIGN(4);
+    *(.bbram_noload_area)
+    . = ALIGN(4);
   } >BBRAM
 
   /* Remove information from the standard libraries */

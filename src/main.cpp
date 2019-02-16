@@ -115,8 +115,8 @@ protected:
 Pool_test_task pool_test_task;
 #endif
 
-USB_RX_task usb_rx_task __attribute__ (( section(".ram_d1_area") ));
-USB_TX_task usb_tx_task __attribute__ (( section(".ram_d1_area") ));
+USB_RX_task usb_rx_task __attribute__ (( section(".ram_d2_s2_noload_area") ));
+USB_TX_task usb_tx_task __attribute__ (( section(".ram_d2_s2_noload_area") ));
 
 USB_rx_buffer_task usb_rx_buffer_task;
 USB_tx_buffer_task usb_tx_buffer_task;
@@ -255,17 +255,17 @@ public:
 			vTaskDelay(250);
 			HAL_GPIO_WritePin(GPIOD, RED1_Pin, GPIO_PIN_SET);
 
-			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_SET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_RESET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_SET);
-
 			HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_SET);
 			vTaskDelay(250);
 			HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_RESET);
 			vTaskDelay(250);
 			HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_SET);
+
+			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_SET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_RESET);
+			vTaskDelay(250);
+			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_SET);
 
 			HAL_GPIO_WritePin(GPIOD, GREEN2_Pin, GPIO_PIN_SET);
 			vTaskDelay(250);
@@ -310,13 +310,24 @@ public:
 
 		if(!m_qspi.init())
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi_indirect.init failed");
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.init failed");
 
 			for(;;)
 			{
 				vTaskSuspend(nullptr);
 			}
 		}
+
+		/*
+		if(!m_qspi.cmd_chip_erase())
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.cmd_chip_erase failed");
+		}
+		else
+		{
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "m_qspi.cmd_chip_erase success");
+		}
+		*/
 
 		HAL_StatusTypeDef ret = HAL_OK;
 		for(;;)
@@ -343,6 +354,84 @@ public:
 			else
 			{
 				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
+			}
+
+			W25Q16JV::STATUS_REG_1 reg1;
+			if(!m_qspi.get_status_1(&reg1))
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.get_status_1 failed");
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "reg1: 0x%02" PRIX32, uint32_t(reg1.reg));
+			}
+			
+			W25Q16JV::STATUS_REG_2 reg2;
+			if(!m_qspi.get_status_2(&reg2))
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.get_status_2 failed");
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "reg2: 0x%02" PRIX32, uint32_t(reg2.reg));
+			}
+			
+			W25Q16JV::STATUS_REG_3 reg3;
+			if(!m_qspi.get_status_3(&reg3))
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.get_status_3 failed");
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "reg3: 0x%02" PRIX32, uint32_t(reg3.reg));
+			}
+
+			std::array<uint32_t, 4> data1;
+			data1.fill(0);
+			if(m_qspi.read(0, data1.size()*sizeof(uint32_t), (uint8_t*)data1.data()))
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "read1 ok: %08" PRIX32 " %08" PRIX32 " %08" PRIX32 " %08" PRIX32, data1[0], data1[1], data1[2], data1[3]);
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read failed");
+			}
+
+			if(data1[0] == 0xFFFFFFFF)
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "writing page");
+
+				std::array<uint32_t, 4> data = {0xA5A55A5A, 0xA5A55A5A, 0xA5A55A5A, 0xA5A55A5A};
+				if(m_qspi.write_page(0, data.size()*sizeof(uint32_t), (uint8_t*)data.data()))
+				{
+					uart1_log<128>(LOG_LEVEL::INFO, "qspi", "write ok");
+				}
+				else
+				{
+					uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "write failed");
+				}
+			}
+
+			std::array<uint32_t, 4> data2;
+			data2.fill(0);
+			if(m_qspi.read2(0, data2.size()*sizeof(uint32_t), (uint8_t*)data2.data()))
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "read2 ok: %08" PRIX32 " %08" PRIX32 " %08" PRIX32 " %08" PRIX32, data2[0], data2[1], data2[2], data2[3]);
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read2 failed");
+			}
+
+			std::array<uint32_t, 4> data4;
+			data4.fill(0);
+			if(m_qspi.read4(0, data4.size()*sizeof(uint32_t), (uint8_t*)data4.data()))
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "read4 ok: %08" PRIX32 " %08" PRIX32 " %08" PRIX32 " %08" PRIX32, data4[0], data4[1], data4[2], data4[3]);
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read4 failed");
 			}
 
 			vTaskDelay(500);
@@ -510,9 +599,26 @@ bool can_rx_to_lawicel(const std::string& str)
 	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
 }
 
+void jump_to_d1_sram()
+{
+	volatile const uint32_t* d1_sram = reinterpret_cast<volatile uint32_t*>(0x24000000);
+
+	const uint32_t d1_sram_estack = d1_sram[0];
+	const uint32_t d1_sram_reset_handler = d1_sram[1];
+
+	asm volatile( 
+		"DSB\n"
+		"ISB\n"
+		"LDR sp,[%[estack]]\n"
+		"LDR pc,[%[reset_handler]]\n"
+		: /* no out */
+		: [estack] "r" (d1_sram_estack), [reset_handler] "r" (d1_sram_reset_handler)
+		: "memory"
+		);
+}
+
 int main(void)
 {
-
 	{
 		//errata 2.2.9
 		volatile uint32_t* AXI_TARG7_FN_MOD = 
@@ -522,15 +628,249 @@ int main(void)
 			0x1000*7U
 		);
 
-		uint32_t AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE  = 0x00000001;
-		uint32_t AXI_TARGx_FN_MOD_WRITE_ISS_OVERRIDE = 0x00000002;
+		const uint32_t AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE  = 0x00000001;
+		const uint32_t AXI_TARGx_FN_MOD_WRITE_ISS_OVERRIDE = 0x00000002;
 
 		SET_BIT(*AXI_TARG7_FN_MOD, AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE);
 	}
 
+	//confg mpu
+	if(1)
+	{
+		/*
+		ITCMRAM, 0x00000000, 64K
+
+		FLASH, 0x08000000, 128K
+
+		DTCMRAM, 0x20000000, 128K
+
+		AXI_D1_SRAM, 0x24000000, 512K,  CPU Inst/Data
+
+		AHB_D2_SRAM1, 0x30000000, 128K, CPU Inst
+		AHB_D2_SRAM2, 0x30020000, 128K, CPU Data
+		AHB_D2_SRAM3, 0x30040000, 32K,  Peripheral Buffers
+
+		AHB_D3_SRAM4, 0x38000000, 64K
+
+		BBRAM, 0x38800000, 4K
+
+		QUADSPI, 0x90000000, 16M
+
+		Peripherals, 0x40000000, 512M
+		*/
+
+		MPU_Region_InitTypeDef mpu_reg;
+		
+		HAL_MPU_Disable();
+
+		/*
+		// Global
+		// Normal, no access
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER0;
+		mpu_reg.BaseAddress = 0x00000000;
+		mpu_reg.Size = MPU_REGION_SIZE_4GB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_NO_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+		*/
+
+		// ITCMRAM
+		// Normal, Non-cacheable
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER1;
+		mpu_reg.BaseAddress = 0x00000000;
+		mpu_reg.Size = MPU_REGION_SIZE_64KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// FLASH
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER2;
+		mpu_reg.BaseAddress = 0x08000000;
+		mpu_reg.Size = MPU_REGION_SIZE_128KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_PRIV_RO_URO;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// DTCMRAM
+		// Normal, Non-cacheable
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER3;
+		mpu_reg.BaseAddress = 0x20000000;
+		mpu_reg.Size = MPU_REGION_SIZE_128KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AXI_D1_SRAM
+		// Write-back, no write allocate
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER4;
+		mpu_reg.BaseAddress = 0x24000000;
+		mpu_reg.Size = MPU_REGION_SIZE_512KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AHB_D2_SRAM1
+		// Write-back, no write allocate
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER5;
+		mpu_reg.BaseAddress = 0x30000000;
+		mpu_reg.Size = MPU_REGION_SIZE_128KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AHB_D2_SRAM2
+		// Write-back, no write allocate
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER6;
+		mpu_reg.BaseAddress = 0x30020000;
+		mpu_reg.Size = MPU_REGION_SIZE_128KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AHB_D2_SRAM3
+		// Normal, Non-cacheable
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER7;
+		mpu_reg.BaseAddress = 0x30040000;
+		mpu_reg.Size = MPU_REGION_SIZE_32KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// AHB_D3_SRAM4
+		// Write-back, no write allocate
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER8;
+		mpu_reg.BaseAddress = 0x38000000;
+		mpu_reg.Size = MPU_REGION_SIZE_64KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// BBSRAM
+		// Write-back, no write allocate
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER9;
+		mpu_reg.BaseAddress = 0x38800000;
+		mpu_reg.Size = MPU_REGION_SIZE_4KB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// QUADSPI
+		// Write through, no write allocate
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER10;
+		mpu_reg.BaseAddress = 0x90000000;
+		mpu_reg.Size = MPU_REGION_SIZE_16MB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// Peripherals
+		// Strongly Ordered
+		/*
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER11;
+		mpu_reg.BaseAddress = 0x40000000;
+		mpu_reg.Size = MPU_REGION_SIZE_512MB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+		*/
+		// Non-shareable device 
+		mpu_reg.Enable = MPU_REGION_ENABLE;
+		mpu_reg.Number = MPU_REGION_NUMBER11;
+		mpu_reg.BaseAddress = 0x40000000;
+		mpu_reg.Size = MPU_REGION_SIZE_512MB;
+		mpu_reg.SubRegionDisable = 0x00;
+		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL2;
+		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+		HAL_MPU_ConfigRegion(&mpu_reg);
+
+		// Privledged code may use background mem map
+		HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+
+		//No background mem map
+		//MPU enabled during MMI
+		// HAL_MPU_Enable(MPU_HARDFAULT_NMI);
+		
+	}
+
 	SCB_EnableICache();
 
-	// SCB_EnableDCache();
+	SCB_EnableDCache();
 
 	HAL_Init();
 
