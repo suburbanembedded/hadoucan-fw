@@ -32,7 +32,7 @@ public:
   void work() override;
 
   //you must hold a lock on m_rx_buf_mutex
-  bool has_line()
+  bool has_line() const
   {
     auto it = std::find(m_rx_buf.begin(), m_rx_buf.end(), '\r');
     
@@ -40,10 +40,20 @@ public:
   }
 
   //you must hold a lock on m_rx_buf_mutex
+  bool has_data() const
+  {  
+    return !m_rx_buf.empty();
+  }
+
+  //you must hold a lock on m_rx_buf_mutex
+  bool has_data(const size_t len) const
+  {  
+    return m_rx_buf.size() >= len;
+  }
+
+  //you must hold a lock on m_rx_buf_mutex
   bool get_line(std::vector<uint8_t>* out_line)
   {
-    out_line->clear();
-
     const auto cr_it = std::find(m_rx_buf.begin(), m_rx_buf.end(), '\r');
 
     if(cr_it == m_rx_buf.end())
@@ -53,11 +63,34 @@ public:
 
     //copy the [begin, \r]
     const auto cr_next_it = std::next(cr_it);
-    out_line->insert(out_line->begin(), m_rx_buf.begin(), cr_next_it);
+    out_line->assign(m_rx_buf.begin(), cr_next_it);
     out_line->push_back('\0');
 
     //erase the [begin, \r]
     m_rx_buf.erase(m_rx_buf.begin(), cr_next_it);
+
+    //notify space was made
+    m_rx_buf_read_condvar.notify_one();
+
+    return true;
+  }
+
+  //you must hold a lock on m_rx_buf_mutex
+  bool get_data(std::vector<uint8_t>* out_data, const size_t num_data)
+  {
+    size_t num_to_copy = std::min(num_data, m_rx_buf.size());
+
+    if(num_to_copy == 0)
+    {
+      return false;
+    }
+
+    //copy the data
+    const auto end_it = std::next(m_rx_buf.begin(), num_to_copy);
+    out_data->assign(m_rx_buf.begin(), end_it);
+
+    //erase the data
+    m_rx_buf.erase(m_rx_buf.begin(), end_it);
 
     //notify space was made
     m_rx_buf_read_condvar.notify_one();

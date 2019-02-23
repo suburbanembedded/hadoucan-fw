@@ -318,134 +318,32 @@ public:
 			}
 		}
 
-		/*
-		if(!m_qspi.cmd_chip_erase())
+		uint8_t mfg_id = 0;
+		uint16_t flash_pn = 0;
+		if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.cmd_chip_erase failed");
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
 		}
 		else
 		{
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "m_qspi.cmd_chip_erase success");
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
 		}
-		*/
 
-		/*
-		if(!m_qspi.cmd_sector_erase(0))
+		uint64_t unique_id = 0;
+		if(m_qspi.get_unique_id(&unique_id))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.cmd_sector_erase failed");
+			// uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %016" PRIX64, unique_id);
+			//aparently PRIX64 is broken
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
 		}
 		else
 		{
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "m_qspi.cmd_sector_erase success");
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
 		}
-		*/
 
-		HAL_StatusTypeDef ret = HAL_OK;
 		for(;;)
 		{
-			uint8_t mfg_id = 0;
-			uint16_t flash_pn = 0;
-			if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
-			{
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
-			}
-			else
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
-			}
-
-			uint64_t unique_id = 0;
-			if(m_qspi.get_unique_id(&unique_id))
-			{
-				// uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %016" PRIX64, unique_id);
-				//aparently PRIX64 is broken
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
-			}
-			else
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
-			}
-
-			W25Q16JV::STATUS_REG_1 reg1;
-			if(!m_qspi.get_status_1(&reg1))
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.get_status_1 failed");
-			}
-			else
-			{
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "reg1: 0x%02" PRIX32, uint32_t(reg1.reg));
-			}
-			
-			W25Q16JV::STATUS_REG_2 reg2;
-			if(!m_qspi.get_status_2(&reg2))
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.get_status_2 failed");
-			}
-			else
-			{
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "reg2: 0x%02" PRIX32, uint32_t(reg2.reg));
-			}
-			
-			W25Q16JV::STATUS_REG_3 reg3;
-			if(!m_qspi.get_status_3(&reg3))
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.get_status_3 failed");
-			}
-			else
-			{
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "reg3: 0x%02" PRIX32, uint32_t(reg3.reg));
-			}
-
-			std::array<uint32_t, 4> data1;
-			data1.fill(0);
-			if(m_qspi.read(0, data1.size()*sizeof(uint32_t), (uint8_t*)data1.data()))
-			{
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "read1 ok: %08" PRIX32 " %08" PRIX32 " %08" PRIX32 " %08" PRIX32, data1[0], data1[1], data1[2], data1[3]);
-			}
-			else
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read failed");
-			}
-
-			if(data1[0] == 0xFFFFFFFF)
-			{
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "writing page");
-
-				std::array<uint32_t, 4> data = {0xA5A55A5A, 0xA5A55A5A, 0xA5A55A5A, 0xA5A55A5A};
-				// if(m_qspi.write_page(0, data.size()*sizeof(uint32_t), (uint8_t*)data.data()))
-				if(m_qspi.write_page4(0, data.size()*sizeof(uint32_t), (uint8_t*)data.data()))
-				{
-					uart1_log<128>(LOG_LEVEL::INFO, "qspi", "write ok");
-				}
-				else
-				{
-					uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "write failed");
-				}
-			}
-
-			std::array<uint32_t, 4> data2;
-			data2.fill(0);
-			if(m_qspi.read2(0, data2.size()*sizeof(uint32_t), (uint8_t*)data2.data()))
-			{
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "read2 ok: %08" PRIX32 " %08" PRIX32 " %08" PRIX32 " %08" PRIX32, data2[0], data2[1], data2[2], data2[3]);
-			}
-			else
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read2 failed");
-			}
-
-			std::array<uint32_t, 4> data4;
-			data4.fill(0);
-			if(m_qspi.read4(0, data4.size()*sizeof(uint32_t), (uint8_t*)data4.data()))
-			{
-				uart1_log<128>(LOG_LEVEL::INFO, "qspi", "read4 ok: %08" PRIX32 " %08" PRIX32 " %08" PRIX32 " %08" PRIX32, data4[0], data4[1], data4[2], data4[3]);
-			}
-			else
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "read4 failed");
-			}
-
 			vTaskDelay(5000);
 		}
 	}
@@ -605,24 +503,6 @@ void set_all_gpio_low_power()
 bool can_rx_to_lawicel(const std::string& str)
 {
 	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
-}
-
-void jump_to_d1_sram()
-{
-	volatile const uint32_t* d1_sram = reinterpret_cast<volatile uint32_t*>(0x24000000);
-
-	const uint32_t d1_sram_estack = d1_sram[0];
-	const uint32_t d1_sram_reset_handler = d1_sram[1];
-
-	asm volatile( 
-		"DSB\n"
-		"ISB\n"
-		"LDR sp,[%[estack]]\n"
-		"LDR pc,[%[reset_handler]]\n"
-		: /* no out */
-		: [estack] "r" (d1_sram_estack), [reset_handler] "r" (d1_sram_reset_handler)
-		: "memory"
-		);
 }
 
 int main(void)
@@ -921,8 +801,15 @@ int main(void)
 		std::array<char, 25> id_str;
 		get_unique_id_str(&id_str);
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "Initialing");
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "CAN FD <-> USB Adapter");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
+	
+		const uint32_t* main_ptr = reinterpret_cast<const uint32_t*>(&main);
+		uart1_log<64>(LOG_LEVEL::DEBUG, "main", "main: 0x%08" PRIX32, main);
+
+		const uint32_t stack_ptr = __get_MSP();
+		uart1_log<64>(LOG_LEVEL::DEBUG, "main", "msp:  0x%08" PRIX32, stack_ptr);
 	}
 
 	//init

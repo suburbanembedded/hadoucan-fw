@@ -68,9 +68,11 @@ SECTIONS
   /* The startup code goes first into FLASH */
   .isr_vector :
   {
-    . = ALIGN(4);
+    . = ALIGN(512);
+    start_isr_vector = .;
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
+    end_isr_vector = .;
   } >AXI_D1_SRAM
 
   /* The program code and other data goes into FLASH */
