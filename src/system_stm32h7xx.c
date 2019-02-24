@@ -171,9 +171,8 @@ void SystemInit (void)
   __HAL_RCC_D2SRAM2_CLK_ENABLE();
   __HAL_RCC_D2SRAM3_CLK_ENABLE();
 
-  //Enable D3 SRAM
-  __HAL_RCC_BKPRAM_CLKAM_ENABLE();
-  __HAL_RCC_D3SRAM1_CLKAM_ENABLE();
+  //Enable D3 BKPRAM
+  __HAL_RCC_BKPRAM_CLK_ENABLE();
 
   /* FPU settings ------------------------------------------------------------*/
   #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
