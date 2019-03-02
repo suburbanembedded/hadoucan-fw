@@ -13,3 +13,6 @@
 [submodule "external/emb_fs_util"]
 	path = external/emb_fs_util
 	url = git@bitbucket.org:jschloss_sm/emb_fs_util.git
+[submodule "external/spiffs"]
+	path = external/spiffs
+	url = https://github.com/pellepl/spiffs.git
