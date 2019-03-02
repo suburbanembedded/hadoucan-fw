@@ -10,8 +10,8 @@ tty_path = '/dev/ttyACM0'
 
 img_info = os.stat(img_path)
 
-download_cmd = 'download:{0:08X}\r'.format(img_info.st_size)
-download_resp = 'DATA{0:08X}'.format(img_info.st_size)
+download_cmd = 'download:{0:08x}\r'.format(img_info.st_size)
+download_resp = 'DATA{0:08x}'.format(img_info.st_size)
 flash_cmd    = 'flash:app.img\r'
 ok_resp      = 'OKAY'
 
@@ -22,7 +22,7 @@ tty_port.flush()
 tty_line = tty_port.read(64)
 
 if tty_line != download_resp:
-	print 'lost dl start ok, got {0}'.format(tty_line)
+	print 'lost dl start ok, expected {0} got {1}'.format(download_resp, tty_line)
 
 img_file = open(img_path, 'rb')
 img_line = img_file.readline()

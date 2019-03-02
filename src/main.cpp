@@ -23,6 +23,7 @@
 #include "common_util/Byte_util.hpp"
 
 #include "W25Q16JV.hpp"
+#include "W25Q16JV_conf_region.hpp"
 
 #include <array>
 #include <deque>
@@ -157,6 +158,11 @@ protected:
 };
 USB_lawicel_task usb_lawicel_task;
 
+bool can_rx_to_lawicel(const std::string& str)
+{
+	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
+}
+
 class LED_task : public Task_static<512>
 {
 public:
@@ -233,6 +239,9 @@ public:
 			}
 		}
 
+		m_fs.initialize();
+		m_fs.set_flash(&m_qspi);
+
 		uint8_t mfg_id = 0;
 		uint16_t flash_pn = 0;
 		if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
@@ -257,23 +266,99 @@ public:
 			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
 		}
 
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
+		int mount_ret = m_fs.mount();
+		if(mount_ret != SPIFFS_OK)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "SPIFFS mount failed: %d", mount_ret);
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "You will need to reload the firmware");
+
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Format flash");
+			int format_ret = m_fs.format();
+			if(format_ret != SPIFFS_OK)
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "SPIFFS format failed: %d", format_ret);
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Try a power cycle, your board may be broken");
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
+			}
+
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
+			mount_ret = m_fs.mount();
+			if(mount_ret != SPIFFS_OK)
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "SPIFFS mount failed right after we formatted it: %d", mount_ret);
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Try a power cycle, your board may be broken");
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
+			}
+		}
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
+
 		for(;;)
 		{
-			vTaskDelay(5000);
+			vTaskSuspend(nullptr);
 		}
 	}
 protected:
 
 	W25Q16JV m_qspi;
+	W25Q16JV_conf_region m_fs;
 
 };
 QSPI_task qspi_task;
 
+class Main_task : public Task_static<512>
+{
+public:
+	void work() override
+	{
+		//init
+		usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
+		usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
+		usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
+
+		//TODO: refactor can handle init
+		hfdcan1.Instance = FDCAN1;
+		stm32_fdcan_rx_task.set_packet_callback(&can_rx_to_lawicel);
+		stm32_fdcan_rx_task.set_can_instance(FDCAN1);
+		stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
+
+		//can RX
+		stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 1);
+
+		//protocol state machine
+		usb_lawicel_task.launch("usb_lawicel", 2);
+
+		//process usb packets
+		usb_rx_buffer_task.launch("usb_rx_buf", 4);
+		usb_tx_buffer_task.launch("usb_tx_buf", 5);
+
+		//actually send usb packets on the wire
+		usb_rx_task.launch("usb_rx", 3);
+		usb_tx_task.launch("usb_tx", 4);
+
+		led_task.launch("led", 1);
+		qspi_task.launch("qspi", 1);
+		timesync_task.launch("timesync", 1);
+
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
+
+		for(;;)
+		{
+			vTaskSuspend(nullptr);
+		}
+	}
+};
+Main_task main_task;
+
 extern "C"
 {
-
 	USBD_CDC_HandleTypeDef usb_cdc_class_data;
-
 	void* USBD_cdc_class_malloc(size_t size)
 	{
 		if(size != sizeof(usb_cdc_class_data))
@@ -413,11 +498,6 @@ void set_all_gpio_low_power()
 	__HAL_RCC_GPIOI_CLK_DISABLE();
 	__HAL_RCC_GPIOJ_CLK_DISABLE();
 	__HAL_RCC_GPIOK_CLK_DISABLE();
-}
-
-bool can_rx_to_lawicel(const std::string& str)
-{
-	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
 }
 
 int main(void)
@@ -728,36 +808,7 @@ int main(void)
 		uart1_log<64>(LOG_LEVEL::DEBUG, "main", "msp:  0x%08" PRIX32, stack_ptr);
 	}
 
-	//init
-	usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
-	usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
-	usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
-
-	//TODO: refactor can handle init
-	hfdcan1.Instance = FDCAN1;
-	stm32_fdcan_rx_task.set_packet_callback(&can_rx_to_lawicel);
-	stm32_fdcan_rx_task.set_can_instance(FDCAN1);
-	stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
-
-	//can RX
-	stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 1);
-
-	//protocol state machine
-	usb_lawicel_task.launch("usb_lawicel", 2);
-
-	//process usb packets
-	usb_rx_buffer_task.launch("usb_rx_buf", 4);
-	usb_tx_buffer_task.launch("usb_tx_buf", 5);
-
-	//actually send usb packets on the wire
-	usb_rx_task.launch("usb_rx", 3);
-	usb_tx_task.launch("usb_tx", 4);
-
-	led_task.launch("led", 1);
-	qspi_task.launch("qspi", 1);
-	timesync_task.launch("timesync", 1);
-
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
+	main_task.launch("main_task", 15);
 
 	vTaskStartScheduler();
 
