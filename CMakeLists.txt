@@ -18,6 +18,12 @@ add_definitions(
 	-DGTEST_LINKED_AS_SHARED_LIBRARY=0
 	-DGTEST_CREATE_SHARED_LIBRARY=0
 
+	-DSPIFFS_USE_MAGIC
+	-DSPIFFS_USE_MAGIC_LENGTH
+	-DSPIFFS_LOCK=spiffs_lock_dispatch
+	-DSPIFFS_UNLOCK=spiffs_unlock_dispatch
+	-DSPIFFS_HAL_CALLBACK_EXTRA
+
 	-DHSE_VALUE=\(\(uint32_t\)24000000\)
 )
 
@@ -25,9 +31,22 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+add_library(spiffs
+	external/spiffs/src/spiffs_cache.c
+	external/spiffs/src/spiffs_check.c
+	external/spiffs/src/spiffs_gc.c
+	external/spiffs/src/spiffs_hydrogen.c
+	external/spiffs/src/spiffs_nucleus.c
+)
+
+target_include_directories(spiffs PUBLIC
+	external/spiffs/src
+)
+
 add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
 add_subdirectory(external/freertos_cpp_util)
 add_subdirectory(external/common_util)
+add_subdirectory(external/emb_fs_util)
 #add_subdirectory(external/googletest)
 
 add_library(gtest_stm32
@@ -67,8 +86,6 @@ add_executable(canusbfdiso.elf
 	src/main_cube.c
 	src/hal_inst.c
 
-	src/W25Q16JV.cpp
-
 	src/USB_RX_task.cpp
 	src/USB_TX_task.cpp
 	src/USB_buf.cpp
@@ -85,14 +102,6 @@ add_executable(canusbfdiso.elf
 	src/usb/usbd_conf.c
 	src/usb/usbd_desc.c
 	src/usb/usb_device.c
-
-	#src/msg/acn.c
-	#src/msg/asn1crt.c
-	#src/msg/ber.c
-	#src/msg/can_packet.c
-	#src/msg/real.c
-	#src/msg/sm-1301_rpc.c
-	#src/msg/xer.c
 
 	src/lawicel/CAN_DLC.cpp
 	src/lawicel/STM32_FDCAN_DLC.cpp
@@ -118,6 +127,10 @@ target_link_libraries(canusbfdiso.elf
 
 	common_util
 	freertos_cpp_util
+
+	spi_flash
+	spiffs_flash
+	spiffs_util
 )
 
 #target_link_libraries(canusbfdiso_tests

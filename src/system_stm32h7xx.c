@@ -233,7 +233,7 @@ void SystemInit (void)
 #endif /* DATA_IN_ExtSRAM || DATA_IN_ExtSDRAM */
 
   /* Configure the Vector Table location add offset address ------------------*/
-  SCB->VTOR = &start_isr_vector;
+  SCB->VTOR = (uint32_t) &start_isr_vector;
 
 }
 

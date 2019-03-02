@@ -19,7 +19,10 @@
 #include "freertos_cpp_util/Mutex_static.hpp"
 #include "freertos_cpp_util/Condition_variable.hpp"
 #include "freertos_cpp_util/object_pool/Object_pool.hpp"
+
 #include "common_util/Byte_util.hpp"
+
+#include "W25Q16JV.hpp"
 
 #include <array>
 #include <deque>
@@ -210,7 +213,6 @@ public:
 };
 Timesync_task timesync_task;
 
-#include "W25Q16JV.hpp"
 class QSPI_task : public Task_static<1024>
 {
 public:
