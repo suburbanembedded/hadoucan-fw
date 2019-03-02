@@ -28,93 +28,6 @@
 #include <cstdio>
 #include <cinttypes>
 
-#if 0
-class foo
-{
-public:
-	foo()
-	{
-		m_v1 = 0; 
-		m_v2 = 0;
-	}
-		foo(int x)
-		{
-		m_v1 = x; 
-		m_v2 = 2;
-	}
-	~foo()
-	{
-		uart1_printf<64>("called ~foo on 0x%" PRIXPTR "\r\n", this);
-	}
-	int m_v1;
-	int m_v2;
-};
-
-class Pool_test_task : public Task_static<1024>
-{
-public:
-
-void work() override
-{
-	for(;;)
-	{
-		HAL_UART_Transmit(&huart1, (uint8_t*)"test\r\n", 6, 100);
-		vTaskDelay(500);
-
-		foo* a = m_pool.allocate();
-		foo* b = m_pool.try_allocate_for_ticks(3, 4);
-		foo* c = m_pool.try_allocate_for(std::chrono::milliseconds(5), 5);
-
-		if(a)
-		{
-			uart1_printf<64>("a is ok\r\n");
-
-			Object_pool_node<foo>* n_ptr = Object_pool_node<foo>::get_this_from_val_ptr(a);
-
-			uart1_printf<64>("\ta                     is 0x%" PRIXPTR "\r\n", a);
-			uart1_printf<64>("\t&m_pool               is 0x%" PRIXPTR "\r\n", &m_pool);
-			uart1_printf<64>("\tn_ptr                 is 0x%" PRIXPTR "\r\n", n_ptr);
-			uart1_printf<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
-			uart1_printf<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
-
-			uart1_printf<64>("a.v1 is %d\r\n", a->m_v1);
-			uart1_printf<64>("a.v2 is %d\r\n", a->m_v2);
-		}
-		if(b)
-		{
-			uart1_printf<64>("b is ok\r\n");
-
-			Object_pool_node<foo>* n_ptr = Object_pool_node<foo>::get_this_from_val_ptr(b);
-
-			uart1_printf<64>("\tb                     is 0x%" PRIXPTR "\r\n", b);
-			uart1_printf<64>("\t&m_pool               is 0x%" PRIXPTR "\r\n", &m_pool);
-			uart1_printf<64>("\tn_ptr                 is 0x%" PRIXPTR "\r\n", n_ptr);
-			uart1_printf<64>("\tn_ptr->get_val_ptr()  is 0x%" PRIXPTR "\r\n", n_ptr->get_val_ptr());
-			uart1_printf<64>("\tn_ptr->get_pool_ptr() is 0x%" PRIXPTR "\r\n", n_ptr->get_pool_ptr());
-			
-			uart1_printf<64>("b.v1 is %d\r\n", b->m_v1);
-			uart1_printf<64>("b.v2 is %d\r\n", b->m_v2);
-	}
-	if(c)
-	{
-		uart1_printf<64>("c.v1 is %d\r\n", c->m_v1);
-		uart1_printf<64>("c.v2 is %d\r\n", c->m_v2);
-	}
-
-		Object_pool<foo, 16>::free(a);
-		Object_pool<foo, 16>::free(b);
-		Object_pool<foo, 16>::free(c);
-		//m_pool.deallocate(a);
-	}
-}
-
-protected:
-	Object_pool<foo, 16> m_pool;
-};
-
-Pool_test_task pool_test_task;
-#endif
-
 USB_RX_task usb_rx_task __attribute__ (( section(".ram_d2_s2_noload_area") ));
 USB_TX_task usb_tx_task __attribute__ (( section(".ram_d2_s2_noload_area") ));
 
@@ -619,7 +532,8 @@ int main(void)
 		mpu_reg.BaseAddress = 0x24000000;
 		mpu_reg.Size = MPU_REGION_SIZE_512KB;
 		mpu_reg.SubRegionDisable = 0x00;
-		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		// mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
+		mpu_reg.AccessPermission = MPU_REGION_PRIV_RO_URO;
 		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
 		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
 		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
