@@ -270,14 +270,14 @@ public:
 		int mount_ret = m_fs.mount();
 		if(mount_ret != SPIFFS_OK)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "SPIFFS mount failed: %d", mount_ret);
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Flash mount failed: %d", mount_ret);
 			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "You will need to reload the firmware");
 
 			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Format flash");
 			int format_ret = m_fs.format();
 			if(format_ret != SPIFFS_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "SPIFFS format failed: %d", format_ret);
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Flash format failed: %d", format_ret);
 				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Try a power cycle, your board may be broken");
 				for(;;)
 				{
@@ -289,7 +289,7 @@ public:
 			mount_ret = m_fs.mount();
 			if(mount_ret != SPIFFS_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "SPIFFS mount failed right after we formatted it: %d", mount_ret);
+				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Flash mount failed right after we formatted it: %d", mount_ret);
 				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Try a power cycle, your board may be broken");
 				for(;;)
 				{
@@ -761,6 +761,10 @@ int main(void)
 	set_all_gpio_low_power();
 
 	SystemClock_Config();
+
+	//Enable backup domain in standby and Vbat mode
+	HAL_PWREx_EnableBkUpReg();
+
 
 	{
 		std::array<char, 25> id_str;
