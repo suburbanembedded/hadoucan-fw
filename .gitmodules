@@ -10,3 +10,6 @@
 [submodule "external/common_util"]
 	path = external/common_util
 	url = git@bitbucket.org:suburbanmarine/common_util.git
+[submodule "external/emb_fs_util"]
+	path = external/emb_fs_util
+	url = git@bitbucket.org:jschloss_sm/emb_fs_util.git
