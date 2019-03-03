@@ -99,6 +99,20 @@ bool STM32_fdcan_tx::init()
 		return false;
 	}
 
+	ret = HAL_FDCAN_ConfigTimestampCounter(m_fdcan_handle, FDCAN_TIMESTAMP_PRESC_1);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTimestampCounter failed");
+		return false;
+	}
+
+	HAL_FDCAN_EnableTimestampCounter(m_fdcan_handle, FDCAN_TIMESTAMP_EXTERNAL);
+	if(ret != HAL_OK)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTimestampCounter failed");
+		return false;
+	}
+
 	// Configure Rx Std filter
 	FDCAN_FilterTypeDef sFilter0;
 	sFilter0.IdType = FDCAN_STANDARD_ID;
