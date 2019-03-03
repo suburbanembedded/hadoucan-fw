@@ -15,14 +15,18 @@ download_resp = 'DATA{0:08x}'.format(img_info.st_size)
 flash_cmd    = 'flash:app.img\r'
 ok_resp      = 'OKAY'
 
-tty_port = serial.Serial(tty_path, 115200, timeout=5)
+tty_port = serial.Serial(tty_path, 115200, timeout=10)
 
+print 'Device open'
+
+print 'Starting Download'
 tty_port.write(download_cmd)
 tty_port.flush()
-tty_line = tty_port.read(64)
+tty_line = tty_port.read_until(size=12)
 
 if tty_line != download_resp:
 	print 'lost dl start ok, expected {0} got {1}'.format(download_resp, tty_line)
+	sys.exit(-1)
 
 img_file = open(img_path, 'rb')
 img_line = img_file.readline()
@@ -35,13 +39,22 @@ img_file.close()
 
 tty_port.flush()
 
-tty_line = tty_port.read(64)
+tty_line = tty_port.read_until(size=4)
 if tty_line != ok_resp:
 	print 'lost dl finish ok, got {0}'.format(tty_line)
+	sys.exit(-1)
+
+print 'Download Complete'
+
+print 'Starting Flash'
 
 tty_port.write(flash_cmd)
 tty_port.flush()
 
-tty_line = tty_port.read(64)
+tty_line = tty_port.read_until(size=4)
 if tty_line != ok_resp:
 	print 'lost flash ok, got {0}'.format(tty_line)
+	sys.exit(-1)
+
+print 'Flash complete'
+sys.exit(0)
