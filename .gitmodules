@@ -16,3 +16,6 @@
 [submodule "external/spiffs"]
 	path = external/spiffs
 	url = https://github.com/pellepl/spiffs.git
+[submodule "external/tinyxml2"]
+	path = external/tinyxml2
+	url = https://github.com/leethomason/tinyxml2.git
