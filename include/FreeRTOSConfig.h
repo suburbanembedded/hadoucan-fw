@@ -101,7 +101,7 @@
 #define configMAX_PRIORITIES              (16)
 
 #define configMINIMAL_STACK_SIZE          ((uint16_t)128U)
-#define configTOTAL_HEAP_SIZE             ((size_t)(64U * 1024U))
+#define configTOTAL_HEAP_SIZE             ((size_t)(96U * 1024U))
 #define configAPPLICATION_ALLOCATED_HEAP  1
 #define configSUPPORT_STATIC_ALLOCATION   1
 

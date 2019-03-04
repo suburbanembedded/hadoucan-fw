@@ -172,74 +172,123 @@ SECTIONS
   } >DTCMRAM
 
   /* RAM sections */
-  .ram_dtc_area :
+  .ram_dtcm : ALIGN(4)
   {
-    *(.ram_dtc_area)
+    start_ram_dtcm = .;
+    *(.ram_dtcm)
+    . = ALIGN(4);
+    end_ram_dtcm = .;
+  } >DTCMRAM AT> AXI_D1_SRAM
+  start_ram_dtcm_laddr = LOADADDR(.ram_dtcm);
+  
+  .ram_dtcm_noload (NOLOAD) : ALIGN(4)
+  {
+    start_ram_dtcm_noload = .;
+    *(.ram_dtcm_noload)
+    . = ALIGN(4);
+    end_ram_dtcm_noload = .;
   } >DTCMRAM
-  
-  .ram_dtc_noload_area (NOLOAD) :
+
+  .ram_d1_s0 : ALIGN(4)
   {
-    *(.ram_dtc_noload_area)
-  } >DTCMRAM
-  
-  .ram_d1_s0_area :
+    start_ram_d1_s0 = .;
+    *(.ram_d1_s0)
+    . = ALIGN(4);
+    end_ram_d1_s0 = .;
+  } >AXI_D1_SRAM AT> AXI_D1_SRAM
+  start_ram_d1_s0_laddr = LOADADDR(.ram_d1_s0);
+
+  .ram_d1_s0_noload (NOLOAD) : ALIGN(4)
   {
-    *(.ram_d1_s0_area)
+    start_ram_d1_s0_noload = .;
+    *(.ram_d1_s0_noload)
+    . = ALIGN(4);
+    end_ram_d1_s0_noload = .;
   } >AXI_D1_SRAM
-  
-  .ram_d1_s0_noload_area (NOLOAD) :
-  {
-    *(.ram_d1_s0_noload_area)
-  } >AXI_D1_SRAM
 
-  .ram_d2_s1_area :
+  .ram_d2_s1 : ALIGN(4)
   {
-    *(.ram_d2_s1_area)
+    start_ram_d2_s1 = .;
+    *(.ram_d2_s1)
+    . = ALIGN(4);
+    end_ram_d2_s1 = .;
+  } >AHB_D2_SRAM1 AT> AXI_D1_SRAM
+  start_ram_d2_s1_laddr = LOADADDR(.ram_d2_s1);
+  
+  .ram_d2_s1_noload (NOLOAD) : ALIGN(4)
+  {
+    start_ram_d2_s1_noload = .;
+    *(.ram_d2_s1_noload)
+    . = ALIGN(4);
+    end_ram_d2_s1_noload = .;
   } >AHB_D2_SRAM1
-  
-  .ram_d2_s1_noload_area (NOLOAD) :
-  {
-    *(.ram_d2_s1_noload_area)
-  } >AHB_D2_SRAM1
 
-  .ram_d2_s2_area :
+  .ram_d2_s2 : ALIGN(4)
   {
-    *(.ram_d2_s2_area)
+    start_ram_d2_s2 = .;
+    *(.ram_d2_s2)
+    . = ALIGN(4);
+    end_ram_d2_s2 = .;
+  } >AHB_D2_SRAM2 AT> AXI_D1_SRAM
+  start_ram_d2_s2_laddr = LOADADDR(.ram_d2_s2);
+
+  .ram_d2_s2_noload (NOLOAD) : ALIGN(4)
+  {
+    start_ram_d2_s2_noload = .;
+    *(.ram_d2_s2_noload)
+    . = ALIGN(4);
+    end_ram_d2_s2_noload = .;
   } >AHB_D2_SRAM2
-  
-  .ram_d2_s2_noload_area (NOLOAD) :
-  {
-    *(.ram_d2_s2_area)
-  } >AHB_D2_SRAM2
 
-  .ram_d2_s3_area :
+  .ram_d2_s3 : ALIGN(4)
   {
-    *(.ram_d2_s3_area)
+    start_ram_d2_s3 = .;
+    *(.ram_d2_s3)
+    . = ALIGN(4);
+    end_ram_d2_s3 = .;
+  } >AHB_D2_SRAM3 AT> AXI_D1_SRAM
+  start_ram_d2_s3_laddr = LOADADDR(.ram_d2_s3);
+  
+  .ram_d2_s3_noload (NOLOAD) : ALIGN(4)
+  {
+    start_ram_d2_s3_noload = .;
+    *(.ram_d2_s3_noload)
+    . = ALIGN(4);
+    end_ram_d2_s3_noload = .;
   } >AHB_D2_SRAM3
-  
-  .ram_d2_s3_noload_area (NOLOAD) :
-  {
-    *(.ram_d2_s3_area)
-  } >AHB_D2_SRAM3
 
-  .ram_d3_s4_area :
+  .ram_d3_s4 : ALIGN(4)
   {
-    *(.ram_d3_s4_area)
-  } >AHB_D3_SRAM4
+    start_ram_d3_s4 = .;
+    *(.ram_d3_s4)
+    . = ALIGN(4);
+    end_ram_d3_s4 = .;
+  } >AHB_D3_SRAM4 AT> AXI_D1_SRAM
+  start_ram_d3_s4_laddr = LOADADDR(.ram_d3_s4);
   
-  .ram_d3_s4_noload_area (NOLOAD) :
+  .ram_d3_s4_noload (NOLOAD) : ALIGN(4)
   {
-    *(.ram_d3_s4_noload_area)
+    start_ram_d3_s4_noload = .;
+    *(.ram_d3_s4_noload)
+    . = ALIGN(4);
+    end_ram_d3_s4_noload = .;
   } >AHB_D3_SRAM4
 
-  .bbram_area :
+  .bbram : ALIGN(4)
   {
-    *(.bbram_area)
-  } >BBRAM
+    start_bbram = .;
+    *(.bbram)
+    . = ALIGN(4);
+    end_bbram = .;
+  } >BBRAM AT> AXI_D1_SRAM
+  start_bbram_laddr = LOADADDR(.bbram);
   
-  .bbram_noload_area (NOLOAD) :
+  .bbram_noload (NOLOAD) : ALIGN(4)
   {
-    *(.bbram_noload_area)
+    start_bbram_noload = .;
+    *(.bbram_noload)
+    . = ALIGN(4);
+    end_bbram_noload = .;
   } >BBRAM
 
   /* Remove information from the standard libraries */

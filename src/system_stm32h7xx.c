@@ -64,6 +64,7 @@
   */
 
 #include "stm32h7xx.h"
+#include "string.h"
 
 #if !defined  (HSE_VALUE)
 #define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */
@@ -157,6 +158,45 @@
   * @{
   */
 
+//Initialized ram regions
+extern int start_ram_dtcm_laddr;
+extern int start_ram_dtcm;
+extern int end_ram_dtcm;
+extern int start_ram_d1_s0_laddr;
+extern int start_ram_d1_s0;
+extern int end_ram_d1_s0;
+extern int start_ram_d2_s1_laddr;
+extern int start_ram_d2_s1;
+extern int end_ram_d2_s1;
+extern int start_ram_d2_s2_laddr;
+extern int start_ram_d2_s2;
+extern int end_ram_d2_s2;
+extern int start_ram_d2_s3_laddr;
+extern int start_ram_d2_s3;
+extern int end_ram_d2_s3;
+extern int start_ram_d3_s4_laddr;
+extern int start_ram_d3_s4;
+extern int end_ram_d3_s4;
+extern int start_bbram_laddr;
+extern int start_bbram;
+extern int end_bbram;
+
+//No load ram regions
+extern int start_ram_dtcm_noload;
+extern int end_ram_dtcm_noload;
+extern int start_ram_d1_s0_noload;
+extern int end_ram_d1_s0_noload;
+extern int start_ram_d2_s1_noload;
+extern int end_ram_d2_s1_noload;
+extern int start_ram_d2_s2_noload;
+extern int end_ram_d2_s2_noload;
+extern int start_ram_d2_s3_noload;
+extern int end_ram_d2_s3_noload;
+extern int start_ram_d3_s4_noload;
+extern int end_ram_d3_s4_noload;
+extern int start_bbram_noload;
+extern int end_bbram_noload;
+
 /**
   * @brief  Setup the microcontroller system
   *         Initialize the FPU setting, vector table location and External memory
@@ -173,6 +213,24 @@ void SystemInit (void)
 
   //Enable D3 BKPRAM
   __HAL_RCC_BKPRAM_CLK_ENABLE();
+
+  //copy all init mem
+  memcpy(&start_ram_dtcm,  &start_ram_dtcm_laddr,  &end_ram_dtcm  - &start_ram_dtcm);
+  memcpy(&start_ram_d1_s0, &start_ram_d1_s0_laddr, &end_ram_d1_s0 - &start_ram_d1_s0);
+  memcpy(&start_ram_d2_s1, &start_ram_d2_s1_laddr, &end_ram_d2_s1 - &start_ram_d2_s1);
+  memcpy(&start_ram_d2_s2, &start_ram_d2_s2_laddr, &end_ram_d2_s2 - &start_ram_d2_s2);
+  memcpy(&start_ram_d2_s3, &start_ram_d2_s3_laddr, &end_ram_d2_s3 - &start_ram_d2_s3);
+  memcpy(&start_ram_d3_s4, &start_ram_d3_s4_laddr, &end_ram_d3_s4 - &start_ram_d3_s4);
+  memcpy(&start_bbram,     &start_bbram_laddr,     &end_bbram     - &start_bbram);
+
+  //zero all no load mem
+  memset(&start_ram_dtcm_noload,  0, &end_ram_dtcm_noload  - &start_ram_dtcm_noload);
+  memset(&start_ram_d1_s0_noload, 0, &end_ram_d1_s0_noload - &start_ram_d1_s0_noload);
+  memset(&start_ram_d2_s1_noload, 0, &end_ram_d2_s1_noload - &start_ram_d2_s1_noload);
+  memset(&start_ram_d2_s2_noload, 0, &end_ram_d2_s2_noload - &start_ram_d2_s2_noload);
+  memset(&start_ram_d2_s3_noload, 0, &end_ram_d2_s3_noload - &start_ram_d2_s3_noload);
+  memset(&start_ram_d3_s4_noload, 0, &end_ram_d3_s4_noload - &start_ram_d3_s4_noload);
+  memset(&start_bbram_noload,     0, &end_bbram_noload     - &start_bbram_noload);
 
   /* FPU settings ------------------------------------------------------------*/
   #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)

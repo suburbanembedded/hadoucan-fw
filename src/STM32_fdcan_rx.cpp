@@ -8,7 +8,7 @@
 
 #include <string>
 
-STM32_fdcan_rx stm32_fdcan_rx_task;
+STM32_fdcan_rx stm32_fdcan_rx_task __attribute__ (( section(".ram_dtcm_noload") ));
 
 namespace
 {

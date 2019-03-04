@@ -25,6 +25,8 @@
 #include "W25Q16JV.hpp"
 #include "W25Q16JV_conf_region.hpp"
 
+#include "../external/tinyxml2/tinyxml2.h"
+
 #include <array>
 #include <deque>
 #include <vector>
@@ -32,11 +34,11 @@
 #include <cstdio>
 #include <cinttypes>
 
-USB_RX_task usb_rx_task __attribute__ (( section(".ram_d2_s2_noload_area") ));
-USB_TX_task usb_tx_task __attribute__ (( section(".ram_d2_s2_noload_area") ));
+USB_RX_task usb_rx_task __attribute__ (( section(".ram_dtcm_noload") ));
+USB_TX_task usb_tx_task __attribute__ (( section(".ram_dtcm_noload") ));
 
-USB_rx_buffer_task usb_rx_buffer_task;
-USB_tx_buffer_task usb_tx_buffer_task;
+USB_rx_buffer_task usb_rx_buffer_task __attribute__ (( section(".ram_dtcm_noload") ));
+USB_tx_buffer_task usb_tx_buffer_task __attribute__ (( section(".ram_dtcm_noload") ));
 
 class USB_lawicel_task : public Task_static<1024>
 {
@@ -156,7 +158,7 @@ protected:
 
 	USB_tx_buffer_task* m_usb_tx_buffer;
 };
-USB_lawicel_task usb_lawicel_task;
+USB_lawicel_task usb_lawicel_task __attribute__ (( section(".ram_dtcm_noload") ));
 
 bool can_rx_to_lawicel(const std::string& str)
 {
@@ -198,7 +200,7 @@ public:
 	}
 
 };
-LED_task led_task;
+LED_task led_task __attribute__ (( section(".ram_d2_s2_noload") ));
 
 class Timesync_task : public Task_static<512>
 {
@@ -339,9 +341,9 @@ public:
 		return true;
 	}
 };
-Timesync_task timesync_task;
+Timesync_task timesync_task __attribute__ (( section(".ram_d2_s2_noload") ));
 
-class QSPI_task : public Task_static<1024>
+class QSPI_task : public Task_static<8192>
 {
 public:
 
@@ -353,7 +355,7 @@ public:
 
 		if(!m_qspi.init())
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "m_qspi.init failed");
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "m_qspi.init failed");
 
 			for(;;)
 			{
@@ -373,7 +375,7 @@ public:
 		}
 		else
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
 		}
 
 		uint64_t unique_id = 0;
@@ -385,10 +387,10 @@ public:
 		}
 		else
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
 		}
 
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
+		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
 		int mount_ret = m_fs.mount();
 		if(mount_ret != SPIFFS_OK)
 		{
@@ -407,7 +409,7 @@ public:
 				}
 			}
 
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
+			uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
 			mount_ret = m_fs.mount();
 			if(mount_ret != SPIFFS_OK)
 			{
@@ -419,12 +421,68 @@ public:
 				}
 			}
 		}
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
+		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
+
+		//write_default_config();
 
 		for(;;)
 		{
 			vTaskSuspend(nullptr);
 		}
+	}
+
+	bool load_config()
+	{
+		return false;
+	}
+
+	bool write_default_config()
+	{
+		tinyxml2::XMLDocument config_doc;
+
+		tinyxml2::XMLDeclaration* decl = config_doc.NewDeclaration("version=\"1.0\" standalone=\"yes\"");
+		config_doc.InsertFirstChild(decl);
+		/*
+
+		tinyxml2::XMLElement* config_doc_root = config_doc.NewElement("config");
+		config_doc.InsertEndChild(config_doc_root);
+
+		tinyxml2::XMLElement* node = nullptr;
+
+		node = config_doc.NewElement("autopoll");
+		node->SetText(false);
+		config_doc_root->InsertEndChild(node);
+
+		node = config_doc.NewElement("timesync");
+		node->SetText("slave");
+		config_doc_root->InsertEndChild(node);
+
+		node = config_doc.NewElement("nom_bitrate");
+		node->SetText(500000);
+		config_doc_root->InsertEndChild(node);
+
+		node = config_doc.NewElement("data_bitrate");
+		node->SetText(4000000);
+		config_doc_root->InsertEndChild(node);
+
+		node = config_doc.NewElement("brs");
+		node->SetText(false);
+		config_doc_root->InsertEndChild(node);
+
+		node = config_doc.NewElement("brs");
+		node->SetText(false);
+		config_doc_root->InsertEndChild(node);
+*/
+		//nom tq1 / tq2 map
+		//data tq1 / tq2 map
+
+		//mem, compact, fulldepth
+		tinyxml2::XMLPrinter xml_printer(nullptr, true, 0);
+		config_doc.Print(&xml_printer);
+
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "%.16s", xml_printer.CStr());
+
+		return true;
 	}
 protected:
 
@@ -432,7 +490,7 @@ protected:
 	W25Q16JV_conf_region m_fs;
 
 };
-QSPI_task qspi_task;
+QSPI_task qspi_task __attribute__ (( section(".ram_d2_s2_noload") ));
 
 class Main_task : public Task_static<512>
 {
@@ -476,7 +534,7 @@ public:
 		}
 	}
 };
-Main_task main_task;
+Main_task main_task __attribute__ (( section(".ram_d2_s2_noload") ));
 
 extern "C"
 {

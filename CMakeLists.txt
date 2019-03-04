@@ -44,9 +44,8 @@ target_include_directories(spiffs PUBLIC
 )
 
 add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
-add_subdirectory(external/freertos_cpp_util)
-add_subdirectory(external/common_util)
-add_subdirectory(external/emb_fs_util)
+
+add_subdirectory(external/tinyxml2)
 #add_subdirectory(external/googletest)
 
 add_library(gtest_stm32
@@ -72,6 +71,10 @@ target_include_directories(gmock_stm32
 target_link_libraries(gmock_stm32
 	gtest_stm32
 )
+
+add_subdirectory(external/freertos_cpp_util)
+add_subdirectory(external/common_util)
+add_subdirectory(external/emb_fs_util)
 
 add_executable(canusbfdiso.elf
 	src/system_stm32h7xx.c
@@ -131,6 +134,8 @@ target_link_libraries(canusbfdiso.elf
 	spi_flash
 	spiffs_flash
 	spiffs_util
+
+	tinyxml2
 )
 
 #target_link_libraries(canusbfdiso_tests
