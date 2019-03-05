@@ -135,7 +135,7 @@ target_link_libraries(canusbfdiso.elf
 	spiffs_flash
 	spiffs_util
 
-	tinyxml2
+	tinyxml2_static
 )
 
 #target_link_libraries(canusbfdiso_tests
