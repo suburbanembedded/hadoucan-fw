@@ -343,7 +343,44 @@ public:
 };
 Timesync_task timesync_task __attribute__ (( section(".ram_d2_s2_noload") ));
 
-class QSPI_task : public Task_static<8192>
+class TinyXML_inc_printer : public tinyxml2::XMLVisitor
+{
+public:
+	bool VisitEnter(const tinyxml2::XMLDocument& doc) override
+	{
+		return true;
+	}
+	bool VisitExit(const tinyxml2::XMLDocument& doc) override
+	{
+		return true;
+	}
+	bool VisitEnter(const tinyxml2::XMLElement& ele, const tinyxml2::XMLAttribute* attr) override
+	{
+		return true;
+	}
+	bool VisitExit(const tinyxml2::XMLElement& ele) override
+	{
+		return true;
+	}
+	bool Visit(const tinyxml2::XMLDeclaration& decl) override
+	{
+		return true;
+	}
+	bool Visit(const tinyxml2::XMLText& text) override
+	{
+		return true;
+	}
+	bool Visit(const tinyxml2::XMLComment& com) override
+	{
+		return true;
+	}
+	bool Visit(const tinyxml2::XMLUnknown& unk) override
+	{
+		return true;
+	}
+};
+
+class QSPI_task : public Task_static<2048>
 {
 public:
 
@@ -423,7 +460,7 @@ public:
 		}
 		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
 
-		//write_default_config();
+		write_default_config();
 
 		for(;;)
 		{
@@ -435,52 +472,248 @@ public:
 	{
 		return false;
 	}
-
 	bool write_default_config()
 	{
 		tinyxml2::XMLDocument config_doc;
 
+		
 		tinyxml2::XMLDeclaration* decl = config_doc.NewDeclaration("version=\"1.0\" standalone=\"yes\"");
 		config_doc.InsertFirstChild(decl);
-		/*
 
 		tinyxml2::XMLElement* config_doc_root = config_doc.NewElement("config");
 		config_doc.InsertEndChild(config_doc_root);
 
-		tinyxml2::XMLElement* node = nullptr;
+		/*
+		{
+			tinyxml2::XMLElement* node = config_doc.NewElement("autopoll");
+			node->SetText(false);
+			config_doc_root->InsertEndChild(node);
+		}
+		{
+			tinyxml2::XMLElement* node = config_doc.NewElement("timesync");
+			node->SetText("slave");
+			config_doc_root->InsertEndChild(node);
+		}
+		{
+			tinyxml2::XMLElement* node = config_doc.NewElement("nom_bitrate");
+			node->SetText(500000);
+			config_doc_root->InsertEndChild(node);
+		}
+		{
+			tinyxml2::XMLElement* node = config_doc.NewElement("data_bitrate");
+			node->SetText(4000000);
+			config_doc_root->InsertEndChild(node);
+		}
+		{
+			tinyxml2::XMLElement* node = config_doc.NewElement("brs");
+			node->SetText(false);
+			config_doc_root->InsertEndChild(node);
+		}
+		*/
+		{
+			tinyxml2::XMLElement* table = config_doc.NewElement("bitrate_table");
+			table->SetAttribute("clock", 24000000U);
+			config_doc_root->InsertEndChild(table);
 
-		node = config_doc.NewElement("autopoll");
-		node->SetText(false);
-		config_doc_root->InsertEndChild(node);
+			tinyxml2::XMLElement* entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  5000U);
+			entry->SetAttribute("pre",   192U);
+			entry->SetAttribute("tseg1", 16U);
+			entry->SetAttribute("tseg2", 8U);
+			entry->SetAttribute("sjw",   2U);
+			table->InsertEndChild(entry);
 
-		node = config_doc.NewElement("timesync");
-		node->SetText("slave");
-		config_doc_root->InsertEndChild(node);
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  10000U);
+			entry->SetAttribute("pre",   120U);
+			entry->SetAttribute("tseg1", 16U);
+			entry->SetAttribute("tseg2", 3U);
+			entry->SetAttribute("sjw",   2U);
+			table->InsertEndChild(entry);
 
-		node = config_doc.NewElement("nom_bitrate");
-		node->SetText(500000);
-		config_doc_root->InsertEndChild(node);
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  20000U);
+			entry->SetAttribute("pre",   60U);
+			entry->SetAttribute("tseg1", 16U);
+			entry->SetAttribute("tseg2", 3U);
+			entry->SetAttribute("sjw",   2U);
+			table->InsertEndChild(entry);
 
-		node = config_doc.NewElement("data_bitrate");
-		node->SetText(4000000);
-		config_doc_root->InsertEndChild(node);
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  50000U);
+			entry->SetAttribute("pre",   24U);
+			entry->SetAttribute("tseg1", 16U);
+			entry->SetAttribute("tseg2", 3U);
+			entry->SetAttribute("sjw",   2U);
+			table->InsertEndChild(entry);
 
-		node = config_doc.NewElement("brs");
-		node->SetText(false);
-		config_doc_root->InsertEndChild(node);
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  100000U);
+			entry->SetAttribute("pre",   12U);
+			entry->SetAttribute("tseg1", 16U);
+			entry->SetAttribute("tseg2", 3U);
+			entry->SetAttribute("sjw",   2U);
+			table->InsertEndChild(entry);
 
-		node = config_doc.NewElement("brs");
-		node->SetText(false);
-		config_doc_root->InsertEndChild(node);
-*/
-		//nom tq1 / tq2 map
-		//data tq1 / tq2 map
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  125000U);
+			entry->SetAttribute("pre",   12U);
+			entry->SetAttribute("tseg1", 13U);
+			entry->SetAttribute("tseg2", 3U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  250000U);
+			entry->SetAttribute("pre",   6U);
+			entry->SetAttribute("tseg1", 12U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  500000U);
+			entry->SetAttribute("pre",   3U);
+			entry->SetAttribute("tseg1", 13U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  800000U);
+			entry->SetAttribute("pre",   3U);
+			entry->SetAttribute("tseg1", 7U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  1000000U);
+			entry->SetAttribute("pre",   3U);
+			entry->SetAttribute("tseg1", 5U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "data");
+			entry->SetAttribute("rate",  2000000U);
+			entry->SetAttribute("pre",   2U);
+			entry->SetAttribute("tseg1", 4U);
+			entry->SetAttribute("tseg2", 1U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "data");
+			entry->SetAttribute("rate",  6000000U);
+			entry->SetAttribute("pre",   1U);
+			entry->SetAttribute("tseg1", 1U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+		}
+
+		{
+			tinyxml2::XMLElement* table = config_doc.NewElement("bitrate_table");
+			table->SetAttribute("clock", 60000000U);
+			config_doc_root->InsertEndChild(table);
+
+			tinyxml2::XMLElement* entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  250000U);
+			entry->SetAttribute("pre",   24U);
+			entry->SetAttribute("tseg1", 7U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  500000U);
+			entry->SetAttribute("pre",   12U);
+			entry->SetAttribute("tseg1", 7U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "nominal");
+			entry->SetAttribute("rate",  1000000U);
+			entry->SetAttribute("pre",   5U);
+			entry->SetAttribute("tseg1", 8U);
+			entry->SetAttribute("tseg2", 3U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "data");
+			entry->SetAttribute("rate",  2000000U);
+			entry->SetAttribute("pre",   3U);
+			entry->SetAttribute("tseg1", 7U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "data");
+			entry->SetAttribute("rate",  4000000U);
+			entry->SetAttribute("pre",   3U);
+			entry->SetAttribute("tseg1", 3U);
+			entry->SetAttribute("tseg2", 1U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "data");
+			entry->SetAttribute("rate",  6000000U);
+			entry->SetAttribute("pre",   2U);
+			entry->SetAttribute("tseg1", 3U);
+			entry->SetAttribute("tseg2", 1U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "data");
+			entry->SetAttribute("rate",  10000000U);
+			entry->SetAttribute("pre",   1U);
+			entry->SetAttribute("tseg1", 3U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+
+			entry = config_doc.NewElement("entry");
+			entry->SetAttribute("type",  "data");
+			entry->SetAttribute("rate",  12000000U);
+			entry->SetAttribute("pre",   1U);
+			entry->SetAttribute("tseg1", 2U);
+			entry->SetAttribute("tseg2", 2U);
+			entry->SetAttribute("sjw",   1U);
+			table->InsertEndChild(entry);
+		}
 
 		//mem, compact, fulldepth
-		tinyxml2::XMLPrinter xml_printer(nullptr, true, 0);
+		tinyxml2::XMLPrinter xml_printer(nullptr, false, 0);
 		config_doc.Print(&xml_printer);
 
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "%.16s", xml_printer.CStr());
+		const char* doc_str = xml_printer.CStr();
+		int doc_str_len = xml_printer.CStrSize();
+
+		for(size_t i = 0; i < (doc_str_len-1); i++)
+		{
+			uart1_printf<16>("%c", doc_str[i]);
+		}
+
 
 		return true;
 	}
