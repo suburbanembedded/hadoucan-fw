@@ -515,9 +515,14 @@ public:
 			timestamp->InsertEndChild(node);
 		}
 
-		node = config_doc.NewElement("clock");
-		node->SetText(60000000U);
-		config_doc_root->InsertEndChild(node);
+		{
+			tinyxml2::XMLComment* comment = config_doc.NewComment("clock may only be 24000000 or 60000000");
+			config_doc_root->InsertEndChild(comment);
+
+			node = config_doc.NewElement("clock");
+			node->SetText(60000000U);
+			config_doc_root->InsertEndChild(node);
+		}
 
 		{
 			tinyxml2::XMLElement* bitrate = config_doc.NewElement("bitrate");
