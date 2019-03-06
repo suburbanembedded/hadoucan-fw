@@ -28,7 +28,6 @@
 #include "../external/tinyxml2/tinyxml2.h"
 
 #include <array>
-#include <deque>
 #include <vector>
 #include <algorithm>
 #include <cstdio>
@@ -342,12 +341,18 @@ public:
 	}
 };
 Timesync_task timesync_task __attribute__ (( section(".ram_d2_s2_noload") ));
-
+/*
 class TinyXML_inc_printer : public tinyxml2::XMLVisitor
 {
 public:
+	TinyXML_inc_printer()
+	{
+		indent_level = 0;
+	}
+
 	bool VisitEnter(const tinyxml2::XMLDocument& doc) override
 	{
+		indent_level = 0;
 		return true;
 	}
 	bool VisitExit(const tinyxml2::XMLDocument& doc) override
@@ -356,30 +361,100 @@ public:
 	}
 	bool VisitEnter(const tinyxml2::XMLElement& ele, const tinyxml2::XMLAttribute* attr) override
 	{
+		print_indent();
+
+		uart1_printf<64>("<%s", ele.Name());
+		if(attr)
+		{
+			tinyxml2::XMLAttribute const* node = attr;
+			
+			do
+			{
+				uart1_printf<64>(" %s=\"%s\"", node->Name(), node->Value());
+				node = node->Next();
+			} while(node);
+		}
+
+		if(ele.NoChildren())
+		{
+			uart1_printf<64>("/>\n");
+		}
+		else
+		{
+			uart1_printf<64>(">");
+
+			if(ele.FirstChild()->ToText() == nullptr)
+			{
+				indent_level++;
+
+				uart1_printf<64>("\n");
+			}
+		}
+
 		return true;
 	}
 	bool VisitExit(const tinyxml2::XMLElement& ele) override
 	{
+		if(ele.NoChildren())
+		{
+			return true;
+		}
+
+		if(ele.Parent() != nullptr)
+		{
+			if(ele.FirstChild()->ToText() == nullptr)
+			{
+				indent_level--;
+				print_indent();
+				uart1_printf<64>("</%s>\n", ele.Name());
+			}
+			else
+			{
+				uart1_printf<64>("</%s>\n", ele.Name());
+			}
+		}
+		else
+		{
+			print_indent();
+			uart1_printf<64>("</%s>\n", ele.Name());	
+		}
+
 		return true;
 	}
 	bool Visit(const tinyxml2::XMLDeclaration& decl) override
 	{
+		print_indent();
+		uart1_printf<64>("<?%s?>\n", decl.Value());
 		return true;
 	}
 	bool Visit(const tinyxml2::XMLText& text) override
 	{
+		uart1_printf<64>("%s", text.Value());
 		return true;
 	}
 	bool Visit(const tinyxml2::XMLComment& com) override
 	{
+		print_indent();
+		uart1_printf<64>("<!--%s-->\n", com.Value());
 		return true;
 	}
 	bool Visit(const tinyxml2::XMLUnknown& unk) override
 	{
 		return true;
 	}
-};
+protected:
 
+	void print_indent()
+	{
+		for(size_t i = 0 ; i < indent_level; i++)
+		{
+			uart1_printf<64>("\t");
+		}
+	}
+
+	size_t indent_level;
+};
+*/
 class QSPI_task : public Task_static<2048>
 {
 public:
@@ -432,7 +507,7 @@ public:
 		if(mount_ret != SPIFFS_OK)
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Flash mount failed: %d", mount_ret);
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "You will need to reload the firmware");
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "You will need to reload the config");
 
 			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Format flash");
 			int format_ret = m_fs.format();
@@ -460,8 +535,8 @@ public:
 		}
 		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
 
-		write_default_config();
-		write_default_bitrate_table();
+		// write_default_config();
+		// write_default_bitrate_table();
 
 		for(;;)
 		{
@@ -478,7 +553,7 @@ public:
 		tinyxml2::XMLDocument config_doc;
 
 		{
-			tinyxml2::XMLDeclaration* decl = config_doc.NewDeclaration("version=\"1.0\" standalone=\"yes\"");
+			tinyxml2::XMLDeclaration* decl = config_doc.NewDeclaration("xml version=\"1.0\" standalone=\"yes\" encoding=\"UTF-8\"");
 			config_doc.InsertFirstChild(decl);
 		}
 
@@ -589,11 +664,31 @@ public:
 		config_doc.Print(&xml_printer);
 
 		const char* doc_str = xml_printer.CStr();
-		int doc_str_len = xml_printer.CStrSize();
+		int doc_str_len = xml_printer.CStrSize() - 1;
 
-		for(size_t i = 0; i < (doc_str_len-1); i++)
+		for(size_t i = 0; i < (doc_str_len); i++)
 		{
 			uart1_printf<16>("%c", doc_str[i]);
+		}
+
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Writing config.xml");
+		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), "config.xml", SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
+		if(fd < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		if(SPIFFS_write(m_fs.get_fs(), fd, const_cast<char*>(doc_str), doc_str_len) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
 		}
 
 		return true;
@@ -603,7 +698,7 @@ public:
 		tinyxml2::XMLDocument table_doc;
 
 		{
-			tinyxml2::XMLDeclaration* decl = table_doc.NewDeclaration("version=\"1.0\" standalone=\"yes\"");
+			tinyxml2::XMLDeclaration* decl = table_doc.NewDeclaration("xml version=\"1.0\" standalone=\"yes\" encoding=\"UTF-8\"");
 			table_doc.InsertFirstChild(decl);
 		}
 
@@ -809,9 +904,9 @@ public:
 		table_doc.Print(&xml_printer);
 
 		const char* doc_str = xml_printer.CStr();
-		int doc_str_len = xml_printer.CStrSize();
+		int doc_str_len = xml_printer.CStrSize() - 1;
 
-		for(size_t i = 0; i < (doc_str_len-1); i++)
+		for(size_t i = 0; i < (doc_str_len); i++)
 		{
 			uart1_printf<16>("%c", doc_str[i]);
 		}
