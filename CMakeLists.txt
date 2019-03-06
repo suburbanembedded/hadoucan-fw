@@ -160,7 +160,7 @@ target_link_libraries(canusbfdiso.elf
 # Generate intel hex image
 add_custom_command(
 	OUTPUT canusbfdiso.hex
-	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -Oihex canusbfdiso.elf canusbfdiso.hex
+	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -S -Oihex canusbfdiso.elf canusbfdiso.hex
 	DEPENDS canusbfdiso.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM	
@@ -169,6 +169,21 @@ add_custom_command(
 add_custom_target(canusbfdiso_hex
 	ALL
 	DEPENDS canusbfdiso.hex
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Generate raw image
+add_custom_command(
+	OUTPUT canusbfdiso.bin
+	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -S -Obinary canusbfdiso.elf canusbfdiso.bin
+	DEPENDS canusbfdiso.elf
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	VERBATIM	
+)
+
+add_custom_target(canusbfdiso_bin
+	ALL
+	DEPENDS canusbfdiso.bin
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 

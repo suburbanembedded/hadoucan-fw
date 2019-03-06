@@ -535,8 +535,8 @@ public:
 		}
 		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
 
-		// write_default_config();
-		// write_default_bitrate_table();
+		write_default_config();
+		write_default_bitrate_table();
 
 		for(;;)
 		{
@@ -690,6 +690,7 @@ public:
 			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
 			return false;
 		}
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Write config.xml success");
 
 		return true;
 	}
@@ -910,6 +911,27 @@ public:
 		{
 			uart1_printf<16>("%c", doc_str[i]);
 		}
+
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Writing table.xml");
+		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), "table.xml", SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
+		if(fd < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		if(SPIFFS_write(m_fs.get_fs(), fd, const_cast<char*>(doc_str), doc_str_len) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Write table.xml success");
 
 		return true;
 	}
