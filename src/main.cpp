@@ -28,6 +28,7 @@
 #include "../external/tinyxml2/tinyxml2.h"
 
 #include <array>
+#include <map>
 #include <vector>
 #include <algorithm>
 #include <cstdio>
@@ -513,8 +514,9 @@ public:
 			int format_ret = m_fs.format();
 			if(format_ret != SPIFFS_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Flash format failed: %d", format_ret);
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Try a power cycle, your board may be broken");
+				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Flash format failed: %d", format_ret);
+				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Try a power cycle, your board may be broken");
+
 				for(;;)
 				{
 					vTaskSuspend(nullptr);
@@ -525,22 +527,37 @@ public:
 			mount_ret = m_fs.mount();
 			if(mount_ret != SPIFFS_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Flash mount failed right after we formatted it: %d", mount_ret);
-				uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Try a power cycle, your board may be broken");
+				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Flash mount failed right after we formatted it: %d", mount_ret);
+				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Try a power cycle, your board may be broken");
+
 				for(;;)
 				{
 					vTaskSuspend(nullptr);
 				}
+			}
+			else
+			{
+				uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
 			}
 
 			//write default config
 			if(!write_default_config())
 			{
 				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config failed");
+
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
 			}
 			if(!write_default_bitrate_table())
 			{
 				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default bitrate table failed");
+
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
 			}
 		}
 		else
@@ -585,19 +602,19 @@ public:
 		}
 	}
 
-	bool load_config()
+	bool load_xml_file(const char* name, tinyxml2::XMLDocument* const out_xml)
 	{
-		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), "config.xml", SPIFFS_RDONLY, 0);
+		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), name, SPIFFS_RDONLY, 0);
 		if(fd < 0)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 			return false;
 		}
 
 		spiffs_stat stat;
 		if(SPIFFS_fstat(m_fs.get_fs(), fd, &stat) < 0)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Getting size of config.xml: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Getting size of %s: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 			return false;
 		}
 
@@ -605,13 +622,413 @@ public:
 		data.resize(stat.size);
 		if(SPIFFS_read(m_fs.get_fs(), fd, data.data(), data.size()) < 0)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Reading config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Reading %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 			return false;
 		}
 
 		if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		tinyxml2::XMLDocument file;
+		tinyxml2::XMLError err = file.Parse(data.data(), data.size());
+		if(err != tinyxml2::XML_SUCCESS)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Parsing %s failed: %" PRId32, name, err);
+			return false;
+		}
+
+		return true;
+	}
+
+	bool write_xml_file(const char* name, const tinyxml2::XMLDocument& xml)
+	{
+		tinyxml2::XMLPrinter xml_printer(nullptr, false, 0);
+		xml.Print(&xml_printer);
+
+		const char* doc_str = xml_printer.CStr();
+		int doc_str_len = xml_printer.CStrSize() - 1;
+
+		for(size_t i = 0; i < (doc_str_len); i++)
+		{
+			uart1_printf<16>("%c", doc_str[i]);
+		}
+
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Writing %s", name);
+		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), name, SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
+		if(fd < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		if(SPIFFS_write(m_fs.get_fs(), fd, const_cast<char*>(doc_str), doc_str_len) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Write %s success", name);
+
+		return true;
+	}
+
+	struct CAN_CONFIG
+	{
+
+	};
+
+	bool get_bool_text(const tinyxml2::XMLElement* root, const char* child, bool* const out_val)
+	{
+		if(root == nullptr)
+		{
+			return false;
+		}
+
+		const tinyxml2::XMLElement* node = root->FirstChildElement(child);
+		if(node == nullptr)
+		{
+			return false;
+		}
+		if(node->QueryBoolText(out_val) != tinyxml2::XML_SUCCESS)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool get_int_text(const tinyxml2::XMLElement* root, const char* child, int* const out_val)
+	{
+		if(root == nullptr)
+		{
+			return false;
+		}
+
+		const tinyxml2::XMLElement* node = root->FirstChildElement(child);
+		if(node == nullptr)
+		{
+			return false;
+		}
+		if(node->QueryIntText(out_val) != tinyxml2::XML_SUCCESS)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool get_hex_text(const tinyxml2::XMLElement* root, const char* child, unsigned* const out_val)
+	{
+		if(root == nullptr)
+		{
+			return false;
+		}
+
+		const tinyxml2::XMLElement* node = root->FirstChildElement(child);
+		if(node == nullptr)
+		{
+			return false;
+		}
+		
+		const char* str = node->GetText();
+
+		if(str == nullptr)
+		{
+			return false;
+		}
+
+		if(sscanf(str, "%x", out_val) != 1)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool get_str_text(const tinyxml2::XMLElement* root, const char* child, char const * * const out_val)
+	{
+		if(root == nullptr)
+		{
+			return false;
+		}
+
+		const tinyxml2::XMLElement* node = root->FirstChildElement(child);
+		if(node == nullptr)
+		{
+			return false;
+		}
+		
+		const char* str = node->GetText();
+		if(str == nullptr)
+		{
+			return false;
+		}
+
+		*out_val = str;
+
+		return true;
+	}
+
+	bool parse_config(const tinyxml2::XMLDocument& config_doc, CAN_CONFIG* const out_config)
+	{
+		const tinyxml2::XMLElement* config_root = config_doc.FirstChildElement("config");
+		if(config_root == nullptr)
+		{
+			return false;
+		}
+
+		{
+			bool autopoll = false;
+			if(!get_bool_text(config_root, "autopoll", &autopoll))
+			{
+				return false;
+			}
+		}
+	
+		{
+			bool listen_only = false;
+			if(!get_bool_text(config_root, "listen_only", &listen_only))
+			{
+				return false;
+			}
+		}
+
+		{
+			const tinyxml2::XMLElement* timestamp_element = config_root->FirstChildElement("timestamp");
+			if(timestamp_element == nullptr)
+			{
+				return false;
+			}
+
+			bool timestamp_enable = false;
+			if(!get_bool_text(timestamp_element, "enable", &timestamp_enable))
+			{
+				return false;
+			}
+			int timestamp_prescaler = 0;
+			if(!get_int_text(config_root, "prescaler", &timestamp_prescaler))
+			{
+				return false;
+			}
+			int timestamp_period = 0;
+			if(!get_int_text(config_root, "period", &timestamp_period))
+			{
+				return false;
+			}
+		}
+
+		{
+			int clock = 0;
+			if(!get_int_text(config_root, "clock", &clock))
+			{
+				return false;
+			}
+		}
+
+		{
+			const tinyxml2::XMLElement* bitrate_element = config_root->FirstChildElement("bitrate");
+			if(bitrate_element == nullptr)
+			{
+				return false;
+			}
+
+			int bitrate_nominal = 0;
+			if(!get_int_text(bitrate_element, "nominal", &bitrate_nominal))
+			{
+				return false;
+			}
+			int bitrate_data = 0;
+			if(!get_int_text(bitrate_element, "data", &bitrate_data))
+			{
+				return false;
+			}
+		}
+
+		{
+			const tinyxml2::XMLElement* protocol_element = config_root->FirstChildElement("protocol");
+			if(protocol_element == nullptr)
+			{
+				return false;
+			}
+
+			bool protocol_ext_id = false;
+			if(!get_bool_text(protocol_element, "ext_id", &protocol_ext_id))
+			{
+				return false;
+			}
+			bool protocol_fd = false;
+			if(!get_bool_text(protocol_element, "fd", &protocol_fd))
+			{
+				return false;
+			}
+			bool protocol_brs = false;
+			if(!get_bool_text(protocol_element, "brs", &protocol_brs))
+			{
+				return false;
+			}
+		}
+
+		{
+			const tinyxml2::XMLElement* filter_element = config_root->FirstChildElement("filter");
+			if(filter_element == nullptr)
+			{
+				return false;
+			}
+
+			unsigned filter_code = 0;
+			if(!get_hex_text(filter_element, "accept_code", &filter_code))
+			{
+				return false;
+			}
+			unsigned filter_mask = 0;
+			if(!get_hex_text(filter_element, "accept_mask", &filter_mask))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	struct Bitrate_Table_entry
+	{
+		int rate;
+		int pre;
+		int tseg1;
+		int tseg2;
+		int sjw;
+	};
+
+	struct Bitrate_Table
+	{
+		//key on bitrate
+		std::map<int, Bitrate_Table_entry> m_nominal_table;
+		std::map<int, Bitrate_Table_entry> m_data_table;
+	};
+
+	struct Bitrate_Table_Set
+	{
+		//key on clock speed
+		std::map<int, Bitrate_Table> m_tables;
+	};
+
+	bool parse_bitrate_tables(const tinyxml2::XMLDocument& bitrate_tables_doc, Bitrate_Table_Set* const out_table_set)
+	{
+		const tinyxml2::XMLElement* bitrate_tables_root = bitrate_tables_doc.FirstChildElement("bitrate_tables");
+		if(bitrate_tables_root == nullptr)
+		{
+			return false;
+		}
+
+		tinyxml2::XMLElement const * table_element = bitrate_tables_root->FirstChildElement("table");
+		if(table_element == nullptr)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "No bitrate table found");
+			return false;
+		}
+
+		do
+		{
+			int clock = 0;
+			if(table_element->QueryIntAttribute("clock", &clock) != tinyxml2::XML_SUCCESS)
+			{
+				return false;
+			}
+
+			tinyxml2::XMLElement const * entry_element = table_element->FirstChildElement("entry");
+			if(entry_element == nullptr)
+			{
+				uart1_log<128>(LOG_LEVEL::WARN, "qspi", "Empty bitrate_table for clock %d", clock);
+				continue;
+			}
+
+			//the table for this clock setting
+			Bitrate_Table& bitrate_table = out_table_set->m_tables[clock];
+
+			do
+			{
+				Bitrate_Table_entry entry;
+
+				char const* type = nullptr;
+				if(entry_element->QueryStringAttribute("type", &type) != tinyxml2::XML_SUCCESS)
+				{
+					return false;
+				}
+
+				entry.rate = 0;
+				if(entry_element->QueryIntAttribute("rate", &entry.rate) != tinyxml2::XML_SUCCESS)
+				{
+					return false;
+				}
+
+				entry.pre = 0;
+				if(entry_element->QueryIntAttribute("pre", &entry.pre) != tinyxml2::XML_SUCCESS)
+				{
+					return false;
+				}
+
+				entry.tseg1 = 0;
+				if(entry_element->QueryIntAttribute("tseg1", &entry.tseg1) != tinyxml2::XML_SUCCESS)
+				{
+					return false;
+				}
+
+				entry.tseg2 = 0;
+				if(entry_element->QueryIntAttribute("tseg2", &entry.tseg2) != tinyxml2::XML_SUCCESS)
+				{
+					return false;
+				}
+
+				entry.sjw = 0;
+				if(entry_element->QueryIntAttribute("sjw", &entry.sjw) != tinyxml2::XML_SUCCESS)
+				{
+					return false;
+				}
+
+				const std::string type_str(type);
+				const std::string nominal_str("nominal");
+				const std::string data_str("data");
+				if(type_str == nominal_str)
+				{
+					bitrate_table.m_nominal_table[entry.rate] = entry;
+				}
+				else if(type_str == data_str)
+				{
+					bitrate_table.m_data_table[entry.rate] = entry;
+				}
+				else
+				{
+					uart1_log<128>(LOG_LEVEL::WARN, "qspi", "Dropping bitrate_table entry of unknown type %s", type);
+					continue;
+				}
+
+			} while(entry_element = entry_element->NextSiblingElement("entry"));
+
+		} while(table_element = table_element->NextSiblingElement("table"));
+
+		return true;
+	}
+
+	bool load_config()
+	{
+		tinyxml2::XMLDocument config_doc;
+		if(!load_xml_file("config.xml", &config_doc))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening config.xml failed");
+			return false;
+		}
+
+		CAN_CONFIG config;
+		if(!parse_config(config_doc, &config))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Parsing config.xml failed");
 			return false;
 		}
 
@@ -620,31 +1037,16 @@ public:
 
 	bool load_bitrate_table()
 	{
-		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), "table.xml", SPIFFS_RDONLY, 0);
-		if(fd < 0)
+		tinyxml2::XMLDocument table_doc;
+		if(!load_xml_file("table.xml", &table_doc))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
-			return false;
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening table.xml failed");
 		}
 
-		spiffs_stat stat;
-		if(SPIFFS_fstat(m_fs.get_fs(), fd, &stat) < 0)
+ 		Bitrate_Table_Set table_set;
+		if(!parse_bitrate_tables(table_doc, &table_set))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Getting size of table.xml: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
-			return false;
-		}
-
-		std::vector<char> data;
-		data.resize(stat.size);
-		if(SPIFFS_read(m_fs.get_fs(), fd, data.data(), data.size()) < 0)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Reading table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
-			return false;
-		}
-
-		if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Parsing table.xml failed");
 			return false;
 		}
 
@@ -697,7 +1099,7 @@ public:
 			config_doc_root->InsertEndChild(comment);
 
 			node = config_doc.NewElement("clock");
-			node->SetText(60000000U);
+			node->SetText(60000000);
 			config_doc_root->InsertEndChild(node);
 		}
 
@@ -718,7 +1120,7 @@ public:
 			tinyxml2::XMLElement* protocol = config_doc.NewElement("protocol");
 			config_doc_root->InsertEndChild(protocol);
 
-			node = config_doc.NewElement("extended_id");
+			node = config_doc.NewElement("ext_id");
 			node->SetText(true);
 			protocol->InsertEndChild(node);
 
@@ -760,39 +1162,11 @@ public:
 			debug->InsertEndChild(node);
 		}
 
-		//mem, compact, fulldepth
-		// tinyxml2::XMLPrinter xml_printer(nullptr, true, 0);
-		tinyxml2::XMLPrinter xml_printer(nullptr, false, 0);
-		config_doc.Print(&xml_printer);
-
-		const char* doc_str = xml_printer.CStr();
-		int doc_str_len = xml_printer.CStrSize() - 1;
-
-		for(size_t i = 0; i < (doc_str_len); i++)
+		if(!write_xml_file("config.xml", config_doc))
 		{
-			uart1_printf<16>("%c", doc_str[i]);
-		}
-
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Writing config.xml");
-		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), "config.xml", SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
-		if(fd < 0)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing config.xml failed");
 			return false;
 		}
-
-		if(SPIFFS_write(m_fs.get_fs(), fd, const_cast<char*>(doc_str), doc_str_len) < 0)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
-			return false;
-		}
-
-		if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
-			return false;
-		}
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Write config.xml success");
 
 		return true;
 	}
@@ -1001,39 +1375,11 @@ public:
 			table->InsertEndChild(entry);
 		}
 
-		//mem, compact, fulldepth
-		// tinyxml2::XMLPrinter xml_printer(nullptr, true, 0);
-		tinyxml2::XMLPrinter xml_printer(nullptr, false, 0);
-		table_doc.Print(&xml_printer);
-
-		const char* doc_str = xml_printer.CStr();
-		int doc_str_len = xml_printer.CStrSize() - 1;
-
-		for(size_t i = 0; i < (doc_str_len); i++)
+		if(!write_xml_file("table.xml", table_doc))
 		{
-			uart1_printf<16>("%c", doc_str[i]);
-		}
-
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Writing table.xml");
-		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), "table.xml", SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
-		if(fd < 0)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing table.xml failed");
 			return false;
 		}
-
-		if(SPIFFS_write(m_fs.get_fs(), fd, const_cast<char*>(doc_str), doc_str_len) < 0)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
-			return false;
-		}
-
-		if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
-			return false;
-		}
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Write table.xml success");
 
 		return true;
 	}
