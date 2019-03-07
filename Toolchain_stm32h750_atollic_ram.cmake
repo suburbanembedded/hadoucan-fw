@@ -28,7 +28,7 @@ set(CMAKE_C_FLAGS_RELEASE 			"-Os" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO 	"-Os -ggdb" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_MINSIZEREL 		"-Os" CACHE STRING "" FORCE)
 
-set(CMAKE_CXX_FLAGS 				"${FLAGS_STM32} ${WARN_STM32} -fstack-usage -fno-threadsafe-statics -specs=nano.specs" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS 				"${FLAGS_STM32} ${WARN_STM32} -fstack-usage -fno-threadsafe-statics -fno-rtti -specs=nano.specs" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG 			"-O0 -ggdb" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELEASE 		"-Os" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 	"-Os -ggdb" CACHE STRING "" FORCE)

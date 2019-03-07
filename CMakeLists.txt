@@ -46,31 +46,6 @@ target_include_directories(spiffs PUBLIC
 add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
 
 add_subdirectory(external/tinyxml2)
-#add_subdirectory(external/googletest)
-
-add_library(gtest_stm32
-	external/googletest/googletest/src/gtest-all.cc
-)
-target_include_directories(gtest_stm32
-	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/googletest/include
-	PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/googletest
-)
-
-add_library(gmock_stm32
-	external/googletest/googlemock/src/gmock-all.cc
-)
-target_include_directories(gmock_stm32
-	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/googlemock/include
-	PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/googlemock
-)
-
-target_link_libraries(gmock_stm32
-	gtest_stm32
-)
 
 add_subdirectory(external/freertos_cpp_util)
 add_subdirectory(external/common_util)
@@ -137,25 +112,6 @@ target_link_libraries(canusbfdiso.elf
 
 	tinyxml2_static
 )
-
-#target_link_libraries(canusbfdiso_tests
-#
-#	stm32h7xx_hal
-#	stm32h7xx_ll
-#	stm32h750xx_cmsis
-#
-#	stm32_usb_lib_core
-#	stm32_usb_lib_cdc
-#
-#	freertos_v9_heap4
-#	freertos_v9
-#	freertos_v9_cmsis
-#
-#	freertos_cpp_util
-#
-#	gtest_stm32
-#	gmock_stm32
-#)
 
 # Generate intel hex image
 add_custom_command(

@@ -532,12 +532,53 @@ public:
 					vTaskSuspend(nullptr);
 				}
 			}
+
+			//write default config
+			if(!write_default_config())
+			{
+				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config failed");
+			}
+			if(!write_default_bitrate_table())
+			{
+				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default bitrate table failed");
+			}
 		}
-		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
+		else
+		{
+			uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
+		}
 
-		write_default_config();
-		write_default_bitrate_table();
+		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Load config");
+		if(!load_config())
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "Config load failed, restoring default");
 
+			if(!write_default_config())
+			{
+				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config load failed");
+			}
+		}
+
+		if(!load_config())
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "Config load failed, restoring default");
+
+			if(!write_default_config())
+			{
+				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config load failed");
+			}
+		}
+
+		if(!load_bitrate_table())
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "Bitrate table load failed, restoring default");
+
+			if(!write_default_bitrate_table())
+			{
+				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default bitrate table failed");
+			}
+		}
+		
 		for(;;)
 		{
 			vTaskSuspend(nullptr);
@@ -546,7 +587,68 @@ public:
 
 	bool load_config()
 	{
-		return false;
+		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), "config.xml", SPIFFS_RDONLY, 0);
+		if(fd < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		spiffs_stat stat;
+		if(SPIFFS_fstat(m_fs.get_fs(), fd, &stat) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Getting size of config.xml: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		std::vector<char> data;
+		data.resize(stat.size);
+		if(SPIFFS_read(m_fs.get_fs(), fd, data.data(), data.size()) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Reading config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing config.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		return true;
+	}
+
+	bool load_bitrate_table()
+	{
+		spiffs_file fd = SPIFFS_open(m_fs.get_fs(), "table.xml", SPIFFS_RDONLY, 0);
+		if(fd < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		spiffs_stat stat;
+		if(SPIFFS_fstat(m_fs.get_fs(), fd, &stat) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Getting size of table.xml: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		std::vector<char> data;
+		data.resize(stat.size);
+		if(SPIFFS_read(m_fs.get_fs(), fd, data.data(), data.size()) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Reading table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing table.xml failed: %" PRId32, SPIFFS_errno(m_fs.get_fs()));
+			return false;
+		}
+
+		return true;
 	}
 	bool write_default_config()
 	{
