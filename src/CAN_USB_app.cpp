@@ -780,12 +780,11 @@ bool CAN_USB_app::write_xml_file(const char* name, const tinyxml2::XMLDocument& 
 
 	const char* doc_str = xml_printer.CStr();
 
-	//Includes trailing null
+	//Includes trailing null, should never return 0
 	int xml_printer_len = xml_printer.CStrSize();
-
 	if(xml_printer_len < 1)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "xml file is 0 length");
+		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "xml print error");
 		return false;
 	}
 
