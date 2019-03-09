@@ -196,21 +196,16 @@ bool CAN_USB_app::parse_config(const tinyxml2::XMLDocument& config_doc, CAN_Conf
 		return false;
 	}
 
+	if(!get_bool_text(config_root, "autopoll", &out_config->autopoll))
 	{
-		bool autopoll = false;
-		if(!get_bool_text(config_root, "autopoll", &autopoll))
-		{
-			return false;
-		}
+		return false;
 	}
 
+	if(!get_bool_text(config_root, "listen_only", &out_config->listen_only))
 	{
-		bool listen_only = false;
-		if(!get_bool_text(config_root, "listen_only", &listen_only))
-		{
-			return false;
-		}
+		return false;
 	}
+	
 
 	{
 		const tinyxml2::XMLElement* timestamp_element = config_root->FirstChildElement("timestamp");
@@ -219,26 +214,24 @@ bool CAN_USB_app::parse_config(const tinyxml2::XMLDocument& config_doc, CAN_Conf
 			return false;
 		}
 
-		bool timestamp_enable = false;
-		if(!get_bool_text(timestamp_element, "enable", &timestamp_enable))
+		if(!get_bool_text(timestamp_element, "enable", &out_config->timestamp_enable))
 		{
 			return false;
 		}
-		int timestamp_prescaler = 0;
-		if(!get_int_text(config_root, "prescaler", &timestamp_prescaler))
+		
+		if(!get_int_text(config_root, "prescaler", &out_config->timestamp_prescaler))
 		{
 			return false;
 		}
-		int timestamp_period = 0;
-		if(!get_int_text(config_root, "period", &timestamp_period))
+
+		if(!get_int_text(config_root, "period", &out_config->timestamp_period))
 		{
 			return false;
 		}
 	}
 
 	{
-		int clock = 0;
-		if(!get_int_text(config_root, "clock", &clock))
+		if(!get_int_text(config_root, "clock", &out_config->can_clock))
 		{
 			return false;
 		}
@@ -251,13 +244,12 @@ bool CAN_USB_app::parse_config(const tinyxml2::XMLDocument& config_doc, CAN_Conf
 			return false;
 		}
 
-		int bitrate_nominal = 0;
-		if(!get_int_text(bitrate_element, "nominal", &bitrate_nominal))
+		if(!get_int_text(bitrate_element, "nominal", &out_config->bitrate_nominal))
 		{
 			return false;
 		}
-		int bitrate_data = 0;
-		if(!get_int_text(bitrate_element, "data", &bitrate_data))
+		
+		if(!get_int_text(bitrate_element, "data", &out_config->bitrate_data))
 		{
 			return false;
 		}
@@ -270,18 +262,17 @@ bool CAN_USB_app::parse_config(const tinyxml2::XMLDocument& config_doc, CAN_Conf
 			return false;
 		}
 
-		bool protocol_ext_id = false;
-		if(!get_bool_text(protocol_element, "ext_id", &protocol_ext_id))
+		if(!get_bool_text(protocol_element, "ext_id", &out_config->protocol_ext_id))
 		{
 			return false;
 		}
-		bool protocol_fd = false;
-		if(!get_bool_text(protocol_element, "fd", &protocol_fd))
+		
+		if(!get_bool_text(protocol_element, "fd", &out_config->protocol_fd))
 		{
 			return false;
 		}
-		bool protocol_brs = false;
-		if(!get_bool_text(protocol_element, "brs", &protocol_brs))
+		
+		if(!get_bool_text(protocol_element, "brs", &out_config->protocol_brs))
 		{
 			return false;
 		}
@@ -293,18 +284,18 @@ bool CAN_USB_app::parse_config(const tinyxml2::XMLDocument& config_doc, CAN_Conf
 		{
 			return false;
 		}
-
-		unsigned filter_code = 0;
-		if(!get_hex_text(filter_element, "accept_code", &filter_code))
+		
+		if(!get_hex_text(filter_element, "accept_code", &out_config->filter_accept_code))
 		{
 			return false;
 		}
-		unsigned filter_mask = 0;
-		if(!get_hex_text(filter_element, "accept_mask", &filter_mask))
+		
+		if(!get_hex_text(filter_element, "accept_mask", &out_config->filter_accept_mask))
 		{
 			return false;
 		}
 	}
+
 	return true;
 }
 
@@ -788,9 +779,20 @@ bool CAN_USB_app::write_xml_file(const char* name, const tinyxml2::XMLDocument& 
 	xml.Print(&xml_printer);
 
 	const char* doc_str = xml_printer.CStr();
-	int doc_str_len = xml_printer.CStrSize() - 1;
 
-	for(size_t i = 0; i < (doc_str_len); i++)
+	//Includes trailing null
+	int xml_printer_len = xml_printer.CStrSize();
+
+	if(xml_printer_len < 1)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "xml file is 0 length");
+		return false;
+	}
+
+	//Remove trailing null
+	const size_t doc_str_len = xml_printer_len - 1;
+
+	for(size_t i = 0; i < doc_str_len; i++)
 	{
 		uart1_printf<16>("%c", doc_str[i]);
 	}

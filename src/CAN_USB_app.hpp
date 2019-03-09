@@ -23,6 +23,11 @@ public:
 	public:
 		CAN_Config()
 		{
+			set_defualt();
+		}
+
+		void set_defualt()
+		{			
 			autopoll = false;
 			listen_only = false;
 			timestamp_enable = false;
@@ -56,8 +61,8 @@ public:
 		bool protocol_brs;
 
 		bool filter_accept_enable;
-		int filter_accept_code;
-		int filter_accept_mask;
+		unsigned filter_accept_code;
+		unsigned filter_accept_mask;
 	};
 
 	struct Bitrate_Table_Entry
