@@ -25,6 +25,10 @@ add_definitions(
 	-DSPIFFS_HAL_CALLBACK_EXTRA
 
 	-DHSE_VALUE=\(\(uint32_t\)24000000\)
+
+	#we will provide the syscalls
+	#-D_REENT_ONLY
+	-DREENTRANT_SYSCALLS_PROVIDED
 )
 
 include_directories(
@@ -58,7 +62,7 @@ add_executable(canusbfdiso.elf
 	src/stm32h7xx_hal_timebase_tim.c
 	src/stm32h7xx_hal_msp.c
 
-	src/syscalls.c
+	#src/syscalls.c
 	
 	src/main.cpp
 	src/main_cube.c
@@ -88,6 +92,8 @@ add_executable(canusbfdiso.elf
 
 	src/STM32_fdcan_tx.cpp
 	src/STM32_fdcan_rx.cpp
+
+	src/CAN_USB_app.cpp
 )
 
 target_link_libraries(canusbfdiso.elf

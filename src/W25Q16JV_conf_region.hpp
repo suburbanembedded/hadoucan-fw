@@ -1,3 +1,5 @@
+#pragma once
+
 #include "spiffs_int_w25q16jv.hpp"
 
 class W25Q16JV_conf_region : public spiffs_int_w25q16jv
