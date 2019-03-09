@@ -11,7 +11,54 @@ CAN_USB_app::~CAN_USB_app()
 {
 
 }
+/*
+bool CAN_USB_app::fs_init()
+{
+	m_qspi.set_handle(&hqspi);
 
+	if(!m_qspi.init())
+	{
+		uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "m_qspi.init failed");
+		return false;
+	}
+
+	m_fs.initialize();
+	m_fs.set_flash(&m_qspi);
+
+	uint8_t mfg_id = 0;
+	uint16_t flash_pn = 0;
+	if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
+	{
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
+	}
+	else
+	{
+		uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
+	}
+
+	uint64_t unique_id = 0;
+	if(m_qspi.get_unique_id(&unique_id))
+	{
+		// uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %016" PRIX64, unique_id);
+		//aparently PRIX64 is broken
+		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
+	}
+	else
+	{
+		uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
+	}
+
+	uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
+	int mount_ret = m_fs.mount();
+	if(mount_ret != SPIFFS_OK)
+	{
+		return false;
+	}
+
+	return true;
+}
+*/
 bool CAN_USB_app::load_config()
 {
 	tinyxml2::XMLDocument config_doc;
@@ -21,7 +68,7 @@ bool CAN_USB_app::load_config()
 	// 	return false;
 	// }
 
-	CAN_CONFIG config;
+	CAN_Config config;
 	if(!parse_config(config_doc, &config))
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Parsing config.xml failed");
@@ -141,7 +188,7 @@ bool get_str_text(const tinyxml2::XMLElement* root, const char* child, char cons
 	return true;
 }
 
-bool CAN_USB_app::parse_config(const tinyxml2::XMLDocument& config_doc, CAN_CONFIG* const out_config)
+bool CAN_USB_app::parse_config(const tinyxml2::XMLDocument& config_doc, CAN_Config* const out_config)
 {
 	const tinyxml2::XMLElement* config_root = config_doc.FirstChildElement("config");
 	if(config_root == nullptr)
@@ -296,7 +343,7 @@ bool CAN_USB_app::parse_bitrate_tables(const tinyxml2::XMLDocument& bitrate_tabl
 
 		do
 		{
-			Bitrate_Table_entry entry;
+			Bitrate_Table_Entry entry;
 
 			char const* type = nullptr;
 			if(entry_element->QueryStringAttribute("type", &type) != tinyxml2::XML_SUCCESS)

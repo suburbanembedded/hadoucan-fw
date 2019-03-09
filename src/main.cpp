@@ -14,6 +14,10 @@
 #include "STM32_fdcan_rx.hpp"
 #include "STM32_fdcan_tx.hpp"
 
+#include "tasks/USB_lawicel_task.hpp"
+#include "tasks/LED_task.hpp"
+#include "tasks/Timesync_task.hpp"
+
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
 #include "freertos_cpp_util/Mutex_static.hpp"
@@ -42,310 +46,20 @@ USB_TX_task usb_tx_task __attribute__ (( section(".ram_dtcm_noload") ));
 USB_rx_buffer_task usb_rx_buffer_task __attribute__ (( section(".ram_dtcm_noload") ));
 USB_tx_buffer_task usb_tx_buffer_task __attribute__ (( section(".ram_dtcm_noload") ));
 
-CAN_USB_app can_usb_app;
+LED_task led_task __attribute__ (( section(".ram_d2_s2_noload") ));
 
-class USB_lawicel_task : public Task_static<1024>
-{
-public:
-
-	USB_lawicel_task()
-	{
-		m_usb_tx_buffer = nullptr;
-	}
-
-	static bool usb_input_drop(uint8_t c)
-	{
-		switch(c)
-		{
-			// case '\r':
-			// {
-			// 	return true;
-			// }
-			case '\n':
-			{
-				return true;
-			}
-			default:
-			{
-				return false;
-			}
-		}
-
-		return false;
-	}
-
-	void set_usb_tx(USB_tx_buffer_task* const usb_tx_buffer)
-	{
-		m_usb_tx_buffer = usb_tx_buffer;
-	}
-
-	bool write_string_usb(const char* str)
-	{
-		m_usb_tx_buffer->write(str);
-		return true;
-	}
-
-	void work() override
-	{
-		m_can.set_can_instance(FDCAN1);
-		m_can.set_can_handle(&hfdcan1);
-
-		m_parser.set_can(&m_can);
-		m_parser.set_write_string_func(
-			std::bind(&USB_lawicel_task::write_string_usb, this, std::placeholders::_1)
-			);
-
-		std::function<bool(void)> has_line_pred = std::bind(&USB_rx_buffer_task::has_line, &usb_rx_buffer_task);
-
-		//a null terminated string
-		//maybe using std::string is a better idea, or a stringstream....
-		std::vector<uint8_t> usb_line;
-		usb_line.reserve(128);
-
-		for(;;)
-		{
-			{
-				uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "wait(lock, has_line_pred)");
-				std::unique_lock<Mutex_static> lock(usb_rx_buffer_task.get_mutex());
-				usb_rx_buffer_task.get_cv().wait(lock, std::cref(has_line_pred));
-				uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "woke");
-
-				if(!usb_rx_buffer_task.get_line(&usb_line))
-				{
-					continue;
-				}
-			}
-			//we unlock lock so buffering can continue
-
-			//drop what usb_input_drop says we should drop
-			auto end_it = std::remove_if(usb_line.begin(), usb_line.end(), &usb_input_drop);
-			usb_line.erase(end_it, usb_line.end());
-
-			//drop lines that are now empty
-			if(strnlen((char*)usb_line.data(), usb_line.size()) == 0)
-			{
-				uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Empty line");
-				continue;
-			}
-
-			//drop lines that are only '\r'
-			if(usb_line.front() == '\r')
-			{
-				uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Line only contains \\r");
-				continue;
-			}
-
-			uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "got line: [%s]", usb_line.data());
-
-			//process line
-			if(!m_parser.parse_string((char*)usb_line.data()))
-			{
-				uart1_log<64>(LOG_LEVEL::ERROR, "USB_lawicel_task", "parse error");
-			}
-			else
-			{
-				uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "ok");
-			}
-		}
-	}
-
-	STM32_fdcan_tx m_can;
-
-	Lawicel_parser* get_lawicel()
-	{
-		return &m_parser;
-	}
-
-protected:
-
-	Lawicel_parser_stm32 m_parser;
-
-	USB_tx_buffer_task* m_usb_tx_buffer;
-};
 USB_lawicel_task usb_lawicel_task __attribute__ (( section(".ram_dtcm_noload") ));
+
+Timesync_task timesync_task __attribute__ (( section(".ram_d2_s2_noload") ));
+
+CAN_USB_app can_usb_app;
 
 bool can_rx_to_lawicel(const std::string& str)
 {
 	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
 }
 
-class LED_task : public Task_static<512>
-{
-public:
 
-	void work() override
-	{
-		for(;;)
-		{
-			HAL_GPIO_WritePin(GPIOD, RED1_Pin, GPIO_PIN_SET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, RED1_Pin, GPIO_PIN_RESET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, RED1_Pin, GPIO_PIN_SET);
-
-			HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_SET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_RESET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_SET);
-
-			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_SET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_RESET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_SET);
-
-			HAL_GPIO_WritePin(GPIOD, GREEN2_Pin, GPIO_PIN_SET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, GREEN2_Pin, GPIO_PIN_RESET);
-			vTaskDelay(250);
-			HAL_GPIO_WritePin(GPIOD, GREEN2_Pin, GPIO_PIN_SET);
-		}
-	}
-
-};
-LED_task led_task __attribute__ (( section(".ram_d2_s2_noload") ));
-
-class Timesync_task : public Task_static<512>
-{
-public:
-
-	void work() override
-	{
-		if(!ic_config())
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "Timesync_task", "ic_config failed");
-		}
-		
-		for(;;)
-		{
-			vTaskSuspend(nullptr);
-		}
-	}
-
-	bool oc_config()
-	{
-		// 100 MHz input clock
-		// 2000 prescaler -> 20us per tick
-		// 50000 counts -> 1s overflow
-
-		htim3.Instance = TIM3;
-		htim3.Init.Prescaler = 2000;
-		htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-		htim3.Init.Period = 50000;
-		htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-		htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-		if(HAL_TIM_Base_Init(&htim3) != HAL_OK)
-		{
-			return false;
-		}
-
-		TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-		sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-		if(HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
-		{
-			return false;
-		}
-
-		TIM_MasterConfigTypeDef sMasterConfig = {0};
-		sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-		sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-		if(HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
-		{
-			return false;
-		}
-
-		HAL_TIM_Base_Start(&htim3);
-
-		if(HAL_TIM_PWM_Init(&htim3) != HAL_OK)
-		{
-			return false;
-		}
-
-		TIM_OC_InitTypeDef sConfigOC = {0};
-		sConfigOC.OCMode = TIM_OCMODE_PWM1;
-		sConfigOC.Pulse = 5;
-		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-		if(HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-		{
-			return false;
-		}
-
-		HAL_GPIO_WritePin(MASTER_TIMESYNC_nOE_GPIO_Port, MASTER_TIMESYNC_nOE_Pin, GPIO_PIN_RESET);
-
-		HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-
-		return true;
-	}
-
-	bool ic_config()
-	{
-		// 100 MHz input clock
-		// 50000 prescaler -> 500us per tick
-		// 50000 counts -> 25s overflow
-
-		htim3.Instance = TIM3;
-		htim3.Init.Prescaler = 50000;
-		htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-		htim3.Init.Period = 50000;
-		htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-		htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-		if(HAL_TIM_Base_Init(&htim3) != HAL_OK)
-		{
-			return false;
-		}
-
-		TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-		sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-		if(HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
-		{
-			return false;
-		}
-
-		if(HAL_TIM_IC_Init(&htim3) != HAL_OK)
-		{
-			return false;
-		}
-
-		TIM_SlaveConfigTypeDef sSlaveConfig = {0};
-		sSlaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
-		sSlaveConfig.InputTrigger = TIM_TS_TI1FP1;
-		sSlaveConfig.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-		sSlaveConfig.TriggerFilter = 0;
-		if(HAL_TIM_SlaveConfigSynchronization(&htim3, &sSlaveConfig) != HAL_OK)
-		{
-			return false;
-		}
-
-		TIM_MasterConfigTypeDef sMasterConfig = {0};
-		sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-		sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-		if(HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
-		{
-			return false;
-		}
-
-		TIM_IC_InitTypeDef sConfigIC = {0};
-		sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-		sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-		sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-		sConfigIC.ICFilter = 0;
-		if(HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
-		{
-			return false;
-		}
-
-		HAL_GPIO_WritePin(MASTER_TIMESYNC_nOE_GPIO_Port, MASTER_TIMESYNC_nOE_Pin, GPIO_PIN_SET);
-
-		HAL_TIM_Base_Start(&htim3);
-
-		HAL_TIM_IC_Start(&htim3, TIM_CHANNEL_1);
-
-		return true;
-	}
-};
-Timesync_task timesync_task __attribute__ (( section(".ram_d2_s2_noload") ));
 /*
 class TinyXML_inc_printer : public tinyxml2::XMLVisitor
 {
@@ -613,6 +327,7 @@ public:
 		usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
 		usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
 		usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
+		usb_lawicel_task.set_usb_rx(&usb_rx_buffer_task);
 
 		//TODO: refactor can handle init
 		hfdcan1.Instance = FDCAN1;
@@ -794,21 +509,6 @@ void set_all_gpio_low_power()
 
 int main(void)
 {
-	{
-		//errata 2.2.9
-		volatile uint32_t* AXI_TARG7_FN_MOD = 
-		reinterpret_cast<uint32_t*>(
-			0x51000000 + 
-			0x1108 + 
-			0x1000*7U
-		);
-
-		const uint32_t AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE  = 0x00000001;
-		const uint32_t AXI_TARGx_FN_MOD_WRITE_ISS_OVERRIDE = 0x00000002;
-
-		SET_BIT(*AXI_TARG7_FN_MOD, AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE);
-	}
-
 	//confg mpu
 	if(1)
 	{

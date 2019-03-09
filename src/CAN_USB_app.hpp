@@ -13,17 +13,54 @@ public:
 	CAN_USB_app();
 	~CAN_USB_app();
 
-	bool init_fs();
+	// bool fs_init();
 
 	bool load_config();
 	bool load_bitrate_table();
 
-	struct CAN_CONFIG
+	class CAN_Config
 	{
+	public:
+		CAN_Config()
+		{
+			autopoll = false;
+			listen_only = false;
+			timestamp_enable = false;
+			timestamp_prescaler =  2000;
+			timestamp_period = 50000;
+			can_clock = 60000000;
+			bitrate_nominal = 500000;
+			bitrate_data = 4000000;
+			protocol_ext_id = true;
+			protocol_fd = true;
+			protocol_brs = false;
+			filter_accept_enable = false;
+			filter_accept_code = 0x00000000;
+			filter_accept_mask = 0x00000000;
+		}
 
+		bool autopoll;
+		bool listen_only;
+
+		bool timestamp_enable;
+		int timestamp_prescaler;
+		int timestamp_period;
+
+		int can_clock;
+
+		int bitrate_nominal;
+		int bitrate_data;
+
+		bool protocol_ext_id;
+		bool protocol_fd;
+		bool protocol_brs;
+
+		bool filter_accept_enable;
+		int filter_accept_code;
+		int filter_accept_mask;
 	};
 
-	struct Bitrate_Table_entry
+	struct Bitrate_Table_Entry
 	{
 		int rate;
 		int pre;
@@ -35,8 +72,8 @@ public:
 	struct Bitrate_Table
 	{
 		//key on bitrate
-		std::map<int, Bitrate_Table_entry> m_nominal_table;
-		std::map<int, Bitrate_Table_entry> m_data_table;
+		std::map<int, Bitrate_Table_Entry> m_nominal_table;
+		std::map<int, Bitrate_Table_Entry> m_data_table;
 	};
 
 	struct Bitrate_Table_Set
@@ -59,6 +96,9 @@ public:
 
 protected:
 
+	CAN_Config m_config;
+	Bitrate_Table_Set m_bitrate_tables;
+
 	bool write_xml_file(const char* name, const tinyxml2::XMLDocument& xml);
 	bool load_xml_file(const char* name, tinyxml2::XMLDocument* const out_xml);
 
@@ -70,7 +110,7 @@ protected:
 
 	static bool get_str_text(const tinyxml2::XMLElement* root, const char* child, char const * * const out_val);
 
-	static bool parse_config(const tinyxml2::XMLDocument& config_doc, CAN_CONFIG* const out_config);
+	static bool parse_config(const tinyxml2::XMLDocument& config_doc, CAN_Config* const out_config);
 
 	static bool parse_bitrate_tables(const tinyxml2::XMLDocument& bitrate_tables_doc, Bitrate_Table_Set* const out_table_set);
 
