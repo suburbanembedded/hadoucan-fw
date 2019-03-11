@@ -402,7 +402,7 @@ bool CAN_USB_app::write_default_config()
 	config_doc_root->InsertEndChild(node);
 
 	{
-		tinyxml2::XMLComment* comment = config_doc.NewComment("Set fast_slope to true for CAN FD BRS or maybe for 1MBps. Otherwise set to false for reduced EMI");
+		tinyxml2::XMLComment* comment = config_doc.NewComment("Set fast_slope to true for CAN FD BRS or maybe for ~1MBps. Otherwise set to false for reduced EMI and better tolerance of lower quality wiring");
 		config_doc_root->InsertEndChild(comment);
 		node = config_doc.NewElement("fast_slope");
 		node->SetText(true);
@@ -427,7 +427,7 @@ bool CAN_USB_app::write_default_config()
 	}
 
 	{
-		tinyxml2::XMLComment* comment = config_doc.NewComment("clock may only be 24000000 or 60000000");
+		tinyxml2::XMLComment* comment = config_doc.NewComment("clock may only be 24000000, 60000000, or 80000000");
 		config_doc_root->InsertEndChild(comment);
 
 		node = config_doc.NewElement("clock");
