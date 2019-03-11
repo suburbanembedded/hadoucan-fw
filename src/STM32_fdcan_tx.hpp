@@ -60,7 +60,7 @@ public:
 		B250000,
 		B500000,
 		B800000,
-		B1000000,
+		B1000000
 	};
 
 	enum class FD_BRS_BAUD
@@ -68,8 +68,10 @@ public:
 		B2000000,
 		B4000000,
 		B5000000,
+		B6000000,
 		B8000000,
-		B12000000,
+		B10000000,
+		B12000000
 	};
 
 	bool set_baud(const STD_BAUD baud);

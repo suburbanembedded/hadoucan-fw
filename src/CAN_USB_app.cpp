@@ -694,6 +694,12 @@ bool CAN_USB_app::write_default_bitrate_table()
 		table->InsertEndChild(entry);
 	}
 
+	// {
+	// 	tinyxml2::XMLElement* table = table_doc.NewElement("table");
+	// 	table->SetAttribute("clock", 80000000U);
+	// 	table_doc_root->InsertEndChild(table);
+	// }
+
 	if(!write_xml_file("table.xml", table_doc))
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing table.xml failed");
