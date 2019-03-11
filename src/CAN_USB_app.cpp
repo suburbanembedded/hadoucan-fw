@@ -435,6 +435,34 @@ bool CAN_USB_app::write_default_config()
 		config_doc_root->InsertEndChild(node);
 	}
 
+	//This is probably not necessary
+	if(0)
+	{
+		tinyxml2::XMLElement* pll2_table = config_doc.NewElement("pll2_table");
+		config_doc_root->InsertEndChild(pll);
+
+		entry = config_doc.NewElement("entry");
+		entry->SetAttribute("clock", 24000000U);
+		entry->SetAttribute("divm2",        2U);
+		entry->SetAttribute("divn2",       16U);
+		entry->SetAttribute("divq2",        8U);
+		pll2_table->InsertEndChild(node);
+
+		entry = config_doc.NewElement("entry");
+		entry->SetAttribute("clock", 80000000U);
+		entry->SetAttribute("divm2",        2U);
+		entry->SetAttribute("divn2",       20U);
+		entry->SetAttribute("divq2",        4U);
+		pll2_table->InsertEndChild(node);
+
+		entry = config_doc.NewElement("entry");
+		entry->SetAttribute("clock", 80000000U);
+		entry->SetAttribute("divm2",        2U);
+		entry->SetAttribute("divn2",       20U);
+		entry->SetAttribute("divq2",        3U);
+		pll2_table->InsertEndChild(node);
+	}
+
 	{
 		tinyxml2::XMLElement* bitrate = config_doc.NewElement("bitrate");
 		config_doc_root->InsertEndChild(bitrate);
