@@ -11,67 +11,20 @@ CAN_USB_app::~CAN_USB_app()
 {
 
 }
-/*
-bool CAN_USB_app::fs_init()
-{
-	m_qspi.set_handle(&hqspi);
 
-	if(!m_qspi.init())
-	{
-		uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "m_qspi.init failed");
-		return false;
-	}
-
-	m_fs.initialize();
-	m_fs.set_flash(&m_qspi);
-
-	uint8_t mfg_id = 0;
-	uint16_t flash_pn = 0;
-	if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
-	{
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
-	}
-	else
-	{
-		uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
-	}
-
-	uint64_t unique_id = 0;
-	if(m_qspi.get_unique_id(&unique_id))
-	{
-		// uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %016" PRIX64, unique_id);
-		//aparently PRIX64 is broken
-		uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
-	}
-	else
-	{
-		uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
-	}
-
-	uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
-	int mount_ret = m_fs.mount();
-	if(mount_ret != SPIFFS_OK)
-	{
-		return false;
-	}
-
-	return true;
-}
-*/
 bool CAN_USB_app::load_config()
 {
 	tinyxml2::XMLDocument config_doc;
-	// if(!load_xml_file("config.xml", &config_doc))
-	// {
-	// 	uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening config.xml failed");
-	// 	return false;
-	// }
+	if(!load_xml_file("config.xml", &config_doc))
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening config.xml failed");
+		return false;
+	}
 
 	CAN_Config config;
 	if(!parse_config(config_doc, &config))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Parsing config.xml failed");
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing config.xml failed");
 		return false;
 	}
 
@@ -81,15 +34,15 @@ bool CAN_USB_app::load_config()
 bool CAN_USB_app::load_bitrate_table()
 {
 	tinyxml2::XMLDocument table_doc;
-	// if(!load_xml_file("table.xml", &table_doc))
-	// {
-	// 	uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening table.xml failed");
-	// }
+	if(!load_xml_file("table.xml", &table_doc))
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening table.xml failed");
+	}
 
-		Bitrate_Table_Set table_set;
+	Bitrate_Table_Set table_set;
 	if(!parse_bitrate_tables(table_doc, &table_set))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Parsing table.xml failed");
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing table.xml failed");
 		return false;
 	}
 
@@ -150,7 +103,6 @@ bool CAN_USB_app::get_hex_text(const tinyxml2::XMLElement* root, const char* chi
 	}
 	
 	const char* str = node->GetText();
-
 	if(str == nullptr)
 	{
 		return false;
@@ -310,7 +262,7 @@ bool CAN_USB_app::parse_bitrate_tables(const tinyxml2::XMLDocument& bitrate_tabl
 	tinyxml2::XMLElement const * table_element = bitrate_tables_root->FirstChildElement("table");
 	if(table_element == nullptr)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "No bitrate table found");
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "No bitrate table found");
 		return false;
 	}
 
@@ -325,7 +277,7 @@ bool CAN_USB_app::parse_bitrate_tables(const tinyxml2::XMLDocument& bitrate_tabl
 		tinyxml2::XMLElement const * entry_element = table_element->FirstChildElement("entry");
 		if(entry_element == nullptr)
 		{
-			uart1_log<128>(LOG_LEVEL::WARN, "qspi", "Empty bitrate_table for clock %d", clock);
+			uart1_log<128>(LOG_LEVEL::WARN, "CAN_USB_app", "Empty bitrate_table for clock %d", clock);
 			continue;
 		}
 
@@ -385,7 +337,7 @@ bool CAN_USB_app::parse_bitrate_tables(const tinyxml2::XMLDocument& bitrate_tabl
 			}
 			else
 			{
-				uart1_log<128>(LOG_LEVEL::WARN, "qspi", "Dropping bitrate_table entry of unknown type %s", type);
+				uart1_log<128>(LOG_LEVEL::WARN, "CAN_USB_app", "Dropping bitrate_table entry of unknown type %s", type);
 				continue;
 			}
 
@@ -512,7 +464,7 @@ bool CAN_USB_app::write_default_config()
 
 	if(!write_xml_file("config.xml", config_doc))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing config.xml failed");
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing config.xml failed");
 		return false;
 	}
 
@@ -725,7 +677,7 @@ bool CAN_USB_app::write_default_bitrate_table()
 
 	if(!write_xml_file("table.xml", table_doc))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing table.xml failed");
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing table.xml failed");
 		return false;
 	}
 
@@ -737,14 +689,14 @@ bool CAN_USB_app::load_xml_file(const char* name, tinyxml2::XMLDocument* const o
 	spiffs_file fd = SPIFFS_open(m_fs.get_fs(), name, SPIFFS_RDONLY, 0);
 	if(fd < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 		return false;
 	}
 
 	spiffs_stat stat;
 	if(SPIFFS_fstat(m_fs.get_fs(), fd, &stat) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Getting size of %s: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Getting size of %s: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 		return false;
 	}
 
@@ -752,13 +704,13 @@ bool CAN_USB_app::load_xml_file(const char* name, tinyxml2::XMLDocument* const o
 	data.resize(stat.size);
 	if(SPIFFS_read(m_fs.get_fs(), fd, data.data(), data.size()) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Reading %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Reading %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 		return false;
 	}
 
 	if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 		return false;
 	}
 
@@ -766,7 +718,7 @@ bool CAN_USB_app::load_xml_file(const char* name, tinyxml2::XMLDocument* const o
 	tinyxml2::XMLError err = file.Parse(data.data(), data.size());
 	if(err != tinyxml2::XML_SUCCESS)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Parsing %s failed: %" PRId32, name, err);
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing %s failed: %" PRId32, name, err);
 		return false;
 	}
 
@@ -784,7 +736,7 @@ bool CAN_USB_app::write_xml_file(const char* name, const tinyxml2::XMLDocument& 
 	int xml_printer_len = xml_printer.CStrSize();
 	if(xml_printer_len < 1)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "xml print error");
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "xml print error");
 		return false;
 	}
 
@@ -796,26 +748,26 @@ bool CAN_USB_app::write_xml_file(const char* name, const tinyxml2::XMLDocument& 
 		uart1_printf<16>("%c", doc_str[i]);
 	}
 
-	uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Writing %s", name);
+	uart1_log<128>(LOG_LEVEL::INFO, "CAN_USB_app", "Writing %s", name);
 	spiffs_file fd = SPIFFS_open(m_fs.get_fs(), name, SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
 	if(fd < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Opening %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 		return false;
 	}
 
 	if(SPIFFS_write(m_fs.get_fs(), fd, const_cast<char*>(doc_str), doc_str_len) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Writing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 		return false;
 	}
 
 	if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Closing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
 		return false;
 	}
-	uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Write %s success", name);
+	uart1_log<128>(LOG_LEVEL::INFO, "CAN_USB_app", "Write %s success", name);
 
 	return true;
 }

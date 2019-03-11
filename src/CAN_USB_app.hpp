@@ -13,8 +13,6 @@ public:
 	CAN_USB_app();
 	~CAN_USB_app();
 
-	// bool fs_init();
-
 	bool load_config();
 	bool load_bitrate_table();
 
@@ -97,6 +95,15 @@ public:
 	W25Q16JV_conf_region& get_fs()
 	{
 		return m_fs; 
+	}
+
+	const CAN_Config& get_config() const
+	{
+		return m_config;
+	}
+	const Bitrate_Table_Set& get_bitrate_tables() const
+	{
+		return m_bitrate_tables;
 	}
 
 protected:

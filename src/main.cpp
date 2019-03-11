@@ -174,6 +174,8 @@ protected:
 	size_t indent_level;
 };
 */
+
+#if 0
 class QSPI_task : public Task_static<2048>
 {
 public:
@@ -317,12 +319,16 @@ protected:
 
 };
 QSPI_task qspi_task __attribute__ (( section(".ram_d2_s2_noload") ));
+#endif
 
-class Main_task : public Task_static<512>
+class Main_task : public Task_static<1024>
 {
 public:
 	void work() override
 	{
+		mount_fs();
+		load_config();
+
 		//init
 		usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
 		usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
@@ -350,7 +356,6 @@ public:
 		usb_tx_task.launch("usb_tx", 4);
 
 		led_task.launch("led", 1);
-		qspi_task.launch("qspi", 1);
 		timesync_task.launch("timesync", 1);
 
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
@@ -359,6 +364,153 @@ public:
 		{
 			vTaskSuspend(nullptr);
 		}
+	}
+
+	bool mount_fs()
+	{
+		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Ready");
+
+		W25Q16JV& m_qspi = can_usb_app.get_flash();
+		W25Q16JV_conf_region& m_fs = can_usb_app.get_fs();
+
+		m_qspi.set_handle(&hqspi);
+
+		if(!m_qspi.init())
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "m_qspi.init failed");
+
+			for(;;)
+			{
+				vTaskSuspend(nullptr);
+			}
+		}
+
+		m_fs.initialize();
+		m_fs.set_flash(&m_qspi);
+
+		uint8_t mfg_id = 0;
+		uint16_t flash_pn = 0;
+		if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
+		{
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
+		}
+		else
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
+		}
+
+		uint64_t unique_id = 0;
+		if(m_qspi.get_unique_id(&unique_id))
+		{
+			// uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %016" PRIX64, unique_id);
+			//aparently PRIX64 is broken
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
+		}
+		else
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
+		}
+
+		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
+		int mount_ret = m_fs.mount();
+		if(mount_ret != SPIFFS_OK)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Flash mount failed: %d", mount_ret);
+			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "You will need to reload the config");
+
+			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Format flash");
+			int format_ret = m_fs.format();
+			if(format_ret != SPIFFS_OK)
+			{
+				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Flash format failed: %d", format_ret);
+				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Try a power cycle, your board may be broken");
+
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
+			}
+
+			uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
+			mount_ret = m_fs.mount();
+			if(mount_ret != SPIFFS_OK)
+			{
+				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Flash mount failed right after we formatted it: %d", mount_ret);
+				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Try a power cycle, your board may be broken");
+
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
+			}
+			else
+			{
+				uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
+			}
+
+			//write default config
+			if(!can_usb_app.write_default_config())
+			{
+				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config failed");
+
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
+			}
+			if(!can_usb_app.write_default_bitrate_table())
+			{
+				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default bitrate table failed");
+
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
+			}
+		}
+		else
+		{
+			uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
+		}
+
+		return true;
+	}
+
+	bool load_config()
+	{
+		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Load config");
+		if(!can_usb_app.load_config())
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "Config load failed, restoring default");
+
+			if(!can_usb_app.write_default_config())
+			{
+				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config load failed");
+
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
+			}
+		}
+
+		if(!can_usb_app.load_bitrate_table())
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "Bitrate table load failed, restoring default");
+
+			if(!can_usb_app.write_default_bitrate_table())
+			{
+				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default bitrate table failed");
+
+				for(;;)
+				{
+					vTaskSuspend(nullptr);
+				}
+			}
+		}
+
+		return true;
 	}
 };
 Main_task main_task __attribute__ (( section(".ram_d2_s2_noload") ));
