@@ -707,11 +707,74 @@ bool CAN_USB_app::write_default_bitrate_table()
 		table->InsertEndChild(entry);
 	}
 
-	// {
-	// 	tinyxml2::XMLElement* table = table_doc.NewElement("table");
-	// 	table->SetAttribute("clock", 80000000U);
-	// 	table_doc_root->InsertEndChild(table);
-	// }
+	{
+		tinyxml2::XMLElement* table = table_doc.NewElement("table");
+		table->SetAttribute("clock", 80000000U);
+		table_doc_root->InsertEndChild(table);
+
+		tinyxml2::XMLElement* entry = table_doc.NewElement("entry");
+		entry->SetAttribute("type",  "nominal");
+		entry->SetAttribute("rate",  250000U);
+		entry->SetAttribute("pre",   20U);
+		entry->SetAttribute("tseg1", 12U);
+		entry->SetAttribute("tseg2", 3U);
+		entry->SetAttribute("sjw",   1U);
+		table->InsertEndChild(entry);
+
+		entry = table_doc.NewElement("entry");
+		entry->SetAttribute("type",  "nominal");
+		entry->SetAttribute("rate",  500000U);
+		entry->SetAttribute("pre",   10U);
+		entry->SetAttribute("tseg1", 12U);
+		entry->SetAttribute("tseg2", 3U);
+		entry->SetAttribute("sjw",   1U);
+		table->InsertEndChild(entry);
+
+		entry = table_doc.NewElement("entry");
+		entry->SetAttribute("type",  "nominal");
+		entry->SetAttribute("rate",  1000000U);
+		entry->SetAttribute("pre",   10U);
+		entry->SetAttribute("tseg1", 5U);
+		entry->SetAttribute("tseg2", 2U);
+		entry->SetAttribute("sjw",   1U);
+		table->InsertEndChild(entry);
+
+		entry = table_doc.NewElement("entry");
+		entry->SetAttribute("type",  "data");
+		entry->SetAttribute("rate",  2000000U);
+		entry->SetAttribute("pre",   4U);
+		entry->SetAttribute("tseg1", 7U);
+		entry->SetAttribute("tseg2", 2U);
+		entry->SetAttribute("sjw",   1U);
+		table->InsertEndChild(entry);
+
+		entry = table_doc.NewElement("entry");
+		entry->SetAttribute("type",  "data");
+		entry->SetAttribute("rate",  4000000U);
+		entry->SetAttribute("pre",   2U);
+		entry->SetAttribute("tseg1", 7U);
+		entry->SetAttribute("tseg2", 2U);
+		entry->SetAttribute("sjw",   1U);
+		table->InsertEndChild(entry);
+
+		entry = table_doc.NewElement("entry");
+		entry->SetAttribute("type",  "data");
+		entry->SetAttribute("rate",  8000000U);
+		entry->SetAttribute("pre",   4U);
+		entry->SetAttribute("tseg1", 7U);
+		entry->SetAttribute("tseg2", 2U);
+		entry->SetAttribute("sjw",   1U);
+		table->InsertEndChild(entry);
+
+		entry = table_doc.NewElement("entry");
+		entry->SetAttribute("type",  "data");
+		entry->SetAttribute("rate",  10000000U);
+		entry->SetAttribute("pre",   1U);
+		entry->SetAttribute("tseg1", 5U);
+		entry->SetAttribute("tseg2", 2U);
+		entry->SetAttribute("sjw",   1U);
+		table->InsertEndChild(entry);
+	}
 
 	if(!write_xml_file("table.xml", table_doc))
 	{
