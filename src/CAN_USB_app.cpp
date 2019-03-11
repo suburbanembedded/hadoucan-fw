@@ -161,6 +161,11 @@ bool CAN_USB_app::parse_config(const tinyxml2::XMLDocument& config_doc, CAN_Conf
 		return false;
 	}
 	
+	if(!get_bool_text(config_root, "fast_slope", &out_config->fast_slope))
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element fast_slope");
+		return false;
+	}
 
 	{
 		const tinyxml2::XMLElement* timestamp_element = config_root->FirstChildElement("timestamp");
@@ -395,6 +400,14 @@ bool CAN_USB_app::write_default_config()
 	node = config_doc.NewElement("timesync");
 	node->SetText("slave");
 	config_doc_root->InsertEndChild(node);
+
+	{
+		tinyxml2::XMLComment* comment = config_doc.NewComment("Set fast_slope to true for CAN FD BRS or maybe for 1MBps. Otherwise set to false for reduced EMI");
+		config_doc_root->InsertEndChild(comment);
+		node = config_doc.NewElement("fast_slope");
+		node->SetText(true);
+		config_doc_root->InsertEndChild(node);
+	}
 
 	{
 		tinyxml2::XMLElement* timestamp = config_doc.NewElement("timestamp");

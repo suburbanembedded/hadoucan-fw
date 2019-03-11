@@ -28,6 +28,7 @@ public:
 		{			
 			autopoll = false;
 			listen_only = false;
+			fast_slope = false;
 			timestamp_enable = false;
 			timestamp_prescaler =  2000;
 			timestamp_period = 50000;
@@ -44,6 +45,7 @@ public:
 
 		bool autopoll;
 		bool listen_only;
+		bool fast_slope;
 
 		bool timestamp_enable;
 		int timestamp_prescaler;

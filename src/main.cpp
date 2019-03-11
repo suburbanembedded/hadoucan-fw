@@ -956,6 +956,20 @@ int main(void)
 		HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
 	}
 
+	//enable high speed for now
+	//TODO: make this config
+	if(1)
+	{
+		GPIO_InitTypeDef GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+		HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
+
+		HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_SET);
+	}
+
 	{
 		std::array<char, 25> id_str;
 		get_unique_id_str(&id_str);
