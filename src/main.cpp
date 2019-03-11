@@ -368,7 +368,7 @@ public:
 
 	bool mount_fs()
 	{
-		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Ready");
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
 
 		W25Q16JV& m_qspi = can_usb_app.get_flash();
 		W25Q16JV_conf_region& m_fs = can_usb_app.get_fs();
@@ -377,7 +377,7 @@ public:
 
 		if(!m_qspi.init())
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "m_qspi.init failed");
+			uart1_log<64>(LOG_LEVEL::ERROR, "main", "m_qspi.init failed");
 
 			for(;;)
 			{
@@ -392,39 +392,39 @@ public:
 		uint16_t flash_pn = 0;
 		if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
 		{
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
+			uart1_log<128>(LOG_LEVEL::INFO, "main", "mfg id %02" PRIX32, uint32_t(mfg_id));
+			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash pn %04" PRIX32, uint32_t(flash_pn));
 		}
 		else
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
+			uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_jdec_id failed");
 		}
 
 		uint64_t unique_id = 0;
 		if(m_qspi.get_unique_id(&unique_id))
 		{
-			// uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %016" PRIX64, unique_id);
+			// uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %016" PRIX64, unique_id);
 			//aparently PRIX64 is broken
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
+			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
 		}
 		else
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
+			uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_unique_id failed");
 		}
 
-		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "Mounting flash fs");
 		int mount_ret = m_fs.mount();
 		if(mount_ret != SPIFFS_OK)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Flash mount failed: %d", mount_ret);
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "You will need to reload the config");
+			uart1_log<128>(LOG_LEVEL::ERROR, "main", "Flash mount failed: %d", mount_ret);
+			uart1_log<128>(LOG_LEVEL::ERROR, "main", "You will need to reload the config");
 
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Format flash");
+			uart1_log<128>(LOG_LEVEL::INFO, "main", "Format flash");
 			int format_ret = m_fs.format();
 			if(format_ret != SPIFFS_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Flash format failed: %d", format_ret);
-				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Try a power cycle, your board may be broken");
+				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash format failed: %d", format_ret);
+				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
 
 				for(;;)
 				{
@@ -432,12 +432,12 @@ public:
 				}
 			}
 
-			uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
+			uart1_log<64>(LOG_LEVEL::INFO, "main", "Mounting flash fs");
 			mount_ret = m_fs.mount();
 			if(mount_ret != SPIFFS_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Flash mount failed right after we formatted it: %d", mount_ret);
-				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Try a power cycle, your board may be broken");
+				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash mount failed right after we formatted it: %d", mount_ret);
+				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
 
 				for(;;)
 				{
@@ -446,13 +446,13 @@ public:
 			}
 			else
 			{
-				uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
+				uart1_log<64>(LOG_LEVEL::INFO, "main", "Flash mount ok");
 			}
 
 			//write default config
 			if(!can_usb_app.write_default_config())
 			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config failed");
+				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default config failed");
 
 				for(;;)
 				{
@@ -461,7 +461,7 @@ public:
 			}
 			if(!can_usb_app.write_default_bitrate_table())
 			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default bitrate table failed");
+				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
 
 				for(;;)
 				{
@@ -471,7 +471,7 @@ public:
 		}
 		else
 		{
-			uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
+			uart1_log<64>(LOG_LEVEL::INFO, "main", "Flash mount ok");
 		}
 
 		return true;
@@ -479,35 +479,51 @@ public:
 
 	bool load_config()
 	{
-		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Load config");
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "Load config");
 		if(!can_usb_app.load_config())
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "Config load failed, restoring default");
+			uart1_log<64>(LOG_LEVEL::WARN, "main", "Config load failed, restoring default");
 
 			if(!can_usb_app.write_default_config())
 			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config load failed");
+				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default config load failed");
 
 				for(;;)
 				{
 					vTaskSuspend(nullptr);
 				}
 			}
+			else
+			{
+				uart1_log<64>(LOG_LEVEL::WARN, "main", "Default config wrote ok");
+			}
+		}
+		else
+		{
+			uart1_log<64>(LOG_LEVEL::INFO, "main", "Config ok");
 		}
 
 		if(!can_usb_app.load_bitrate_table())
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "Bitrate table load failed, restoring default");
+			uart1_log<64>(LOG_LEVEL::WARN, "main", "Bitrate table load failed, restoring default");
 
 			if(!can_usb_app.write_default_bitrate_table())
 			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default bitrate table failed");
+				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
 
 				for(;;)
 				{
 					vTaskSuspend(nullptr);
 				}
 			}
+			else
+			{
+				uart1_log<64>(LOG_LEVEL::WARN, "main", "Default bitrate table wrote ok");
+			}
+		}
+		else
+		{
+			uart1_log<64>(LOG_LEVEL::INFO, "main", "Bitrate table ok");
 		}
 
 		return true;
