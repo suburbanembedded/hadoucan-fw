@@ -26,20 +26,14 @@ bool STM32_fdcan_tx::init()
 
 	m_std_baud = STD_BAUD::B500000;
 	m_fd_brs_baud = FD_BRS_BAUD::B4000000;
-	// m_std_baud =       STD_BAUD::B1000000;
-	// m_fd_brs_baud = FD_BRS_BAUD::B12000000;
 	if(!set_baud(m_std_baud, m_fd_brs_baud, m_fdcan_handle))
 	{
 		return false;
 	}
 
-	m_fdcan_handle->Init.MessageRAMOffset = 0;//0 - 2560
+	m_fdcan_handle->Init.MessageRAMOffset = 0;
 	m_fdcan_handle->Init.StdFiltersNbr = 1;
 	m_fdcan_handle->Init.ExtFiltersNbr = 1;
-	// m_fdcan_handle->Init.RxFifo0ElmtsNbr = 16;
-	// m_fdcan_handle->Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
-	// m_fdcan_handle->Init.RxFifo1ElmtsNbr = 0;
-	// m_fdcan_handle->Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
 	m_fdcan_handle->Init.RxFifo0ElmtsNbr = 64;
 	m_fdcan_handle->Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_64;
 	m_fdcan_handle->Init.RxFifo1ElmtsNbr = 0;
@@ -60,7 +54,7 @@ bool STM32_fdcan_tx::init()
 	}
 
 	//bypass clock calibration
-	// fdcan_ker_ck = 80MHz
+	// fdcan_ker_ck = 60MHz
 	// fdcan_tq_ck  = fdcan_ker_ck / 1
 	FDCAN_ClkCalUnitTypeDef cal_config = FDCAN_ClkCalUnitTypeDef();
 	cal_config.ClockCalibration = DISABLE;
@@ -72,12 +66,12 @@ bool STM32_fdcan_tx::init()
 		return false;
 	}
 
-	//units of mtq - fdcan_tq_ck - 80MHz -> 12.5ns
+	//units of mtq - fdcan_tq_ck - 60MHz -> 16 2/3 ns
 	//ADM3055E - TXD->BUS R->D 35 - 60ns
 	//ADM3055E - TXD->BUS D->E 46 - 70ns
 	//ADM3055E - TXD->RXD Falling 150ns full, 300ns slope ctrl
 	//ADM3055E - TXD->RXD Rising 150ns full, 300ns slope ctrl
-	//150ns is 12 mtq
+	//150ns is 9 mtq
 	ret = HAL_FDCAN_ConfigTxDelayCompensation(m_fdcan_handle, 5, 0);
 	if(ret != HAL_OK)
 	{

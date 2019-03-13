@@ -23,7 +23,7 @@ public:
 	{		
 		m_is_open = false;
 		m_fdcan = nullptr;
-		m_std_baud = STD_BAUD::B125000;
+		m_std_baud = STD_BAUD::B500000;
 		m_fd_brs_baud = FD_BRS_BAUD::B4000000;
 	}
 

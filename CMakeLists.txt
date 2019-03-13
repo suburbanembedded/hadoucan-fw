@@ -94,6 +94,10 @@ add_executable(canusbfdiso.elf
 	src/STM32_fdcan_rx.cpp
 
 	src/CAN_USB_app.cpp
+	src/CAN_USB_app_config.cpp
+	src/CAN_USB_app_bitrate_table.cpp
+
+	src/tinyxml2_helper.cpp
 )
 
 target_link_libraries(canusbfdiso.elf
