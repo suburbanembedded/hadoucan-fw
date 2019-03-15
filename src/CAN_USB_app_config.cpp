@@ -24,7 +24,7 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 	config_doc_root->InsertEndChild(node);
 	
 	{
-		node = config_doc->NewElement("timesync");
+		node = config_doc->NewElement("timesync_mode");
 	
 		switch(m_config.timesync_mode)
 		{

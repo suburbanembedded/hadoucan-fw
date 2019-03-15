@@ -40,286 +40,24 @@
 #include <cstdio>
 #include <cinttypes>
 
-USB_RX_task usb_rx_task __attribute__ (( section(".ram_dtcm_noload") ));
-USB_TX_task usb_tx_task __attribute__ (( section(".ram_dtcm_noload") ));
+CAN_USB_app can_usb_app __attribute__(( section(".ram_dtcm_noload") ));
 
-USB_rx_buffer_task usb_rx_buffer_task __attribute__ (( section(".ram_dtcm_noload") ));
-USB_tx_buffer_task usb_tx_buffer_task __attribute__ (( section(".ram_dtcm_noload") ));
+USB_RX_task usb_rx_task __attribute__(( section(".ram_dtcm_noload") ));
+USB_TX_task usb_tx_task __attribute__(( section(".ram_dtcm_noload") ));
 
-LED_task led_task __attribute__ (( section(".ram_d2_s2_noload") ));
+USB_rx_buffer_task usb_rx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
+USB_tx_buffer_task usb_tx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
 
-USB_lawicel_task usb_lawicel_task __attribute__ (( section(".ram_dtcm_noload") ));
+LED_task led_task __attribute__(( section(".ram_dtcm_noload") ));
 
-Timesync_task timesync_task __attribute__ (( section(".ram_d2_s2_noload") ));
+USB_lawicel_task usb_lawicel_task __attribute__(( section(".ram_dtcm_noload") ));
 
-CAN_USB_app can_usb_app;
+Timesync_task timesync_task __attribute__(( section(".ram_dtcm_noload") ));
 
 bool can_rx_to_lawicel(const std::string& str)
 {
 	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
 }
-
-
-/*
-class TinyXML_inc_printer : public tinyxml2::XMLVisitor
-{
-public:
-	TinyXML_inc_printer()
-	{
-		indent_level = 0;
-	}
-
-	bool VisitEnter(const tinyxml2::XMLDocument& doc) override
-	{
-		indent_level = 0;
-		return true;
-	}
-	bool VisitExit(const tinyxml2::XMLDocument& doc) override
-	{
-		return true;
-	}
-	bool VisitEnter(const tinyxml2::XMLElement& ele, const tinyxml2::XMLAttribute* attr) override
-	{
-		print_indent();
-
-		uart1_printf<64>("<%s", ele.Name());
-		if(attr)
-		{
-			tinyxml2::XMLAttribute const* node = attr;
-			
-			do
-			{
-				uart1_printf<64>(" %s=\"%s\"", node->Name(), node->Value());
-				node = node->Next();
-			} while(node);
-		}
-
-		if(ele.NoChildren())
-		{
-			uart1_printf<64>("/>\n");
-		}
-		else
-		{
-			uart1_printf<64>(">");
-
-			if(ele.FirstChild()->ToText() == nullptr)
-			{
-				indent_level++;
-
-				uart1_printf<64>("\n");
-			}
-		}
-
-		return true;
-	}
-	bool VisitExit(const tinyxml2::XMLElement& ele) override
-	{
-		if(ele.NoChildren())
-		{
-			return true;
-		}
-
-		if(ele.Parent() != nullptr)
-		{
-			if(ele.FirstChild()->ToText() == nullptr)
-			{
-				indent_level--;
-				print_indent();
-				uart1_printf<64>("</%s>\n", ele.Name());
-			}
-			else
-			{
-				uart1_printf<64>("</%s>\n", ele.Name());
-			}
-		}
-		else
-		{
-			print_indent();
-			uart1_printf<64>("</%s>\n", ele.Name());	
-		}
-
-		return true;
-	}
-	bool Visit(const tinyxml2::XMLDeclaration& decl) override
-	{
-		print_indent();
-		uart1_printf<64>("<?%s?>\n", decl.Value());
-		return true;
-	}
-	bool Visit(const tinyxml2::XMLText& text) override
-	{
-		uart1_printf<64>("%s", text.Value());
-		return true;
-	}
-	bool Visit(const tinyxml2::XMLComment& com) override
-	{
-		print_indent();
-		uart1_printf<64>("<!--%s-->\n", com.Value());
-		return true;
-	}
-	bool Visit(const tinyxml2::XMLUnknown& unk) override
-	{
-		return true;
-	}
-protected:
-
-	void print_indent()
-	{
-		for(size_t i = 0 ; i < indent_level; i++)
-		{
-			uart1_printf<64>("\t");
-		}
-	}
-
-	size_t indent_level;
-};
-*/
-
-#if 0
-class QSPI_task : public Task_static<2048>
-{
-public:
-
-	void work() override
-	{
-		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Ready");
-
-		W25Q16JV& m_qspi = can_usb_app.get_flash();
-		W25Q16JV_conf_region& m_fs = can_usb_app.get_fs();
-
-		m_qspi.set_handle(&hqspi);
-
-		if(!m_qspi.init())
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "m_qspi.init failed");
-
-			for(;;)
-			{
-				vTaskSuspend(nullptr);
-			}
-		}
-
-		m_fs.initialize();
-		m_fs.set_flash(&m_qspi);
-
-		uint8_t mfg_id = 0;
-		uint16_t flash_pn = 0;
-		if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
-		{
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "mfg id %02" PRIX32, uint32_t(mfg_id));
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash pn %04" PRIX32, uint32_t(flash_pn));
-		}
-		else
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_jdec_id failed");
-		}
-
-		uint64_t unique_id = 0;
-		if(m_qspi.get_unique_id(&unique_id))
-		{
-			// uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %016" PRIX64, unique_id);
-			//aparently PRIX64 is broken
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
-		}
-		else
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "get_unique_id failed");
-		}
-
-		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
-		int mount_ret = m_fs.mount();
-		if(mount_ret != SPIFFS_OK)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "Flash mount failed: %d", mount_ret);
-			uart1_log<128>(LOG_LEVEL::ERROR, "qspi", "You will need to reload the config");
-
-			uart1_log<128>(LOG_LEVEL::INFO, "qspi", "Format flash");
-			int format_ret = m_fs.format();
-			if(format_ret != SPIFFS_OK)
-			{
-				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Flash format failed: %d", format_ret);
-				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Try a power cycle, your board may be broken");
-
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
-			}
-
-			uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Mounting flash fs");
-			mount_ret = m_fs.mount();
-			if(mount_ret != SPIFFS_OK)
-			{
-				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Flash mount failed right after we formatted it: %d", mount_ret);
-				uart1_log<128>(LOG_LEVEL::FATAL, "qspi", "Try a power cycle, your board may be broken");
-
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
-			}
-			else
-			{
-				uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
-			}
-
-			//write default config
-			if(!can_usb_app.write_default_config())
-			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config failed");
-
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
-			}
-			if(!can_usb_app.write_default_bitrate_table())
-			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default bitrate table failed");
-
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
-			}
-		}
-		else
-		{
-			uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Flash mount ok");
-		}
-
-		uart1_log<64>(LOG_LEVEL::INFO, "qspi", "Load config");
-		if(!can_usb_app.load_config())
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "Config load failed, restoring default");
-
-			if(!can_usb_app.write_default_config())
-			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default config load failed");
-			}
-		}
-
-		if(!can_usb_app.load_bitrate_table())
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "qspi", "Bitrate table load failed, restoring default");
-
-			if(!can_usb_app.write_default_bitrate_table())
-			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "qspi", "Writing default bitrate table failed");
-			}
-		}
-		
-		for(;;)
-		{
-			vTaskSuspend(nullptr);
-		}
-	}
-
-protected:
-
-};
-QSPI_task qspi_task __attribute__ (( section(".ram_d2_s2_noload") ));
-#endif
 
 class Main_task : public Task_static<1024>
 {
@@ -528,8 +266,130 @@ public:
 
 		return true;
 	}
+protected:
+	
+
+
 };
-Main_task main_task __attribute__ (( section(".ram_d2_s2_noload") ));
+
+Main_task main_task __attribute__(( section(".ram_dtcm_noload") ));
+
+
+
+/*
+class TinyXML_inc_printer : public tinyxml2::XMLVisitor
+{
+public:
+	TinyXML_inc_printer()
+	{
+		indent_level = 0;
+	}
+
+	bool VisitEnter(const tinyxml2::XMLDocument& doc) override
+	{
+		indent_level = 0;
+		return true;
+	}
+	bool VisitExit(const tinyxml2::XMLDocument& doc) override
+	{
+		return true;
+	}
+	bool VisitEnter(const tinyxml2::XMLElement& ele, const tinyxml2::XMLAttribute* attr) override
+	{
+		print_indent();
+
+		uart1_printf<64>("<%s", ele.Name());
+		if(attr)
+		{
+			tinyxml2::XMLAttribute const* node = attr;
+			
+			do
+			{
+				uart1_printf<64>(" %s=\"%s\"", node->Name(), node->Value());
+				node = node->Next();
+			} while(node);
+		}
+
+		if(ele.NoChildren())
+		{
+			uart1_printf<64>("/>\n");
+		}
+		else
+		{
+			uart1_printf<64>(">");
+
+			if(ele.FirstChild()->ToText() == nullptr)
+			{
+				indent_level++;
+
+				uart1_printf<64>("\n");
+			}
+		}
+
+		return true;
+	}
+	bool VisitExit(const tinyxml2::XMLElement& ele) override
+	{
+		if(ele.NoChildren())
+		{
+			return true;
+		}
+
+		if(ele.Parent() != nullptr)
+		{
+			if(ele.FirstChild()->ToText() == nullptr)
+			{
+				indent_level--;
+				print_indent();
+				uart1_printf<64>("</%s>\n", ele.Name());
+			}
+			else
+			{
+				uart1_printf<64>("</%s>\n", ele.Name());
+			}
+		}
+		else
+		{
+			print_indent();
+			uart1_printf<64>("</%s>\n", ele.Name());	
+		}
+
+		return true;
+	}
+	bool Visit(const tinyxml2::XMLDeclaration& decl) override
+	{
+		print_indent();
+		uart1_printf<64>("<?%s?>\n", decl.Value());
+		return true;
+	}
+	bool Visit(const tinyxml2::XMLText& text) override
+	{
+		uart1_printf<64>("%s", text.Value());
+		return true;
+	}
+	bool Visit(const tinyxml2::XMLComment& com) override
+	{
+		print_indent();
+		uart1_printf<64>("<!--%s-->\n", com.Value());
+		return true;
+	}
+	bool Visit(const tinyxml2::XMLUnknown& unk) override
+	{
+		return true;
+	}
+protected:
+
+	void print_indent()
+	{
+		for(size_t i = 0 ; i < indent_level; i++)
+		{
+			uart1_printf<64>("\t");
+		}
+	}
+
+	size_t indent_level;
+};
+*/
 
 extern "C"
 {
@@ -984,6 +844,10 @@ int main(void)
 		const uint32_t stack_ptr = __get_MSP();
 		uart1_log<64>(LOG_LEVEL::DEBUG, "main", "msp:  0x%08" PRIX32, stack_ptr);
 	}
+
+	// Switch to heap5?
+	// AHB_D2_SRAM1: 0x30000000, 128KB
+	// AHB_D2_SRAM2: 0x30020000, 128KB
 
 	main_task.launch("main_task", 15);
 

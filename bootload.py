@@ -5,14 +5,14 @@ import sys
 import shutil
 import serial
 
-img_path = '/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/build/ram/release/canusbfdiso.hex'
+img_path = '/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/build/ram/release/canusbfdiso.bin'
 tty_path = '/dev/ttyACM0'
 
 img_info = os.stat(img_path)
 
 download_cmd = 'download:{0:08x}\r'.format(img_info.st_size)
 download_resp = 'DATA{0:08x}'.format(img_info.st_size)
-flash_cmd    = 'flash:app.img\r'
+flash_cmd    = 'flash:app.bin\r'
 ok_resp      = 'OKAY'
 
 tty_port = serial.Serial(tty_path, 115200, timeout=10)

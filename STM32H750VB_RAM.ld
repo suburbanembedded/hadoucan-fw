@@ -75,6 +75,21 @@ SECTIONS
     end_isr_vector = .;
   } >AXI_D1_SRAM
 
+  /* The OS goes in ITCM */
+  /*
+  .ram_itcm : ALIGN(4)
+  {
+    start_ram_itcm = .;
+    *(.ram_itcm)
+    *libfreertos_v9.a:*
+    *libfreertos_v9_cmsis.a:*
+    *libfreertos_v9_heap4.a:*
+    . = ALIGN(4);
+    end_ram_itcm = .;
+  } >ITCMRAM AT> AXI_D1_SRAM
+  start_ram_itcm_laddr = LOADADDR(.ram_itcm);
+  */
+
   /* The program code and other data goes into FLASH */
   .text :
   {

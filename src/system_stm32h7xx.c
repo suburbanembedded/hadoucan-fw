@@ -159,6 +159,9 @@
   */
 
 //Initialized ram regions
+// extern int start_ram_itcm_laddr;
+// extern int start_ram_itcm;
+// extern int end_ram_itcm;
 extern int start_ram_dtcm_laddr;
 extern int start_ram_dtcm;
 extern int end_ram_dtcm;
@@ -215,6 +218,7 @@ void SystemInit (void)
   __HAL_RCC_BKPRAM_CLK_ENABLE();
 
   //copy all init mem
+  // memcpy(&start_ram_itcm,  &start_ram_itcm_laddr,  &end_ram_itcm  - &start_ram_itcm);
   memcpy(&start_ram_dtcm,  &start_ram_dtcm_laddr,  &end_ram_dtcm  - &start_ram_dtcm);
   memcpy(&start_ram_d1_s0, &start_ram_d1_s0_laddr, &end_ram_d1_s0 - &start_ram_d1_s0);
   memcpy(&start_ram_d2_s1, &start_ram_d2_s1_laddr, &end_ram_d2_s1 - &start_ram_d2_s1);
