@@ -22,3 +22,6 @@
 [submodule "external/mbedtls_util"]
 	path = external/mbedtls_util
 	url = git@github.com:jacobschloss/mbedtls_util.git
+[submodule "external/mbedtls"]
+	path = external/mbedtls
+	url = git@bitbucket.org:suburbanmarine/mbedtls.git

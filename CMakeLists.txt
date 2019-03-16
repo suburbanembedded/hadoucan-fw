@@ -10,13 +10,15 @@ add_definitions(
 	-D__packed=__attribute__\(\(__packed__\)\)
 
 	-DUSE_HAL_DRIVER
+	-DHSE_VALUE=\(\(uint32_t\)24000000\)
+	
 	-DWORD_SIZE=4
 
-	-DGTEST_HAS_PTHREAD=0
-	-DGTEST_HAS_CLONE=0
-	-DGTEST_HAS_POSIX_RE=0
-	-DGTEST_LINKED_AS_SHARED_LIBRARY=0
-	-DGTEST_CREATE_SHARED_LIBRARY=0
+	#-DGTEST_HAS_PTHREAD=0
+	#-DGTEST_HAS_CLONE=0
+	#-DGTEST_HAS_POSIX_RE=0
+	#-DGTEST_LINKED_AS_SHARED_LIBRARY=0
+	#-DGTEST_CREATE_SHARED_LIBRARY=0
 
 	-DSPIFFS_USE_MAGIC
 	-DSPIFFS_USE_MAGIC_LENGTH
@@ -24,15 +26,17 @@ add_definitions(
 	-DSPIFFS_UNLOCK=spiffs_unlock_dispatch
 	-DSPIFFS_HAL_CALLBACK_EXTRA
 
-	-DHSE_VALUE=\(\(uint32_t\)24000000\)
 
 	#we will provide the syscalls
 	#-D_REENT_ONLY
-	-DREENTRANT_SYSCALLS_PROVIDED
+	#-DREENTRANT_SYSCALLS_PROVIDED
+
+	-DMBEDTLS_CONFIG_FILE=<config-no-entropy.h>
 )
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
+	external/mbedtls/include
 )
 
 add_library(spiffs
@@ -49,12 +53,13 @@ target_include_directories(spiffs PUBLIC
 
 add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
 add_subdirectory(external/tinyxml2)
-
+add_subdirectory(external/mbedtls)
 
 add_subdirectory(external/freertos_cpp_util)
 add_subdirectory(external/common_util)
 add_subdirectory(external/emb_fs_util)
 add_subdirectory(external/tinyxml2_util)
+add_subdirectory(external/mbedtls_util)
 
 add_executable(canusbfdiso.elf
 	src/system_stm32h7xx.c
@@ -114,13 +119,18 @@ target_link_libraries(canusbfdiso.elf
 
 	common_util
 	freertos_cpp_util
+
 	tinyxml2_util
+	mbedtls_util
 
 	spi_flash
 	spiffs_flash
 	spiffs_util
 
 	tinyxml2_static
+
+	mbedtls
+	mbedcrypto
 )
 
 # Generate intel hex image
