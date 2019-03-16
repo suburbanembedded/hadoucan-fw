@@ -48,12 +48,13 @@ target_include_directories(spiffs PUBLIC
 )
 
 add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
-
 add_subdirectory(external/tinyxml2)
+
 
 add_subdirectory(external/freertos_cpp_util)
 add_subdirectory(external/common_util)
 add_subdirectory(external/emb_fs_util)
+add_subdirectory(external/tinyxml2_util)
 
 add_executable(canusbfdiso.elf
 	src/system_stm32h7xx.c
@@ -96,8 +97,6 @@ add_executable(canusbfdiso.elf
 	src/CAN_USB_app.cpp
 	src/CAN_USB_app_config.cpp
 	src/CAN_USB_app_bitrate_table.cpp
-
-	src/tinyxml2_helper.cpp
 )
 
 target_link_libraries(canusbfdiso.elf
@@ -115,6 +114,7 @@ target_link_libraries(canusbfdiso.elf
 
 	common_util
 	freertos_cpp_util
+	tinyxml2_util
 
 	spi_flash
 	spiffs_flash

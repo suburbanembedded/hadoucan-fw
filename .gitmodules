@@ -16,3 +16,9 @@
 [submodule "external/tinyxml2"]
 	path = external/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
+[submodule "external/tinyxml2_util"]
+	path = external/tinyxml2_util
+	url = git@github.com:jacobschloss/tinyxml2_util.git
+[submodule "external/mbedtls_util"]
+	path = external/mbedtls_util
+	url = git@github.com:jacobschloss/mbedtls_util.git

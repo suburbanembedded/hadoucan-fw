@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tinyxml2_helper.hpp"
+#include "tinyxml2_util/tinyxml2_helper.hpp"
 #include "../external/tinyxml2/tinyxml2.h"
 
 #include <map>

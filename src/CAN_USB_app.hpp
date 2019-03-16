@@ -6,7 +6,6 @@
 #include "W25Q16JV.hpp"
 #include "W25Q16JV_conf_region.hpp"
 
-#include "tinyxml2_helper.hpp"
 #include "../external/tinyxml2/tinyxml2.h"
 
 class CAN_USB_app
