@@ -41,6 +41,11 @@ public:
 		m_fdcan_handle = can_handle;
 	}
 
+	void set_config(const CAN_USB_app_config::Config_Set& config)
+	{
+		m_config = config;
+	}
+
 	bool init();
 
 	bool open();
@@ -61,7 +66,7 @@ protected:
 
 	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, FDCAN_HandleTypeDef* const handle);
 	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& fd_baud, FDCAN_HandleTypeDef* const handle);
-	
+
 	CAN_USB_app_config::Config_Set m_config;
 	CAN_USB_app_bitrate_table m_bitrate_table;
 
