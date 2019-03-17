@@ -55,6 +55,14 @@ public:
 		unsigned filter_accept_mask;
 	};
 
+	static Config_Set get_defualt()
+	{
+		CAN_USB_app_config config;
+		config.set_defualt();
+
+		return config.m_config;
+	}
+
 	void set_defualt()
 	{			
 		m_config.autopoll = false;

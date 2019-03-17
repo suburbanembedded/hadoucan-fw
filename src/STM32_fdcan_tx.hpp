@@ -1,5 +1,8 @@
 #pragma once
 
+#include "CAN_USB_app_config.hpp"
+#include "CAN_USB_app_bitrate_table.hpp"
+
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_hal_fdcan.h"
 
@@ -21,10 +24,11 @@ public:
 
 	STM32_fdcan_tx()
 	{		
+		m_baud_is_set = false;
 		m_is_open = false;
 		m_fdcan = nullptr;
-		m_std_baud = STD_BAUD::B500000;
-		m_fd_brs_baud = FD_BRS_BAUD::B4000000;
+
+		m_config = CAN_USB_app_config::get_defualt();
 	}
 
 	void set_can_instance(FDCAN_GlobalTypeDef* can)
@@ -50,42 +54,19 @@ public:
 	bool tx_fd_std(const uint32_t id, const BRS brs, const ESI esi, const uint8_t data_len, const uint8_t* data);
 	bool tx_fd_ext(const uint32_t id, const BRS brs, const ESI esi, const uint8_t data_len, const uint8_t* data);
 
-	enum class STD_BAUD
-	{
-		B10000,
-		B20000,
-		B50000,
-		B100000,
-		B125000,
-		B250000,
-		B500000,
-		B800000,
-		B1000000
-	};
-
-	enum class FD_BRS_BAUD
-	{
-		B2000000,
-		B4000000,
-		B5000000,
-		B6000000,
-		B8000000,
-		B10000000,
-		B12000000
-	};
-
-	bool set_baud(const STD_BAUD baud);
-	static bool set_baud(const STD_BAUD baud, FDCAN_HandleTypeDef* const handle);
-	bool set_baud(const STD_BAUD std_baud, const FD_BRS_BAUD fd_baud);
-	static bool set_baud(const STD_BAUD std_baud, const FD_BRS_BAUD fd_baud, FDCAN_HandleTypeDef* const handle);
+	bool set_baud(const int std_baud);
+	bool set_baud(const int std_baud, const int fd_baud);
 
 protected:
 
-	bool m_is_open;
-	bool m_baud_is_set;
+	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, FDCAN_HandleTypeDef* const handle);
+	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& fd_baud, FDCAN_HandleTypeDef* const handle);
+	
+	CAN_USB_app_config::Config_Set m_config;
+	CAN_USB_app_bitrate_table m_bitrate_table;
 
-	STD_BAUD m_std_baud;
-	FD_BRS_BAUD m_fd_brs_baud;
+	bool m_baud_is_set;
+	bool m_is_open;
 
 	bool send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data);
 

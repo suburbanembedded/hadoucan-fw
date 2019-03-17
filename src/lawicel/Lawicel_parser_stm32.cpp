@@ -5,52 +5,52 @@
 
 bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
 {
-	STM32_fdcan_tx::STD_BAUD stm32_baud;
+	int stm32_baud = 0;
 	switch(baud)
 	{
 		case CAN_NOM_BPS::bps_10k:
 		{
-			stm32_baud = STM32_fdcan_tx::STD_BAUD::B10000;
+			stm32_baud = 10000;
 			break;
 		}
 		case CAN_NOM_BPS::bps_20k:
 		{
-			stm32_baud = STM32_fdcan_tx::STD_BAUD::B20000;
+			stm32_baud = 20000;
 			break;
 		}
 		case CAN_NOM_BPS::bps_50k:
 		{
-			stm32_baud = STM32_fdcan_tx::STD_BAUD::B50000;
+			stm32_baud = 50000;
 			break;
 		}
 		case CAN_NOM_BPS::bps_100k:
 		{
-			stm32_baud = STM32_fdcan_tx::STD_BAUD::B100000;
+			stm32_baud = 100000;
 			break;
 		}
 		case CAN_NOM_BPS::bps_125k:
 		{
-			stm32_baud = STM32_fdcan_tx::STD_BAUD::B125000;
+			stm32_baud = 125000;
 			break;
 		}
 		case CAN_NOM_BPS::bps_250k:
 		{
-			stm32_baud = STM32_fdcan_tx::STD_BAUD::B250000;
+			stm32_baud = 250000;
 			break;
 		}
 		case CAN_NOM_BPS::bps_500k:
 		{
-			stm32_baud = STM32_fdcan_tx::STD_BAUD::B500000;
+			stm32_baud = 500000;
 			break;
 		}
 		case CAN_NOM_BPS::bps_800k:
 		{
-			stm32_baud = STM32_fdcan_tx::STD_BAUD::B800000;
+			stm32_baud = 800000;
 			break;
 		}
 		case CAN_NOM_BPS::bps_1M:
 		{
-			stm32_baud = STM32_fdcan_tx::STD_BAUD::B1000000;
+			stm32_baud = 1000000;
 			break;
 		}
 		default:
