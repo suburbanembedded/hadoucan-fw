@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../CAN_USB_app_config.hpp"
+
 #include "freertos_cpp_util/Mutex_static.hpp"
 
 #include <array>

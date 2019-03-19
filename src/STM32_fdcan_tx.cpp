@@ -34,7 +34,15 @@ bool STM32_fdcan_tx::init()
 		m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_CLASSIC;
 	}
 	
-	m_fdcan_handle->Init.Mode = FDCAN_MODE_NORMAL;
+	if(m_config.listen_only)
+	{
+		m_fdcan_handle->Init.Mode = FDCAN_MODE_BUS_MONITORING;
+	}
+	else
+	{
+		m_fdcan_handle->Init.Mode = FDCAN_MODE_NORMAL;
+	}
+
 	m_fdcan_handle->Init.AutoRetransmission = ENABLE;
 	m_fdcan_handle->Init.TransmitPause = DISABLE;
 	m_fdcan_handle->Init.ProtocolException = ENABLE;

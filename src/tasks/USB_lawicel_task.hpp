@@ -30,6 +30,11 @@ public:
 		return false;
 	}
 
+	void set_can_tx(STM32_fdcan_tx* const can_tx)
+	{
+		m_can = can_tx;
+	}
+
 	void set_usb_tx(USB_tx_buffer_task* const usb_tx_buffer)
 	{
 		m_usb_tx_buffer = usb_tx_buffer;
@@ -50,10 +55,10 @@ public:
 
 	void work() override
 	{
-		m_can.set_can_instance(FDCAN1);
-		m_can.set_can_handle(&hfdcan1);
+		m_can->set_can_instance(FDCAN1);
+		m_can->set_can_handle(&hfdcan1);
 
-		m_parser.set_can(&m_can);
+		m_parser.set_can(m_can);
 		m_parser.set_write_string_func(
 			std::bind(&USB_lawicel_task::write_string_usb, this, std::placeholders::_1)
 			);
@@ -110,7 +115,7 @@ public:
 		}
 	}
 
-	STM32_fdcan_tx m_can;
+	STM32_fdcan_tx* m_can;
 
 	Lawicel_parser* get_lawicel()
 	{

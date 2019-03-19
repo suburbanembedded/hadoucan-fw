@@ -54,6 +54,8 @@ USB_lawicel_task usb_lawicel_task __attribute__(( section(".ram_dtcm_noload") ))
 
 Timesync_task timesync_task __attribute__(( section(".ram_dtcm_noload") ));
 
+STM32_fdcan_tx can_tx;
+
 bool can_rx_to_lawicel(const std::string& str)
 {
 	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
@@ -67,9 +69,15 @@ public:
 		mount_fs();
 		load_config();
 
+		const CAN_USB_app_config::Config_Set& config_struct = can_usb_app.get_config();
+		
+		can_tx.set_config(config_struct);
+
 		//init
 		usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
 		usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
+
+		usb_lawicel_task.set_can_tx(&can_tx);
 		usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
 		usb_lawicel_task.set_usb_rx(&usb_rx_buffer_task);
 
@@ -838,8 +846,8 @@ int main(void)
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
 	
-		const uint32_t* main_ptr = reinterpret_cast<const uint32_t*>(&main);
-		uart1_log<64>(LOG_LEVEL::DEBUG, "main", "main: 0x%08" PRIX32, main);
+		const uint32_t main_ptr = reinterpret_cast<uint32_t>(&main);
+		uart1_log<64>(LOG_LEVEL::DEBUG, "main", "main: 0x%08" PRIX32, main_ptr);
 
 		const uint32_t stack_ptr = __get_MSP();
 		uart1_log<64>(LOG_LEVEL::DEBUG, "main", "msp:  0x%08" PRIX32, stack_ptr);
