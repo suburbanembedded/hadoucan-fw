@@ -140,7 +140,7 @@ public:
 		uint16_t flash_pn = 0;
 		if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
 		{
-			uart1_log<128>(LOG_LEVEL::INFO, "main", "mfg id %02" PRIX32, uint32_t(mfg_id));
+			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash mfg id %02" PRIX32, uint32_t(mfg_id));
 			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash pn %04" PRIX32, uint32_t(flash_pn));
 		}
 		else

@@ -228,10 +228,10 @@ bool STM32_fdcan_tx::set_baud(const int std_baud)
 
 bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, FDCAN_HandleTypeDef* const handle)
 {
-	handle->Init.NominalPrescaler = std_baud.pre;       //1-512
-	handle->Init.NominalSyncJumpWidth = std_baud.tseg1;  //1-128
-	handle->Init.NominalTimeSeg1 = std_baud.tseg2;       //1-256 
-	handle->Init.NominalTimeSeg2 = std_baud.sjw;         //1-128
+	handle->Init.NominalPrescaler = std_baud.pre;      //1-512
+	handle->Init.NominalSyncJumpWidth = std_baud.sjw;  //1-128
+	handle->Init.NominalTimeSeg1 = std_baud.tseg1;     //1-256 
+	handle->Init.NominalTimeSeg2 = std_baud.tseg2;     //1-128
 
 	return true;
 }
@@ -254,20 +254,16 @@ bool STM32_fdcan_tx::set_baud(const int std_baud, const int fd_baud)
 }
 bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& fd_baud, FDCAN_HandleTypeDef* const handle)
 {
-	if(!set_baud(std_baud, handle))
-	{
-		return false;
-	}
 
-	handle->Init.NominalPrescaler = std_baud.pre;       //1-512
-	handle->Init.NominalSyncJumpWidth = std_baud.tseg1;  //1-128
-	handle->Init.NominalTimeSeg1 = std_baud.tseg2;       //1-256 
-	handle->Init.NominalTimeSeg2 = std_baud.sjw;         //1-128
+	handle->Init.NominalPrescaler = std_baud.pre;      //1-512
+	handle->Init.NominalSyncJumpWidth = std_baud.sjw;  //1-128
+	handle->Init.NominalTimeSeg1 = std_baud.tseg1;     //1-256 
+	handle->Init.NominalTimeSeg2 = std_baud.tseg2;     //1-128
 
-	handle->Init.DataPrescaler = fd_baud.pre;       //1-32
-	handle->Init.DataSyncJumpWidth = fd_baud.tseg1;  //1-16
-	handle->Init.DataTimeSeg1 = fd_baud.tseg2;       //1-32 
-	handle->Init.DataTimeSeg2 = fd_baud.sjw;         //1-16
+	handle->Init.DataPrescaler = fd_baud.pre;      //1-32
+	handle->Init.DataSyncJumpWidth = fd_baud.sjw;  //1-16
+	handle->Init.DataTimeSeg1 = fd_baud.tseg1;     //1-32 
+	handle->Init.DataTimeSeg2 = fd_baud.tseg2;     //1-16
 
 	return true;
 }
