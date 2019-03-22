@@ -70,8 +70,10 @@ public:
 		load_config();
 
 		const CAN_USB_app_config::Config_Set& config_struct = can_usb_app.get_config();
+		const CAN_USB_app_bitrate_table& bitrate_table = can_usb_app.get_bitrate_tables();
 		
 		can_tx.set_config(config_struct);
+		can_tx.set_bitrate_table(bitrate_table);
 
 		//init
 		usb_rx_buffer_task.set_usb_rx(&usb_rx_task);

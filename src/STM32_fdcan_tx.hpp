@@ -24,7 +24,6 @@ public:
 
 	STM32_fdcan_tx()
 	{		
-		m_baud_is_set = false;
 		m_is_open = false;
 		m_fdcan = nullptr;
 
@@ -44,6 +43,11 @@ public:
 	void set_config(const CAN_USB_app_config::Config_Set& config)
 	{
 		m_config = config;
+	}
+
+	void set_bitrate_table(const CAN_USB_app_bitrate_table& table)
+	{
+		m_bitrate_table = table;
 	}
 
 	bool init();
@@ -70,7 +74,6 @@ protected:
 	CAN_USB_app_config::Config_Set m_config;
 	CAN_USB_app_bitrate_table m_bitrate_table;
 
-	bool m_baud_is_set;
 	bool m_is_open;
 
 	bool send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data);

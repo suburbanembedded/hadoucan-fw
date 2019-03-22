@@ -217,8 +217,6 @@ bool STM32_fdcan_tx::init()
 
 bool STM32_fdcan_tx::set_baud(const int std_baud)
 {
-	m_baud_is_set = true;
-
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry nominal_entry;
 	if(!m_bitrate_table.get_nominal_entry(m_config.can_clock, std_baud, &nominal_entry))
 	{
@@ -240,13 +238,12 @@ bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Ent
 
 bool STM32_fdcan_tx::set_baud(const int std_baud, const int fd_baud)
 {
-	m_baud_is_set = true;
-
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry nominal_entry;
-	if(!m_bitrate_table.get_nominal_entry(m_config.can_clock, fd_baud, &nominal_entry))
+	if(!m_bitrate_table.get_nominal_entry(m_config.can_clock, std_baud, &nominal_entry))
 	{
 		return false;	
 	}
+
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry data_entry;
 	if(!m_bitrate_table.get_data_entry(m_config.can_clock, fd_baud, &data_entry))
 	{

@@ -33,9 +33,9 @@ public:
 	{
 		return m_config.get_config();
 	}
-	const CAN_USB_app_bitrate_table::Bitrate_Table_Set& get_bitrate_tables() const
+	const CAN_USB_app_bitrate_table& get_bitrate_tables() const
 	{
-		return m_bitrate_tables.get_table();
+		return m_bitrate_tables;
 	}
 
 protected:
