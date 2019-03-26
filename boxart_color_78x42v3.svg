@@ -16,7 +16,7 @@
    id="svg8"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="boxart_color_78x42v3.svg"
-   inkscape:export-filename="/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/boxart_color_78x42v2.png"
+   inkscape:export-filename="/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/boxart_color_78x42v3.png"
    inkscape:export-xdpi="600"
    inkscape:export-ydpi="600">
   <defs
@@ -28,9 +28,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.1213203"
-     inkscape:cx="110.24369"
-     inkscape:cy="56.919717"
+     inkscape:zoom="2"
+     inkscape:cx="41.880056"
+     inkscape:cy="49.402858"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -39,9 +39,9 @@
      inkscape:window-x="1440"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     showguides="false"
+     showguides="true"
      inkscape:guide-bbox="true"
-     inkscape:snap-text-baseline="true"
+     inkscape:snap-text-baseline="false"
      inkscape:snap-bbox="true"
      inkscape:bbox-paths="true"
      inkscape:bbox-nodes="true"
@@ -51,7 +51,10 @@
      borderlayer="true"
      inkscape:showpageshadow="false"
      showborder="true"
-     inkscape:pagecheckerboard="false">
+     inkscape:pagecheckerboard="true"
+     inkscape:snap-nodes="false"
+     inkscape:snap-others="true"
+     inkscape:object-nodes="false">
     <inkscape:grid
        type="xygrid"
        id="grid249" />
@@ -63,7 +66,7 @@
        inkscape:label=""
        inkscape:color="rgb(0,0,255)" />
     <sodipodi:guide
-       position="2,15"
+       position="91.281248,14.993055"
        orientation="0,1"
        id="guide200"
        inkscape:locked="false"
@@ -126,9 +129,16 @@
        inkscape:label=""
        inkscape:color="rgb(0,0,255)" />
     <sodipodi:guide
-       position="8.9999998,34.999999"
+       position="8.9999997,32.999999"
        orientation="0,1"
        id="guide927"
+       inkscape:locked="false"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)" />
+    <sodipodi:guide
+       position="8.9999995,26.999999"
+       orientation="0,1"
+       id="guide929"
        inkscape:locked="false"
        inkscape:label=""
        inkscape:color="rgb(0,0,255)" />
@@ -150,16 +160,8 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-255)">
-    <rect
-       id="rect4731"
-       width="77.915558"
-       height="41.915558"
-       x="0.042221487"
-       y="255.04222"
-       style="fill:#0000ff;fill-opacity:0.3627451;stroke:#000013;stroke-width:0.08444297;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       ry="1.9613746" />
     <g
-       transform="matrix(0.01562292,0,0,-0.01562292,44.429677,292.81579)"
+       transform="matrix(0.01562292,0,0,-0.01562292,44.429678,284.51915)"
        inkscape:label="ink_ext_XXXXXX"
        id="g37">
       <g
@@ -476,66 +478,50 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333311px;line-height:1.25;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke:none;stroke-width:0.26458332"
        x="8.7622881"
-       y="273.18805"
+       y="273.14194"
        id="text247"><tspan
          sodipodi:role="line"
          id="tspan245"
          x="8.7622881"
-         y="273.18805"
+         y="273.14194"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333311px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332">CAN FD - USB</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;line-height:1.25;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke:none;stroke-width:0.26458332"
-       x="42.401108"
-       y="294.97003"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.76388884px;line-height:1.25;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke:none;stroke-width:0.26458332"
+       x="46.664124"
+       y="285.85928"
        id="text204"><tspan
          sodipodi:role="line"
          id="tspan202"
-         x="42.401108"
-         y="294.97003"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332">www.suburbanmarine.io</tspan></text>
+         x="46.664124"
+         y="285.85928"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.76388884px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332">www.suburbanmarine.io</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.29305553px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke:none;stroke-width:0.26458332"
-       x="8.9037094"
-       y="283.74219"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke:none;stroke-width:0.26458332"
+       x="8.9111166"
+       y="288.62866"
        id="text208"><tspan
          sodipodi:role="line"
-         x="8.9037094"
-         y="283.74219"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.29305553px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
+         x="8.9111166"
+         y="288.62866"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
          id="tspan210">CAN FD 12 Mbps</tspan><tspan
          sodipodi:role="line"
-         x="8.9037094"
-         y="286.03525"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.29305553px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
+         x="8.9111166"
+         y="290.74533"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
          id="tspan1167">USB 2.0 HS 480 Mbps</tspan><tspan
          sodipodi:role="line"
-         x="8.9037094"
-         y="288.32831"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.29305553px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
+         x="8.9111166"
+         y="292.862"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
          id="tspan1108">500V Galvanic Isolation</tspan><tspan
          sodipodi:role="line"
-         x="8.9037094"
-         y="290.62137"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.29305553px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
-         id="tspan925">Multi-Bus Timesync</tspan><tspan
-         sodipodi:role="line"
-         x="8.9037094"
-         y="292.9144"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.29305553px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
-         id="tspan1173">SM-1301</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:7.76111126px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:0.88970588;stroke:none;stroke-width:0.26458332"
-       x="8.2382898"
-       y="267.76019"
-       id="text1023"><tspan
-         sodipodi:role="line"
-         id="tspan1021"
-         x="8.2382898"
-         y="267.76019"
-         style="font-size:7.76111126px;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332">HADOU-CAN</tspan></text>
+         x="8.9111166"
+         y="294.97867"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
+         id="tspan1173">Multi-Bus Timesync</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:5.64444447px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -569,5 +555,32 @@
          x="31.502975"
          y="267.75421"
          style="stroke-width:0.26458332" /></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke:none;stroke-width:0.26458332"
+       x="60.229477"
+       y="291.24518"
+       id="text208-1"><tspan
+         sodipodi:role="line"
+         x="60.229477"
+         y="292.85336"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
+         id="tspan925-9" /><tspan
+         sodipodi:role="line"
+         x="60.229477"
+         y="294.97"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;line-height:1;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:0.88970588;stroke-width:0.26458332"
+         id="tspan1173-2">SM-1301</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.96597195px;line-height:1.25;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="8.0218945"
+       y="267.62775"
+       id="text992-5"><tspan
+         sodipodi:role="line"
+         id="tspan990-2"
+         x="8.0218945"
+         y="267.62775"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.96597195px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:0.26458332">HADOU-CAN</tspan></text>
   </g>
 </svg>
