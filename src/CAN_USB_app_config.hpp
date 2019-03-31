@@ -80,7 +80,8 @@ public:
 		m_config.tx_delay_comp_offset = 5;
 		m_config.tx_delay_comp_filter_window = 0;
 
-		m_config.can_clock = 60000000;
+		m_config.can_clock = 24000000;
+		// m_config.can_clock = 60000000;
 		m_config.bitrate_nominal = 500000;
 		m_config.bitrate_data = 4000000;
 

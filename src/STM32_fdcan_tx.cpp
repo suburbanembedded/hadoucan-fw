@@ -220,6 +220,7 @@ bool STM32_fdcan_tx::set_baud(const int std_baud)
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry nominal_entry;
 	if(!m_bitrate_table.get_nominal_entry(m_config.can_clock, std_baud, &nominal_entry))
 	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_baud", "m_bitrate_table.get_nominal_entry failed, clock: %d, baud: %d", m_config.can_clock, std_baud);
 		return false;
 	}
 
@@ -241,12 +242,14 @@ bool STM32_fdcan_tx::set_baud(const int std_baud, const int fd_baud)
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry nominal_entry;
 	if(!m_bitrate_table.get_nominal_entry(m_config.can_clock, std_baud, &nominal_entry))
 	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_baud", "m_bitrate_table.get_nominal_entry failed, clock: %d, baud: %d", m_config.can_clock, std_baud);
 		return false;	
 	}
 
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry data_entry;
 	if(!m_bitrate_table.get_data_entry(m_config.can_clock, fd_baud, &data_entry))
 	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_baud", "m_bitrate_table.get_data_entry failed, clock: %d, baud: %d", m_config.can_clock, fd_baud);
 		return false;
 	}
 

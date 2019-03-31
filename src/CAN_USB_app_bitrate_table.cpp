@@ -5,202 +5,213 @@
 void CAN_USB_app_bitrate_table::set_defualt()
 {
 	Bitrate_Table_Entry entry;
-	int clock = 0;
 	
 	/// 24MHz
-	clock = 24000000;
-	entry.rate  = 5000;
-	entry.pre   = 192;
-	entry.tseg1 = 16;
-	entry.tseg2 = 8;
-	entry.sjw   = 2;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+	{
+		int clock = 24000000;
+		auto& table_24mhz = m_bitrate_tables[clock];
 
-	entry.rate  = 10000;
-	entry.pre   = 120;
-	entry.tseg1 = 16;
-	entry.tseg2 = 3;
-	entry.sjw   = 2;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 5000;
+		entry.pre   = 192;
+		entry.tseg1 = 16;
+		entry.tseg2 = 8;
+		entry.sjw   = 2;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 20000;
-	entry.pre   = 60;
-	entry.tseg1 = 16;
-	entry.tseg2 = 3;
-	entry.sjw   = 2;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 10000;
+		entry.pre   = 120;
+		entry.tseg1 = 16;
+		entry.tseg2 = 3;
+		entry.sjw   = 2;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 50000;
-	entry.pre   = 24;
-	entry.tseg1 = 16;
-	entry.tseg2 = 3;
-	entry.sjw   = 2;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 20000;
+		entry.pre   = 60;
+		entry.tseg1 = 16;
+		entry.tseg2 = 3;
+		entry.sjw   = 2;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 100000;
-	entry.pre   = 12;
-	entry.tseg1 = 16;
-	entry.tseg2 = 3;
-	entry.sjw   = 2;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 50000;
+		entry.pre   = 24;
+		entry.tseg1 = 16;
+		entry.tseg2 = 3;
+		entry.sjw   = 2;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 125000;
-	entry.pre   = 12;
-	entry.tseg1 = 13;
-	entry.tseg2 = 3;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 100000;
+		entry.pre   = 12;
+		entry.tseg1 = 16;
+		entry.tseg2 = 3;
+		entry.sjw   = 2;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 250000;
-	entry.pre   = 6;
-	entry.tseg1 = 12;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 125000;
+		entry.pre   = 12;
+		entry.tseg1 = 13;
+		entry.tseg2 = 3;
+		entry.sjw   = 1;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 500000;
-	entry.pre   = 3;
-	entry.tseg1 = 13;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 250000;
+		entry.pre   = 6;
+		entry.tseg1 = 12;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 800000;
-	entry.pre   = 3;
-	entry.tseg1 = 7;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 500000;
+		entry.pre   = 3;
+		entry.tseg1 = 13;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 1000000;
-	entry.pre   = 3;
-	entry.tseg1 = 5;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 800000;
+		entry.pre   = 3;
+		entry.tseg1 = 7;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 2000000;
-	entry.pre   = 2;
-	entry.tseg1 = 4;
-	entry.tseg2 = 1;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+		entry.rate  = 1000000;
+		entry.pre   = 3;
+		entry.tseg1 = 5;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_24mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 6000000;
-	entry.pre   = 1;
-	entry.tseg1 = 1;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+		entry.rate  = 2000000;
+		entry.pre   = 2;
+		entry.tseg1 = 4;
+		entry.tseg2 = 1;
+		entry.sjw   = 1;
+		table_24mhz.m_data_table[entry.rate] = entry;
+
+		entry.rate  = 6000000;
+		entry.pre   = 1;
+		entry.tseg1 = 1;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_24mhz.m_data_table[entry.rate] = entry;
+	}
 
 	/// 60MHz
-	clock = 60000000;
-	entry.rate  = 250000;
-	entry.pre   = 24;
-	entry.tseg1 = 7;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+	{
+		const int clock = 60000000;
+		auto& table_60mhz = m_bitrate_tables[clock];
 
-	entry.rate  = 500000;
-	entry.pre   = 12;
-	entry.tseg1 = 7;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 250000;
+		entry.pre   = 24;
+		entry.tseg1 = 7;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_60mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 1000000;
-	entry.pre   = 5;
-	entry.tseg1 = 8;
-	entry.tseg2 = 3;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 500000;
+		entry.pre   = 12;
+		entry.tseg1 = 7;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_60mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 2000000;
-	entry.pre   = 3;
-	entry.tseg1 = 7;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+		entry.rate  = 1000000;
+		entry.pre   = 5;
+		entry.tseg1 = 8;
+		entry.tseg2 = 3;
+		entry.sjw   = 1;
+		table_60mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 4000000;
-	entry.pre   = 3;
-	entry.tseg1 = 3;
-	entry.tseg2 = 1;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+		entry.rate  = 2000000;
+		entry.pre   = 3;
+		entry.tseg1 = 7;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_60mhz.m_data_table[entry.rate] = entry;
 
-	entry.rate  = 6000000;
-	entry.pre   = 2;
-	entry.tseg1 = 3;
-	entry.tseg2 = 1;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+		entry.rate  = 4000000;
+		entry.pre   = 3;
+		entry.tseg1 = 3;
+		entry.tseg2 = 1;
+		entry.sjw   = 1;
+		table_60mhz.m_data_table[entry.rate] = entry;
 
-	entry.rate  = 10000000;
-	entry.pre   = 1;
-	entry.tseg1 = 3;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+		entry.rate  = 6000000;
+		entry.pre   = 2;
+		entry.tseg1 = 3;
+		entry.tseg2 = 1;
+		entry.sjw   = 1;
+		table_60mhz.m_data_table[entry.rate] = entry;
 
-	entry.rate  = 12000000;
-	entry.pre   = 1;
-	entry.tseg1 = 2;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+		entry.rate  = 10000000;
+		entry.pre   = 1;
+		entry.tseg1 = 3;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_60mhz.m_data_table[entry.rate] = entry;
 
-	/// 80MHz
-	clock = 80000000;
-	entry.rate  = 250000;
-	entry.pre   = 20;
-	entry.tseg1 = 12;
-	entry.tseg2 = 3;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		entry.rate  = 12000000;
+		entry.pre   = 1;
+		entry.tseg1 = 2;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_60mhz.m_data_table[entry.rate] = entry;
 
-	entry.rate  = 500000;
-	entry.pre   = 10;
-	entry.tseg1 = 12;
-	entry.tseg2 = 3;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+		/// 80MHz
+		{
+			const int clock = 80000000;
+			auto& table_80mhz = m_bitrate_tables[clock];
 
-	entry.rate  = 1000000;
-	entry.pre   = 10;
-	entry.tseg1 = 5;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_nominal_table[entry.rate] = entry;
+			entry.rate  = 250000;
+			entry.pre   = 20;
+			entry.tseg1 = 12;
+			entry.tseg2 = 3;
+			entry.sjw   = 1;
+			table_80mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 2000000;
-	entry.pre   = 4;
-	entry.tseg1 = 7;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+			entry.rate  = 500000;
+			entry.pre   = 10;
+			entry.tseg1 = 12;
+			entry.tseg2 = 3;
+			entry.sjw   = 1;
+			table_80mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 4000000;
-	entry.pre   = 2;
-	entry.tseg1 = 7;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+			entry.rate  = 1000000;
+			entry.pre   = 10;
+			entry.tseg1 = 5;
+			entry.tseg2 = 2;
+			entry.sjw   = 1;
+			table_80mhz.m_nominal_table[entry.rate] = entry;
 
-	entry.rate  = 8000000;
-	entry.pre   = 4;
-	entry.tseg1 = 7;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+			entry.rate  = 2000000;
+			entry.pre   = 4;
+			entry.tseg1 = 7;
+			entry.tseg2 = 2;
+			entry.sjw   = 1;
+			table_80mhz.m_data_table[entry.rate] = entry;
 
-	entry.rate  = 10000000;
-	entry.pre   = 1;
-	entry.tseg1 = 5;
-	entry.tseg2 = 2;
-	entry.sjw   = 1;
-	m_bitrate_tables[clock].m_data_table[entry.rate] = entry;
+			entry.rate  = 4000000;
+			entry.pre   = 2;
+			entry.tseg1 = 7;
+			entry.tseg2 = 2;
+			entry.sjw   = 1;
+			table_80mhz.m_data_table[entry.rate] = entry;
+
+			entry.rate  = 8000000;
+			entry.pre   = 4;
+			entry.tseg1 = 7;
+			entry.tseg2 = 2;
+			entry.sjw   = 1;
+			table_80mhz.m_data_table[entry.rate] = entry;
+
+			entry.rate  = 10000000;
+			entry.pre   = 1;
+			entry.tseg1 = 5;
+			entry.tseg2 = 2;
+			entry.sjw   = 1;
+			table_80mhz.m_data_table[entry.rate] = entry;
+		}
+	}
 }
 
 bool CAN_USB_app_bitrate_table::to_xml(tinyxml2::XMLDocument* const table_doc) const

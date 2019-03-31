@@ -25,3 +25,9 @@
 [submodule "external/mbedtls"]
 	path = external/mbedtls
 	url = git@bitbucket.org:suburbanmarine/mbedtls.git
+[submodule "external/bootloader_util"]
+	path = external/bootloader_util
+	url = git@bitbucket.org:jschloss_sm/bootloader_util.git
+[submodule "external/crc"]
+	path = external/crc
+	url = git@bitbucket.org:suburbanmarine/crc.git

@@ -145,6 +145,8 @@ class Lawicel_parser
 	bool parse_fd_dlc(const char dlc_char, uint8_t* const data_len);
 	bool parse_fd_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 64>* const data);
 
+	bool parse_extended_cmd(const char* in_str);
+
 	bool write_bell();
 	bool write_cr();
 

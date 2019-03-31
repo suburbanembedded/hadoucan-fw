@@ -54,12 +54,14 @@ target_include_directories(spiffs PUBLIC
 add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
 add_subdirectory(external/tinyxml2)
 add_subdirectory(external/mbedtls)
+add_subdirectory(external/crc)
 
-add_subdirectory(external/freertos_cpp_util)
+add_subdirectory(external/bootloader_util)
 add_subdirectory(external/common_util)
 add_subdirectory(external/emb_fs_util)
-add_subdirectory(external/tinyxml2_util)
+add_subdirectory(external/freertos_cpp_util)
 add_subdirectory(external/mbedtls_util)
+add_subdirectory(external/tinyxml2_util)
 
 add_executable(canusbfdiso.elf
 	src/system_stm32h7xx.c
@@ -117,15 +119,18 @@ target_link_libraries(canusbfdiso.elf
 	freertos_v9
 	freertos_v9_cmsis
 
+	bootloader_util
 	common_util
-	freertos_cpp_util
 
-	tinyxml2_util
+	freertos_cpp_util
 	mbedtls_util
+	tinyxml2_util
 
 	spi_flash
 	spiffs_flash
 	spiffs_util
+
+	crc
 
 	tinyxml2_static
 
