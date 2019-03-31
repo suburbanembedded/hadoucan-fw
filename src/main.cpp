@@ -847,12 +847,6 @@ int main(void)
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "CAN FD <-> USB Adapter");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
-	
-		const uint32_t main_ptr = reinterpret_cast<uint32_t>(&main);
-		uart1_log<64>(LOG_LEVEL::DEBUG, "main", "main: 0x%08" PRIX32, main_ptr);
-
-		const uint32_t stack_ptr = __get_MSP();
-		uart1_log<64>(LOG_LEVEL::DEBUG, "main", "msp:  0x%08" PRIX32, stack_ptr);
 	}
 
 	// Switch to heap5?

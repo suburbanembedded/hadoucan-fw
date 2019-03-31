@@ -26,6 +26,8 @@ public:
 
 	struct Config_Set
 	{
+		unsigned config_version;
+
 		bool autopoll;
 		bool listen_only;
 
@@ -64,7 +66,9 @@ public:
 	}
 
 	void set_defualt()
-	{			
+	{	
+		m_config.config_version = 0;
+
 		m_config.autopoll = false;
 		m_config.listen_only = false;
 

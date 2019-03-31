@@ -12,7 +12,9 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 	}
 
 	tinyxml2::XMLElement* config_doc_root = config_doc->NewElement("config");
+	config_doc_root->SetAttribute("version", m_config.config_version);
 	config_doc->InsertEndChild(config_doc_root);
+
 
 	//General Config Settings
 	tinyxml2::XMLElement* node = config_doc->NewElement("autopoll");
@@ -201,6 +203,12 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 	if(config_root == nullptr)
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element config");
+		return false;
+	}
+
+	if(config_root->QueryUnsignedAttribute("version", &m_config.config_version) != tinyxml2::XML_SUCCESS)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find attr version");
 		return false;
 	}
 
