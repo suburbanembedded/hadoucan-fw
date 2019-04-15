@@ -81,6 +81,11 @@ public:
 		return true;
 	}
 
+	void swap(CAN_USB_app_bitrate_table& other)
+	{
+		m_bitrate_tables.swap(other.m_bitrate_tables);
+	}
+
 protected:
 	Bitrate_Table_Set m_bitrate_tables;
 };

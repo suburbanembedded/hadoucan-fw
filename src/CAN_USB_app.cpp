@@ -15,16 +15,21 @@ CAN_USB_app::~CAN_USB_app()
 bool CAN_USB_app::load_config()
 {
 	tinyxml2::XMLDocument config_doc;
-	if(!load_xml_file("config.xml", &config_doc))
-	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening config.xml failed");
-		return false;
-	}
 
-	if(!m_config.from_xml(config_doc))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing config.xml failed");
-		return false;
+		std::lock_guard<Mutex_static_recursive> lock(m_mutex);
+
+		if(!load_xml_file(m_fs.get_fs(), "config.xml", &config_doc))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening config.xml failed");
+			return false;
+		}
+
+		if(!m_config.from_xml(config_doc))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing config.xml failed");
+			return false;
+		}
 	}
 
 	return true;
@@ -33,15 +38,44 @@ bool CAN_USB_app::load_config()
 bool CAN_USB_app::load_bitrate_table()
 {
 	tinyxml2::XMLDocument table_doc;
-	if(!load_xml_file("table.xml", &table_doc))
+
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening table.xml failed");
+		std::lock_guard<Mutex_static_recursive> lock(m_mutex);
+
+		if(!load_xml_file(m_fs.get_fs(), "table.xml", &table_doc))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening table.xml failed");
+		}
+
+		if(!m_bitrate_tables.from_xml(table_doc))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing table.xml failed");
+			return false;
+		}
 	}
 
-	if(!m_bitrate_tables.from_xml(table_doc))
+	return true;
+}
+
+bool CAN_USB_app::write_config(const CAN_USB_app_config& config)
+{
+	tinyxml2::XMLDocument config_doc;
+	if(!config.to_xml(&config_doc))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing table.xml failed");
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app::write_config", "config to xml failed");
 		return false;
+	}
+
+	{
+		std::lock_guard<Mutex_static_recursive> lock(m_mutex);
+	
+		if(!write_xml_file(m_fs.get_fs(), "config.xml", config_doc))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app::write_config", "Writing config.xml failed");
+			return false;
+		}
+
+		m_config = config;
 	}
 
 	return true;
@@ -51,19 +85,7 @@ bool CAN_USB_app::write_default_config()
 {
 	CAN_USB_app_config default_config;
 
-	tinyxml2::XMLDocument config_doc;
-	if(!default_config.to_xml(&config_doc))
-	{
-		return false;
-	}
-
-	if(!write_xml_file("config.xml", config_doc))
-	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing config.xml failed");
-		return false;
-	}
-
-	return true;
+	return write_config(default_config);
 }
 bool CAN_USB_app::write_default_bitrate_table()
 {
@@ -76,42 +98,48 @@ bool CAN_USB_app::write_default_bitrate_table()
 		return false;
 	}
 
-	if(!write_xml_file("table.xml", table_doc))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing table.xml failed");
-		return false;
+		std::lock_guard<Mutex_static_recursive> lock(m_mutex);
+
+		if(!write_xml_file(m_fs.get_fs(), "table.xml", table_doc))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing table.xml failed");
+			return false;
+		}
+
+		m_bitrate_tables.swap(default_table);
 	}
 
 	return true;
 }
 
-bool CAN_USB_app::load_xml_file(const char* name, tinyxml2::XMLDocument* const out_xml)
+bool CAN_USB_app::load_xml_file(spiffs* const fs, const char* name, tinyxml2::XMLDocument* const out_xml)
 {
-	spiffs_file fd = SPIFFS_open(m_fs.get_fs(), name, SPIFFS_RDONLY, 0);
+	spiffs_file fd = SPIFFS_open(fs, name, SPIFFS_RDONLY, 0);
 	if(fd < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
 	spiffs_stat stat;
-	if(SPIFFS_fstat(m_fs.get_fs(), fd, &stat) < 0)
+	if(SPIFFS_fstat(fs, fd, &stat) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Getting size of %s: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Getting size of %s: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
 	std::vector<char> data;
 	data.resize(stat.size);
-	if(SPIFFS_read(m_fs.get_fs(), fd, data.data(), data.size()) < 0)
+	if(SPIFFS_read(fs, fd, data.data(), data.size()) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Reading %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Reading %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
-	if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
+	if(SPIFFS_close(fs, fd) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
@@ -126,7 +154,7 @@ bool CAN_USB_app::load_xml_file(const char* name, tinyxml2::XMLDocument* const o
 	return true;
 }
 
-bool CAN_USB_app::write_xml_file(const char* name, const tinyxml2::XMLDocument& xml)
+bool CAN_USB_app::write_xml_file(spiffs* const fs, const char* name, const tinyxml2::XMLDocument& xml)
 {
 	tinyxml2::XMLPrinter xml_printer(nullptr, false, 0);
 	xml.Print(&xml_printer);
@@ -150,22 +178,22 @@ bool CAN_USB_app::write_xml_file(const char* name, const tinyxml2::XMLDocument& 
 	}
 
 	uart1_log<128>(LOG_LEVEL::INFO, "CAN_USB_app", "Writing %s", name);
-	spiffs_file fd = SPIFFS_open(m_fs.get_fs(), name, SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
+	spiffs_file fd = SPIFFS_open(fs, name, SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
 	if(fd < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
-	if(SPIFFS_write(m_fs.get_fs(), fd, const_cast<char*>(doc_str), doc_str_len) < 0)
+	if(SPIFFS_write(fs, fd, const_cast<char*>(doc_str), doc_str_len) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
-	if(SPIFFS_close(m_fs.get_fs(), fd) < 0)
+	if(SPIFFS_close(fs, fd) < 0)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(m_fs.get_fs()));
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 	uart1_log<128>(LOG_LEVEL::INFO, "CAN_USB_app", "Write %s success", name);

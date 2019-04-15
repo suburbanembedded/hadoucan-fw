@@ -87,7 +87,7 @@ public:
 		m_config.can_clock = 24000000;
 		// m_config.can_clock = 60000000;
 		m_config.bitrate_nominal = 500000;
-		m_config.bitrate_data = 4000000;
+		m_config.bitrate_data = 2000000;
 
 		m_config.protocol_ext_id = true;
 		m_config.protocol_fd = true;

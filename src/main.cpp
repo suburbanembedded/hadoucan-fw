@@ -69,8 +69,10 @@ public:
 		mount_fs();
 		load_config();
 
-		const CAN_USB_app_config::Config_Set& config_struct = can_usb_app.get_config();
-		const CAN_USB_app_bitrate_table& bitrate_table = can_usb_app.get_bitrate_tables();
+		CAN_USB_app_config::Config_Set config_struct;
+		can_usb_app.get_config(&config_struct);
+		CAN_USB_app_bitrate_table bitrate_table;
+		can_usb_app.get_bitrate_tables(&bitrate_table);
 		
 		can_tx.set_config(config_struct);
 		can_tx.set_bitrate_table(bitrate_table);
@@ -118,61 +120,17 @@ public:
 	{
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
 
-		W25Q16JV& m_qspi = can_usb_app.get_flash();
-		W25Q16JV_conf_region& m_fs = can_usb_app.get_fs();
-
-		m_qspi.set_handle(&hqspi);
-
-		if(!m_qspi.init())
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "main", "m_qspi.init failed");
+			std::lock_guard<Mutex_static_recursive> lock(can_usb_app.get_mutex());
 
-			for(;;)
+			W25Q16JV& m_qspi = can_usb_app.get_flash();
+			W25Q16JV_conf_region& m_fs = can_usb_app.get_fs();
+
+			m_qspi.set_handle(&hqspi);
+
+			if(!m_qspi.init())
 			{
-				vTaskSuspend(nullptr);
-			}
-		}
-
-		m_fs.initialize();
-		m_fs.set_flash(&m_qspi);
-
-		uint8_t mfg_id = 0;
-		uint16_t flash_pn = 0;
-		if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
-		{
-			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash mfg id %02" PRIX32, uint32_t(mfg_id));
-			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash pn %04" PRIX32, uint32_t(flash_pn));
-		}
-		else
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_jdec_id failed");
-		}
-
-		uint64_t unique_id = 0;
-		if(m_qspi.get_unique_id(&unique_id))
-		{
-			// uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %016" PRIX64, unique_id);
-			//aparently PRIX64 is broken
-			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
-		}
-		else
-		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_unique_id failed");
-		}
-
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "Mounting flash fs");
-		int mount_ret = m_fs.mount();
-		if(mount_ret != SPIFFS_OK)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "main", "Flash mount failed: %d", mount_ret);
-			uart1_log<128>(LOG_LEVEL::ERROR, "main", "You will need to reload the config");
-
-			uart1_log<128>(LOG_LEVEL::INFO, "main", "Format flash");
-			int format_ret = m_fs.format();
-			if(format_ret != SPIFFS_OK)
-			{
-				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash format failed: %d", format_ret);
-				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
+				uart1_log<64>(LOG_LEVEL::ERROR, "main", "m_qspi.init failed");
 
 				for(;;)
 				{
@@ -180,46 +138,94 @@ public:
 				}
 			}
 
+			m_fs.initialize();
+			m_fs.set_flash(&m_qspi);
+
+			uint8_t mfg_id = 0;
+			uint16_t flash_pn = 0;
+			if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
+			{
+				uart1_log<128>(LOG_LEVEL::INFO, "main", "flash mfg id %02" PRIX32, uint32_t(mfg_id));
+				uart1_log<128>(LOG_LEVEL::INFO, "main", "flash pn %04" PRIX32, uint32_t(flash_pn));
+			}
+			else
+			{
+				uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_jdec_id failed");
+			}
+
+			uint64_t unique_id = 0;
+			if(m_qspi.get_unique_id(&unique_id))
+			{
+				// uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %016" PRIX64, unique_id);
+				//aparently PRIX64 is broken
+				uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
+			}
+			else
+			{
+				uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_unique_id failed");
+			}
+
 			uart1_log<64>(LOG_LEVEL::INFO, "main", "Mounting flash fs");
-			mount_ret = m_fs.mount();
+			int mount_ret = m_fs.mount();
 			if(mount_ret != SPIFFS_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash mount failed right after we formatted it: %d", mount_ret);
-				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
+				uart1_log<128>(LOG_LEVEL::ERROR, "main", "Flash mount failed: %d", mount_ret);
+				uart1_log<128>(LOG_LEVEL::ERROR, "main", "You will need to reload the config");
 
-				for(;;)
+				uart1_log<128>(LOG_LEVEL::INFO, "main", "Format flash");
+				int format_ret = m_fs.format();
+				if(format_ret != SPIFFS_OK)
 				{
-					vTaskSuspend(nullptr);
+					uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash format failed: %d", format_ret);
+					uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
+
+					for(;;)
+					{
+						vTaskSuspend(nullptr);
+					}
+				}
+
+				uart1_log<64>(LOG_LEVEL::INFO, "main", "Mounting flash fs");
+				mount_ret = m_fs.mount();
+				if(mount_ret != SPIFFS_OK)
+				{
+					uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash mount failed right after we formatted it: %d", mount_ret);
+					uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
+
+					for(;;)
+					{
+						vTaskSuspend(nullptr);
+					}
+				}
+				else
+				{
+					uart1_log<64>(LOG_LEVEL::INFO, "main", "Flash mount ok");
+				}
+
+				//write default config
+				if(!can_usb_app.write_default_config())
+				{
+					uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default config failed");
+
+					for(;;)
+					{
+						vTaskSuspend(nullptr);
+					}
+				}
+				if(!can_usb_app.write_default_bitrate_table())
+				{
+					uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
+
+					for(;;)
+					{
+						vTaskSuspend(nullptr);
+					}
 				}
 			}
 			else
 			{
 				uart1_log<64>(LOG_LEVEL::INFO, "main", "Flash mount ok");
 			}
-
-			//write default config
-			if(!can_usb_app.write_default_config())
-			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default config failed");
-
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
-			}
-			if(!can_usb_app.write_default_bitrate_table())
-			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
-
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
-			}
-		}
-		else
-		{
-			uart1_log<64>(LOG_LEVEL::INFO, "main", "Flash mount ok");
 		}
 
 		return true;

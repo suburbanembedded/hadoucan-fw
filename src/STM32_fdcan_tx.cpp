@@ -4,9 +4,143 @@
 
 #include "uart1_printf.hpp"
 
+#include "stm32h7xx_hal_rcc.h"
+#include "stm32h7xx_hal_rcc_ex.h"
+
 #include <array>
 #include <algorithm>
 #include <stdexcept>
+
+bool set_can_clk(const uint32_t can_clk)
+{
+	const uint32_t hse_clk = HSE_VALUE;
+	if(hse_clk != 24000000U)
+	{
+		return false;
+	}
+
+	RCC_PeriphCLKInitTypeDef periph_config;
+	HAL_RCCEx_GetPeriphCLKConfig(&periph_config);
+
+	bool ret = false;
+	switch(periph_config.FdcanClockSelection)
+	{
+		case RCC_FDCANCLKSOURCE_HSE:
+		{
+			ret = true;
+			break;
+		}
+		case RCC_FDCANCLKSOURCE_PLL:
+		{
+			ret = false;
+			break;
+		}
+		case RCC_FDCANCLKSOURCE_PLL2:
+		{
+			switch(can_clk)
+			{
+				case 24000000U:
+				{
+					periph_config.PLL2.PLL2M = 2;
+					periph_config.PLL2.PLL2N = 20;
+					periph_config.PLL2.PLL2Q = 10;
+
+					ret = true;
+					break;
+				}
+				case 60000000U:
+				{
+					periph_config.PLL2.PLL2M = 2;
+					periph_config.PLL2.PLL2N = 20;
+					periph_config.PLL2.PLL2Q = 4;
+
+					ret = true;
+					break;
+				}
+				case 80000000U:
+				{
+					periph_config.PLL2.PLL2M = 2;
+					periph_config.PLL2.PLL2N = 20;
+					periph_config.PLL2.PLL2Q = 3;
+
+					ret = true;
+					break;
+				}
+				default:
+				{
+					ret = false;
+					break;
+				}
+			}
+
+			break;
+		}
+		default:
+		{
+			ret = false;
+			break;
+		}
+	}
+
+	if(ret == true)
+	{
+		if(HAL_RCCEx_PeriphCLKConfig(&periph_config) != HAL_OK)
+		{
+			ret = false;
+		}
+	}
+
+	return ret;
+}
+
+bool get_can_clk(uint32_t* const can_clk)
+{
+	const uint32_t hse_clk = HSE_VALUE;
+
+	RCC_PeriphCLKInitTypeDef periph_config;
+	HAL_RCCEx_GetPeriphCLKConfig(&periph_config);
+
+	bool ret = false;
+	switch(periph_config.FdcanClockSelection)
+	{
+		case RCC_FDCANCLKSOURCE_HSE:
+		{
+			*can_clk = hse_clk;
+			ret = true;
+			break;
+		}
+		case RCC_FDCANCLKSOURCE_PLL:
+		{
+			RCC_OscInitTypeDef pll_config;
+			HAL_RCC_GetOscConfig(&pll_config);
+
+			const uint32_t m = pll_config.PLL.PLLM;
+			const uint32_t n = pll_config.PLL.PLLN;
+			const uint32_t q = pll_config.PLL.PLLQ;
+
+			*can_clk = ((hse_clk / m) * n) / q;
+			ret = true;
+			break;
+		}
+		case RCC_FDCANCLKSOURCE_PLL2:
+		{
+			const uint32_t m = periph_config.PLL2.PLL2M;
+			const uint32_t n = periph_config.PLL2.PLL2N;
+			const uint32_t q = periph_config.PLL2.PLL2Q;
+
+			*can_clk = ((hse_clk / m) * n) / q;
+			ret = true;
+			break;
+		}
+		default:
+		{
+			ret = false;
+			break;
+		}
+	}
+
+	return ret;
+}
 
 bool STM32_fdcan_tx::init()
 {

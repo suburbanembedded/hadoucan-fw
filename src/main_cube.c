@@ -274,9 +274,11 @@ void SystemClock_Config(void)
   PeriphClkInitStruct.PLL2.PLL2M = 2;//12 MHz
   PeriphClkInitStruct.PLL2.PLL2N = 20;//240 MHz
   PeriphClkInitStruct.PLL2.PLL2P = 2;
+  
   // PeriphClkInitStruct.PLL2.PLL2Q = 3;//80 MHz
   // PeriphClkInitStruct.PLL2.PLL2Q = 4;//60 MHz
-  PeriphClkInitStruct.PLL2.PLL2Q = 24;//24 MHz
+  PeriphClkInitStruct.PLL2.PLL2Q = 10;//24 MHz
+
   PeriphClkInitStruct.PLL2.PLL2R = 3;
   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;

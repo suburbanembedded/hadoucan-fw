@@ -99,6 +99,10 @@ class Lawicel_parser
 	
 	virtual bool handle_set_timestamp(const bool enable) = 0;
 
+	virtual bool handle_ext_config() = 0;
+	virtual bool handle_ext_defconfig() = 0;
+	virtual bool handle_ext_bootloader() = 0;
+
 	protected:
 
 	bool handle_poll_one(std::string* const out_line);

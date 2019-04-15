@@ -2,8 +2,6 @@
 
 #include "CAN_DLC.hpp"
 
-#include "bootloader_util/Bootloader_key.hpp"
-
 #include "common_util/Byte_util.hpp"
 
 #include "uart1_printf.hpp"
@@ -1112,38 +1110,22 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	const char bootloader_str[] = "!bootloader\r";
 	const size_t bootloader_str_len = strlen(bootloader_str);
 
+	bool ret = false;
+
 	//TODO: this does not compare substrings as true
 	if(strncmp(in_str, config_str, config_str_len) == 0)
 	{
-
+		ret = handle_ext_config();
 	}
 	else if(strncmp(in_str, defconfig_str, defconfig_str_len) == 0)
 	{
-
+		ret = handle_ext_defconfig();
 	}
 	else if(strncmp(in_str, bootloader_str, bootloader_str_len) == 0)
 	{
 		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Rebooting to bootloader");
 
-		Bootloader_key key;
-		key.update_magic_sig();
-		key.bootloader_op = static_cast<uint8_t>(Bootloader_key::Bootloader_ops::RUN_BOOTLDR);
-		key.update_crc();
-
-		key.to_addr(reinterpret_cast<uint8_t*>(0x38800000));
-
-		//Disable ISR, sync
-		asm volatile(
-			"cpsid i\n"
-			"dsb 0xF\n"
-			"isb 0xF\n"
-			: /* no out */
-			: /* no in */
-			: "memory"
-			);
-
-		//reboot
-		NVIC_SystemReset();
+		ret = handle_ext_bootloader();
 	}
 	else
 	{
@@ -1154,7 +1136,7 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	}
 
 	write_cr();
-	return true;
+	return ret;
 }
 
 bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
