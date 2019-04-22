@@ -168,7 +168,6 @@ bool Lawicel_parser_stm32::handle_ext_print_config()
 
 	tinyxml2::XMLPrinter xml_printer(nullptr, false, 0);
 	config_doc.Print(&xml_printer);
-
 	const char* doc_str = xml_printer.CStr();
 
 	uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32", "Printing config file");
@@ -196,7 +195,24 @@ bool Lawicel_parser_stm32::handle_ext_bitrate_table(const std::vector<char>& tab
 }
 bool Lawicel_parser_stm32::handle_ext_print_bitrate_table()
 {
-	return false;
+	CAN_USB_app_bitrate_table table;
+	can_usb_app.get_bitrate_tables(&table);
+
+	tinyxml2::XMLDocument table_doc;
+	if(!table.to_xml(&table_doc))
+	{
+		return false;
+	}
+
+	tinyxml2::XMLPrinter xml_printer(nullptr, false, 0);
+	table_doc.Print(&xml_printer);
+	const char* doc_str = xml_printer.CStr();
+
+	uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32", "Printing bitrate table");
+	uart1_puts(doc_str);
+	uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32", "End of bitrate table");
+
+	return true;
 }
 bool Lawicel_parser_stm32::handle_ext_defconfig()
 {
