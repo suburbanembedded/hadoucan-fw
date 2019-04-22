@@ -24,3 +24,16 @@ const char* LOG_LEVEL_to_str(const LOG_LEVEL level)
 
 	return "UNKNOWN";
 }
+
+bool uart1_puts(const char* str)
+{
+	const size_t num_to_print = strlen(str);
+
+	HAL_StatusTypeDef uartret;
+	{
+		std::lock_guard<Mutex_static> lock(m_uart1_mutex);
+		uartret = HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(str)), num_to_print, -1);
+	}
+
+	return uartret == HAL_OK;
+}

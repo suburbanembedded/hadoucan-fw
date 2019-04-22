@@ -100,7 +100,12 @@ add_executable(canusbfdiso.elf
 	src/lawicel/Lawicel_parser_stm32.cpp
 
 	src/STM32_fdcan_tx.cpp
-	src/STM32_fdcan_rx.cpp
+
+	src/tasks/STM32_fdcan_rx.cpp
+	src/tasks/LED_task.cpp
+	src/tasks/Timesync_task.cpp
+	src/tasks/USB_lawicel_task.cpp
+
 
 	src/CAN_USB_app.cpp
 	src/CAN_USB_app_config.cpp

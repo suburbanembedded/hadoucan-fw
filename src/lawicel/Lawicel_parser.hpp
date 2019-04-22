@@ -5,6 +5,7 @@
 #include "freertos_cpp_util/Mutex_static.hpp"
 
 #include <array>
+#include <vector>
 #include <deque>
 #include <functional>
 #include <mutex>
@@ -53,6 +54,11 @@ class Lawicel_parser
 		m_poll_mode = POLL_MODE::MANUAL;
 	}
 
+	virtual ~Lawicel_parser()
+	{
+
+	}
+
 	bool queue_rx_packet(const std::string& packet_str);
 
 	void set_write_string_func(WriteStringCallback func)
@@ -99,7 +105,10 @@ class Lawicel_parser
 	
 	virtual bool handle_set_timestamp(const bool enable) = 0;
 
-	virtual bool handle_ext_config() = 0;
+	virtual bool handle_ext_config(const std::vector<char>& config) = 0;
+	virtual bool handle_ext_print_config() = 0;
+	virtual bool handle_ext_bitrate_table(const std::vector<char>& table) = 0;
+	virtual bool handle_ext_print_bitrate_table() = 0;
 	virtual bool handle_ext_defconfig() = 0;
 	virtual bool handle_ext_bootloader() = 0;
 

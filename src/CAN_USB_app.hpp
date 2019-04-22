@@ -6,6 +6,8 @@
 #include "W25Q16JV.hpp"
 #include "W25Q16JV_conf_region.hpp"
 
+#include "STM32_fdcan_tx.hpp"
+
 #include "freertos_cpp_util/Mutex_static_recursive.hpp"
 
 #include "../external/tinyxml2/tinyxml2.h"
@@ -23,6 +25,8 @@ public:
 
 	bool write_config(const CAN_USB_app_config& config);
 	bool write_default_config();
+
+	bool write_bitrate_table(const CAN_USB_app_bitrate_table& table);
 	bool write_default_bitrate_table();
 
 	Mutex_static_recursive& get_mutex()
@@ -39,6 +43,11 @@ public:
 		return m_fs; 
 	}
 
+	void get_config(CAN_USB_app_config* const out_config) const
+	{
+		std::lock_guard<Mutex_static_recursive> lock(m_mutex);
+		*out_config = m_config;
+	}
 	void get_config(CAN_USB_app_config::Config_Set* const out_config) const
 	{
 		std::lock_guard<Mutex_static_recursive> lock(m_mutex);
@@ -48,6 +57,11 @@ public:
 	{
 		std::lock_guard<Mutex_static_recursive> lock(m_mutex);
 		*out_table = m_bitrate_tables;
+	}
+
+	STM32_fdcan_tx& get_can_tx()
+	{
+		return can_tx;
 	}
 
 protected:
@@ -60,6 +74,8 @@ protected:
 
 	W25Q16JV m_qspi;
 	W25Q16JV_conf_region m_fs;
+
+	STM32_fdcan_tx can_tx;
 
 	mutable Mutex_static_recursive m_mutex;
 };

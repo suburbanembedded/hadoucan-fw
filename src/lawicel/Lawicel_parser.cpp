@@ -1101,8 +1101,19 @@ bool Lawicel_parser::parse_auto_poll(const char* in_str)
 
 bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 {
+	const size_t in_str_len = strlen(in_str);
+
 	const char config_str[] = "!config";
 	const size_t config_str_len = strlen(config_str);
+
+	const char printconfig_str[] = "!printconfig\r";
+	const size_t printconfig_str_len = strlen(printconfig_str);
+
+	const char table_str[] = "!table";
+	const size_t table_str_len = strlen(table_str);
+
+	const char printtable_str[] = "!printtable\r";
+	const size_t printtable_str_len = strlen(printtable_str);
 
 	const char defconfig_str[] = "!defconfig\r";
 	const size_t defconfig_str_len = strlen(defconfig_str);
@@ -1115,7 +1126,35 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	//TODO: this does not compare substrings as true
 	if(strncmp(in_str, config_str, config_str_len) == 0)
 	{
-		ret = handle_ext_config();
+		auto it = std::find(in_str, in_str+in_str_len, ':');
+
+		if(it == (in_str+in_str_len))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_extended_cmd", "Parsing config failed");
+		}
+
+		std::vector<char> config_str(it, in_str+in_str_len);
+		ret = handle_ext_config(config_str);
+	}
+	else if(strncmp(in_str, printconfig_str, printconfig_str_len) == 0)
+	{
+		ret = handle_ext_print_config();
+	}
+	else if(strncmp(in_str, table_str, table_str_len) == 0)
+	{
+		auto it = std::find(in_str, in_str+in_str_len, ':');
+
+		if(it == (in_str+in_str_len))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_extended_cmd", "Parsing table failed");
+		}
+
+		std::vector<char> table_str(it, in_str+in_str_len);
+		ret = handle_ext_bitrate_table(table_str);
+	}
+	else if(strncmp(in_str, printtable_str, printtable_str_len) == 0)
+	{
+		ret = handle_ext_print_bitrate_table();
 	}
 	else if(strncmp(in_str, defconfig_str, defconfig_str_len) == 0)
 	{

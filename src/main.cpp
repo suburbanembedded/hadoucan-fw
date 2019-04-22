@@ -11,12 +11,11 @@
 #include "USB_tx_buffer_task.hpp"
 
 #include "lawicel/Lawicel_parser_stm32.hpp"
-#include "STM32_fdcan_rx.hpp"
-#include "STM32_fdcan_tx.hpp"
 
 #include "tasks/USB_lawicel_task.hpp"
 #include "tasks/LED_task.hpp"
 #include "tasks/Timesync_task.hpp"
+#include "tasks/STM32_fdcan_rx.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
@@ -33,10 +32,6 @@
 
 #include "../external/tinyxml2/tinyxml2.h"
 
-#include <array>
-#include <map>
-#include <vector>
-#include <algorithm>
 #include <cstdio>
 #include <cinttypes>
 
@@ -53,8 +48,6 @@ LED_task led_task __attribute__(( section(".ram_dtcm_noload") ));
 USB_lawicel_task usb_lawicel_task __attribute__(( section(".ram_dtcm_noload") ));
 
 Timesync_task timesync_task __attribute__(( section(".ram_dtcm_noload") ));
-
-STM32_fdcan_tx can_tx;
 
 bool can_rx_to_lawicel(const std::string& str)
 {
@@ -74,14 +67,14 @@ public:
 		CAN_USB_app_bitrate_table bitrate_table;
 		can_usb_app.get_bitrate_tables(&bitrate_table);
 		
-		can_tx.set_config(config_struct);
-		can_tx.set_bitrate_table(bitrate_table);
+		can_usb_app.get_can_tx().set_config(config_struct);
+		can_usb_app.get_can_tx().set_bitrate_table(bitrate_table);
 
 		//init
 		usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
 		usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
 
-		usb_lawicel_task.set_can_tx(&can_tx);
+		usb_lawicel_task.set_can_tx(&can_usb_app.get_can_tx());
 		usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
 		usb_lawicel_task.set_usb_rx(&usb_rx_buffer_task);
 

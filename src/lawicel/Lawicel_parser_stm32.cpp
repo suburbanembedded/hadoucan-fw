@@ -4,6 +4,8 @@
 
 #include "global_app_inst.hpp"
 
+#include "uart1_printf.hpp"
+
 #include <algorithm>
 
 bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
@@ -136,21 +138,78 @@ bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
 	return false;
 }
 
-bool Lawicel_parser_stm32::handle_ext_config()
+bool Lawicel_parser_stm32::handle_ext_config(const std::vector<char>& config_str)
 {
 	tinyxml2::XMLDocument config_doc;
+	tinyxml2::XMLError err = config_doc.Parse(config_str.data(), config_str.size());
+	if(err != tinyxml2::XML_SUCCESS)
+	{
+		return false;
+	}
 
 	CAN_USB_app_config config;
 	if(!config.from_xml(config_doc))
 	{
-
+		return false;
 	}
 
 	return can_usb_app.write_config(config);
 }
+bool Lawicel_parser_stm32::handle_ext_print_config()
+{
+	CAN_USB_app_config config;
+	can_usb_app.get_config(&config);
+
+	tinyxml2::XMLDocument config_doc;
+	if(!config.to_xml(&config_doc))
+	{
+		return false;
+	}
+
+	tinyxml2::XMLPrinter xml_printer(nullptr, false, 0);
+	config_doc.Print(&xml_printer);
+
+	const char* doc_str = xml_printer.CStr();
+
+	uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32", "Printing config file");
+	uart1_puts(doc_str);
+	uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32", "End of config file");
+
+	return true;
+}
+bool Lawicel_parser_stm32::handle_ext_bitrate_table(const std::vector<char>& table_str)
+{
+	tinyxml2::XMLDocument table_doc;
+	tinyxml2::XMLError err = table_doc.Parse(table_str.data(), table_str.size());
+	if(err != tinyxml2::XML_SUCCESS)
+	{
+		return false;
+	}
+
+	CAN_USB_app_bitrate_table table;
+	if(!table.from_xml(table_doc))
+	{
+		return false;
+	}
+
+	return can_usb_app.write_bitrate_table(table);
+}
+bool Lawicel_parser_stm32::handle_ext_print_bitrate_table()
+{
+	return false;
+}
 bool Lawicel_parser_stm32::handle_ext_defconfig()
 {
-	return can_usb_app.write_default_config();
+	if(!can_usb_app.write_default_config())
+	{
+		return false;
+	}
+	if(!can_usb_app.write_default_bitrate_table())
+	{
+		return false;
+	}
+
+	return true;
 }
 bool Lawicel_parser_stm32::handle_ext_bootloader()
 {

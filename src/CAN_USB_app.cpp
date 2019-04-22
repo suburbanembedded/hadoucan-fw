@@ -75,25 +75,28 @@ bool CAN_USB_app::write_config(const CAN_USB_app_config& config)
 			return false;
 		}
 
+		//update master in-mem copy
 		m_config = config;
+
+		//update fdcan's copy
+		//it will be re-examined on next call to open
+		//this is not a race condition, since this function is called from the same context as open
+		get_can_tx().set_config(config.get_config());
 	}
 
 	return true;
 }
-
 bool CAN_USB_app::write_default_config()
 {
 	CAN_USB_app_config default_config;
+	default_config.set_defualt();
 
 	return write_config(default_config);
 }
-bool CAN_USB_app::write_default_bitrate_table()
+bool CAN_USB_app::write_bitrate_table(const CAN_USB_app_bitrate_table& table)
 {
-	CAN_USB_app_bitrate_table default_table;
-	default_table.set_defualt();
-
 	tinyxml2::XMLDocument table_doc;
-	if(!default_table.to_xml(&table_doc))
+	if(!table.to_xml(&table_doc))
 	{
 		return false;
 	}
@@ -107,10 +110,17 @@ bool CAN_USB_app::write_default_bitrate_table()
 			return false;
 		}
 
-		m_bitrate_tables.swap(default_table);
+		m_bitrate_tables = table;
 	}
 
 	return true;
+}
+bool CAN_USB_app::write_default_bitrate_table()
+{
+	CAN_USB_app_bitrate_table default_table;
+	default_table.set_defualt();
+
+	return write_bitrate_table(default_table);
 }
 
 bool CAN_USB_app::load_xml_file(spiffs* const fs, const char* name, tinyxml2::XMLDocument* const out_xml)

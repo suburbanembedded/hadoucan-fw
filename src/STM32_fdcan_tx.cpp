@@ -181,6 +181,52 @@ bool STM32_fdcan_tx::init()
 	m_fdcan_handle->Init.TransmitPause = DISABLE;
 	m_fdcan_handle->Init.ProtocolException = ENABLE;
 
+	//handle the slew rate control based on the setting and baud rate
+	switch(m_config.slope_ctrl)
+	{
+		case CAN_USB_app_config::SLOPE_CONTROL::SLOW:
+		{
+			set_can_slew_slow();
+			break;
+		}
+		case CAN_USB_app_config::SLOPE_CONTROL::FAST:
+		{
+			set_can_slew_high();
+			break;
+		}
+		case CAN_USB_app_config::SLOPE_CONTROL::AUTO:
+		{
+			if(m_config.protocol_brs)
+			{
+				if((m_config.bitrate_nominal > 500000) || (m_config.bitrate_data > 500000))
+				{
+					set_can_slew_high();
+				}
+				else
+				{
+					set_can_slew_slow();
+				}
+			}
+			else
+			{
+				if(m_config.bitrate_nominal > 500000)
+				{
+					set_can_slew_high();
+				}
+				else
+				{
+					set_can_slew_slow();
+				}
+			}
+			break;
+		}
+		default:
+		{
+			set_can_slew_slow();
+			break;
+		}
+	}
+
 	if(!set_baud(m_config.bitrate_nominal, m_config.bitrate_data))
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "set_baud failed");
@@ -744,6 +790,29 @@ bool STM32_fdcan_tx::send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data)
 	} while(ret != HAL_OK);
 
 	return true;
+}
+
+void STM32_fdcan_tx::set_can_slew_slow()
+{
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
+
+	HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_RESET);
+}
+void STM32_fdcan_tx::set_can_slew_high()
+{
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
+
+	HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_SET);
 }
 
 extern "C"

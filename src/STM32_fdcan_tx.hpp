@@ -68,6 +68,9 @@ public:
 
 protected:
 
+	static void set_can_slew_slow();
+	static void set_can_slew_high();
+
 	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, FDCAN_HandleTypeDef* const handle);
 	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& fd_baud, FDCAN_HandleTypeDef* const handle);
 

@@ -36,17 +36,17 @@ public:
 		SLOPE_CONTROL slope_ctrl;
 
 		bool timestamp_enable;
-		int timestamp_prescaler;
-		int timestamp_period;
+		unsigned timestamp_prescaler;
+		unsigned timestamp_period;
 
 		bool tx_delay_comp_enable;
-		int tx_delay_comp_offset;
-		int tx_delay_comp_filter_window;
+		unsigned tx_delay_comp_offset;
+		unsigned tx_delay_comp_filter_window;
 
-		int can_clock;
+		unsigned can_clock;
 
-		int bitrate_nominal;
-		int bitrate_data;
+		unsigned bitrate_nominal;
+		unsigned bitrate_data;
 
 		bool protocol_ext_id;
 		bool protocol_fd;

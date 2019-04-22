@@ -18,11 +18,13 @@ public:
 	{
 		m_last_fifo_msg_lost_check = 0;
 
-		m_can_fifo0_full = false;
-		m_can_fifo0_msg_lost = 0;
+		//technically in C++11 if using the non-default constructor
+		//we haveto use these init functions
+		std::atomic_init(&m_can_fifo0_full, false);
+		std::atomic_init(&m_can_fifo0_msg_lost, 0U);
 
-		m_can_fifo1_full = false;
-		m_can_fifo1_msg_lost = 0;
+		std::atomic_init(&m_can_fifo1_full, false);
+		std::atomic_init(&m_can_fifo1_msg_lost, 0U);
 	}
 
 	typedef std::function<bool (const std::string str)> PacketRXCallback;

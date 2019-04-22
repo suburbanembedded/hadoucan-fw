@@ -41,7 +41,10 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 	bool handle_get_serial(std::array<uint8_t, 4>* const sn) override;
 	bool handle_set_timestamp(const bool enable) override;
 
-	bool handle_ext_config() override;
+	bool handle_ext_config(const std::vector<char>& config_str) override;
+	bool handle_ext_print_config() override;
+	bool handle_ext_bitrate_table(const std::vector<char>& table_str) override;
+	bool handle_ext_print_bitrate_table() override;
 	bool handle_ext_defconfig() override;
 	bool handle_ext_bootloader() override;
 

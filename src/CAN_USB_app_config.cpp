@@ -288,13 +288,13 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 			return false;
 		}
 		
-		if(!get_int_text(timestamp_element, "prescaler", &m_config.timestamp_prescaler))
+		if(!get_uint_text(timestamp_element, "prescaler", &m_config.timestamp_prescaler))
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp/prescaler");
 			return false;
 		}
 
-		if(!get_int_text(timestamp_element, "period", &m_config.timestamp_period))
+		if(!get_uint_text(timestamp_element, "period", &m_config.timestamp_period))
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp/period");
 			return false;
@@ -315,13 +315,13 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 			return false;
 		}
 
-		if(!get_int_text(tx_delay_comp_element, "offset", &m_config.tx_delay_comp_offset))
+		if(!get_uint_text(tx_delay_comp_element, "offset", &m_config.tx_delay_comp_offset))
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp/offset");
 			return false;
 		}
 
-		if(!get_int_text(tx_delay_comp_element, "filter_window", &m_config.tx_delay_comp_filter_window))
+		if(!get_uint_text(tx_delay_comp_element, "filter_window", &m_config.tx_delay_comp_filter_window))
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp/filter_window");
 			return false;
@@ -329,7 +329,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 	}
 
 	{
-		if(!get_int_text(config_root, "clock", &m_config.can_clock))
+		if(!get_uint_text(config_root, "clock", &m_config.can_clock))
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element clock");
 			return false;
@@ -344,13 +344,13 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 			return false;
 		}
 
-		if(!get_int_text(bitrate_element, "nominal", &m_config.bitrate_nominal))
+		if(!get_uint_text(bitrate_element, "nominal", &m_config.bitrate_nominal))
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element bitrate/nominal");
 			return false;
 		}
 		
-		if(!get_int_text(bitrate_element, "data", &m_config.bitrate_data))
+		if(!get_uint_text(bitrate_element, "data", &m_config.bitrate_data))
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element bitrate/data");
 			return false;

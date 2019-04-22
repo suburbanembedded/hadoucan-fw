@@ -7,10 +7,12 @@
 
 #include <cstdarg>
 #include <cinttypes>
+#include <cstring>
 #include <mutex>
-#include <string>
 
 extern Mutex_static m_uart1_mutex;
+
+bool uart1_puts(const char* str);
 
 template<size_t LEN>
 bool uart1_printf(const char* fmt, ...)

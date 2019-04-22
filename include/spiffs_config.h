@@ -11,11 +11,11 @@
 // ----------- 8< ------------
 // Following includes are for the linux test build of spiffs
 // These may/should/must be removed/altered/replaced in your target
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stddef.h>
 #include <unistd.h>
 #ifdef _SPIFFS_TEST
 #include "testrunner.h"
@@ -27,8 +27,8 @@ extern "C" {
 #endif
 
 struct spiffs_t;
-void spiffs_lock(struct spiffs_t* fs);
-void spiffs_unlock(struct spiffs_t* fs);
+void spiffs_lock_dispatch(struct spiffs_t* fs);
+void spiffs_unlock_dispatch(struct spiffs_t* fs);
 
 typedef int32_t s32_t;
 typedef uint32_t u32_t;

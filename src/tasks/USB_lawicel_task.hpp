@@ -1,5 +1,25 @@
 #pragma once
 
+#include "uart1_printf.hpp"
+
+#include "USB_rx_buffer_task.hpp"
+#include "USB_tx_buffer_task.hpp"
+
+#include "tasks/STM32_fdcan_rx.hpp"
+#include "STM32_fdcan_tx.hpp"
+
+#include "lawicel/Lawicel_parser.hpp"
+#include "lawicel/Lawicel_parser_stm32.hpp"
+
+#include "freertos_cpp_util/Task_static.hpp"
+
+#include "stm32h7xx_hal.h"
+
+#include <cstring>
+
+#include <algorithm>
+#include <vector>
+
 class USB_lawicel_task : public Task_static<1024>
 {
 public:
