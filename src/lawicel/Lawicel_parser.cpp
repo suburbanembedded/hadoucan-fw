@@ -1211,7 +1211,7 @@ bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
 			break;
 		}
 	}
-	return success;	
+	return success;
 }
 
 bool Lawicel_parser::handle_poll_one(std::string* const out_line)
@@ -1296,10 +1296,14 @@ bool Lawicel_parser::handle_auto_poll(const bool enable)
 
 	if(enable)
 	{
+		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::handle_auto_poll", "POLL_MODE::AUTO");
+
 		m_poll_mode = POLL_MODE::AUTO;
 	}
 	else
 	{
+		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::handle_auto_poll", "POLL_MODE::MANUAL");
+
 		m_poll_mode = POLL_MODE::MANUAL;
 	}
 

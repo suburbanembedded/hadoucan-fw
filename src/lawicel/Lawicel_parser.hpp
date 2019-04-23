@@ -51,7 +51,7 @@ class Lawicel_parser
 		m_write_str_func = nullptr;
 
 		m_is_channel_open = false;
-		m_poll_mode = POLL_MODE::MANUAL;
+		m_poll_mode = POLL_MODE::AUTO;
 	}
 
 	virtual ~Lawicel_parser()

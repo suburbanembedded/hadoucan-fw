@@ -10,52 +10,52 @@
 
 bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
 {
-	int stm32_baud = 0;
+	unsigned stm32_baud = 0;
 	switch(baud)
 	{
 		case CAN_NOM_BPS::bps_10k:
 		{
-			stm32_baud = 10000;
+			stm32_baud = 10000U;
 			break;
 		}
 		case CAN_NOM_BPS::bps_20k:
 		{
-			stm32_baud = 20000;
+			stm32_baud = 20000U;
 			break;
 		}
 		case CAN_NOM_BPS::bps_50k:
 		{
-			stm32_baud = 50000;
+			stm32_baud = 50000U;
 			break;
 		}
 		case CAN_NOM_BPS::bps_100k:
 		{
-			stm32_baud = 100000;
+			stm32_baud = 100000U;
 			break;
 		}
 		case CAN_NOM_BPS::bps_125k:
 		{
-			stm32_baud = 125000;
+			stm32_baud = 125000U;
 			break;
 		}
 		case CAN_NOM_BPS::bps_250k:
 		{
-			stm32_baud = 250000;
+			stm32_baud = 250000U;
 			break;
 		}
 		case CAN_NOM_BPS::bps_500k:
 		{
-			stm32_baud = 500000;
+			stm32_baud = 500000U;
 			break;
 		}
 		case CAN_NOM_BPS::bps_800k:
 		{
-			stm32_baud = 800000;
+			stm32_baud = 800000U;
 			break;
 		}
 		case CAN_NOM_BPS::bps_1M:
 		{
-			stm32_baud = 1000000;
+			stm32_baud = 1000000U;
 			break;
 		}
 		default:
@@ -64,9 +64,26 @@ bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
 		}
 	}
 	
-	if(!m_fdcan->set_baud(stm32_baud))
+	//update config
+	CAN_USB_app_config config;
+	can_usb_app.get_config(&config);
+
+	if(config.get_config().bitrate_nominal != stm32_baud)
 	{
-		return false;
+		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32::handle_std_baud", "Updating baud");
+
+		config.get_config().bitrate_nominal = stm32_baud;
+
+		//write new config to flash
+		if(!can_usb_app.write_config(config))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_std_baud", "Writing config.xml failed");
+			return false;
+		}
+	}
+	else
+	{
+		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32::handle_std_baud", "Requested baud already set");
 	}
 
 	return true;
@@ -77,7 +94,15 @@ bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t b0, const uint8_t b1)
 }
 bool Lawicel_parser_stm32::handle_open()
 {
-	return m_fdcan->open();
+	if(!m_fdcan->open())
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->open() failed");
+		return false;
+	}
+
+	uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->open() ok");
+
+	return true;
 }
 bool Lawicel_parser_stm32::handle_open_listen()
 {
@@ -85,7 +110,15 @@ bool Lawicel_parser_stm32::handle_open_listen()
 }
 bool Lawicel_parser_stm32::handle_close()
 {
-	return m_fdcan->close();
+	if(!m_fdcan->close())
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->close() failed");
+		return false;
+	}
+
+	uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->close() ok");
+
+	return true;
 }
 bool Lawicel_parser_stm32::handle_tx_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {

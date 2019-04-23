@@ -101,6 +101,11 @@ public:
 	bool to_xml(tinyxml2::XMLDocument* const config_doc) const;
 	bool from_xml(const tinyxml2::XMLDocument& config_doc);
 
+	Config_Set& get_config()
+	{
+		return m_config;
+	}
+
 	const Config_Set& get_config() const
 	{
 		return m_config;

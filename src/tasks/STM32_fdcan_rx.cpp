@@ -382,8 +382,6 @@ void STM32_fdcan_rx::work()
 		else
 		{
 			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "m_rx_callback is nullptr");
-			vTaskDelay(pdMS_TO_TICKS(500));
-			continue;	
 		}
 	}
 }
