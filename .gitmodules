@@ -31,3 +31,6 @@
 [submodule "external/crc"]
 	path = external/crc
 	url = git@bitbucket.org:suburbanmarine/crc.git
+[submodule "external/stm32cube_fw_h7_v1_4_0"]
+	path = external/stm32cube_fw_h7_v1_4_0
+	url = git@bitbucket.org:suburbanmarine/stm32cube_fw_h7_v1_4_0.git

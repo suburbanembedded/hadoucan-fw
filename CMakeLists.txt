@@ -52,7 +52,8 @@ target_include_directories(spiffs PUBLIC
 	external/spiffs/src
 )
 
-add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
+#add_subdirectory(external/stm32cube_fw_h7_v1_3_0)
+add_subdirectory(external/stm32cube_fw_h7_v1_4_0)
 add_subdirectory(external/tinyxml2)
 add_subdirectory(external/mbedtls)
 add_subdirectory(external/crc)
@@ -121,9 +122,9 @@ target_link_libraries(canusbfdiso.elf
 	stm32_usb_lib_core
 	stm32_usb_lib_cdc
 
-	freertos_v9_heap4
-	freertos_v9
-	freertos_v9_cmsis
+	freertos_v10_heap4
+	freertos_v10
+	freertos_v10_cmsis
 
 	bootloader_util
 	common_util
