@@ -94,6 +94,7 @@ add_executable(canusbfdiso.elf
 	src/usb/usbd_conf.c
 	src/usb/usbd_desc.c
 	src/usb/usb_device.c
+	src/usb/usbd_cdc_if.cpp
 
 	src/lawicel/CAN_DLC.cpp
 	src/lawicel/STM32_FDCAN_DLC.cpp
@@ -186,4 +187,11 @@ add_custom_target(canusbfdiso_size
 
 add_dependencies(canusbfdiso_size
 	canusbfdiso.elf
+)
+
+add_custom_target(canusbfdiso_flash
+	COMMAND openocd -f /usr/local/share/openocd/scripts/interface/stlink.cfg -f /usr/local/share/openocd/scripts/target/stm32h7x.cfg -c "init;reset halt;load_image canusbfdiso.elf;verify_image canusbfdiso.elf;mem2array estack_reset_handler 32 0x24000000 2;reg msp $estack_reset_handler(0); resume $estack_reset_handler(1);exit"
+	DEPENDS canusbfdiso.elf
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	VERBATIM
 )
