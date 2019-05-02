@@ -1,6 +1,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "usb_device.h"
+#include "usbd_desc.h"
 #include "usbd_cdc_if.h"
 
 #include "uart1_printf.hpp"
@@ -402,76 +403,6 @@ protected:
 
 extern "C"
 {
-	USBD_CDC_HandleTypeDef usb_cdc_class_data;
-	void* USBD_cdc_class_malloc(size_t size)
-	{
-		if(size != sizeof(usb_cdc_class_data))
-		{
-			return nullptr;
-		}
-
-		return &usb_cdc_class_data;
-	}
-
-	void USBD_cdc_class_free(void* ptr)
-	{
-
-	}
-
-	int8_t CDC_Init_HS(void);
-	int8_t CDC_DeInit_HS(void);
-	int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length);
-	int8_t CDC_Receive_HS(uint8_t* pbuf, uint32_t *Len);
-	void CDC_TX_Cmpl_HS(void);
-
-	USBD_CDC_ItfTypeDef USBD_Interface_fops_HS =
-	{
-		CDC_Init_HS,
-		CDC_DeInit_HS,
-		CDC_Control_HS,
-		CDC_Receive_HS,
-		CDC_TX_Cmpl_HS
-	};
-
-	int8_t CDC_Init_HS(void)
-	{
-		usb_rx_task.handle_init_callback();
-		usb_tx_task.handle_init_callback();
-		return USBD_OK;
-	}
-
-	int8_t CDC_DeInit_HS(void)
-	{
-	/* USER CODE BEGIN 9 */
-		return USBD_OK;
-	/* USER CODE END 9 */
-	}
-
-	int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
-	{
-		return usb_rx_task.handle_rx_callback(Buf, *Len);
-	}
-
-	void CDC_TX_Cmpl_HS(void)
-	{
-		usb_tx_task.notify_tx_complete_callback();
-	}
-
-	int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
-	{
-		return USBD_OK;
-	}
-
-	static char USB_SERIAL_NUMBER[25] = {0};
-	char* get_usb_serial_number()
-	{
-		return USB_SERIAL_NUMBER;
-	}
-	void set_usb_serial_number(char id_str[25])
-	{
-		snprintf(USB_SERIAL_NUMBER, 25, "%s", id_str);
-	}
-
 	void handle_config_assert(const char* file, const int line, const char* msg)
 	{
 		uart1_log<64>(LOG_LEVEL::FATAL, "freertos", "configASSERT in %s at %d, %s", file, line, msg);
@@ -787,19 +718,13 @@ int main(void)
 
 	HAL_Init();
 
-	set_all_gpio_low_power();
+	//TODO: fix this to keep JTAG/SWD on, maybe
+	// set_all_gpio_low_power();
 
 	SystemClock_Config();
 
 	//Enable backup domain in standby and Vbat mode
 	HAL_PWREx_EnableBkUpReg();
-
-	{
-		std::array<char, 25> id_str;
-		get_unique_id_str(&id_str);
-
-		set_usb_serial_number(id_str.data());
-	}
 
 	MX_GPIO_Init();
 	MX_USART1_UART_Init();
@@ -848,9 +773,53 @@ int main(void)
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
 	}
 
-	// Switch to heap5?
-	// AHB_D2_SRAM1: 0x30000000, 128KB
-	// AHB_D2_SRAM2: 0x30020000, 128KB
+	{
+		const uint32_t idcode = DBGMCU->IDCODE;
+		const uint16_t rev_id = (idcode & 0xFFFF0000) >> 16;
+		const uint16_t dev_id = (idcode & 0x000007FF);
+
+		if(dev_id == 0x450)
+		{
+			uart1_log<64>(LOG_LEVEL::INFO, "main", "Dev ID STM32H7xx (42, 43/53, 50)");
+		}
+		else
+		{
+			uart1_log<64>(LOG_LEVEL::WARN, "main", "Unk dev ID");
+		}
+
+		switch(rev_id)
+		{
+			case 0x1001:
+			{
+				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev Z");
+				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
+				break;
+			}
+			case 0x1003:
+			{
+				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev Y");
+				break;
+			}
+			case 0x2001:
+			{
+				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev X");
+				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
+				break;
+			}
+			case 0x2003:
+			{
+				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev V");
+				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported, but will be soon");
+				break;
+			}
+			default:
+			{
+				uart1_log<64>(LOG_LEVEL::WARN, "main", "Unk rev ID");
+				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
+				break;
+			}
+		}
+	}
 
 	main_task.launch("main_task", 15);
 

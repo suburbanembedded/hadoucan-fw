@@ -27,7 +27,7 @@ void USB_RX_task::handle_init_callback()
 
 USB_RX_task::USB_rx_buf_ptr USB_RX_task::get_rx_buffer()
 {
-	USB_buf* usb_buffer = nullptr;
+	USB_buf_rx* usb_buffer = nullptr;
 	while(!m_full_buffers.pop_front(&usb_buffer, portMAX_DELAY))
 	{
 
@@ -51,7 +51,7 @@ void USB_RX_task::work()
 		//if this is null, there was an underflow
 		//alloc a new buffer and restart tx
 		//normally the isr does this
-		USB_buf* active_buf = m_active_buf.load();
+		USB_buf_rx* active_buf = m_active_buf.load();
 		if(active_buf == nullptr)
 		{
 			//wait for a buffer
@@ -70,20 +70,50 @@ void USB_RX_task::work()
 			// active_buf->clean_invalidate_cache();
 			// active_buf->clean_cache();
 
-			USBD_CDC_SetRxBuffer(&hUsbDeviceHS, active_buf->buf.data());
+			asm volatile(
+				"cpsid i\n"
+				"dsb 0xF\n"
+				"isb 0xF\n"
+				: /* no out */
+				: /* no in */
+				: "memory"
+			);
 
 			m_active_buf.store(active_buf);
-			USBD_CDC_ReceivePacket(&hUsbDeviceHS);		
+			USBD_CDC_SetRxBuffer(&hUsbDeviceHS, active_buf->buf.data());
+			const uint8_t ret = USBD_CDC_ReceivePacket(&hUsbDeviceHS);		
+
+			asm volatile(
+				"dsb 0xF\n"
+				"isb 0xF\n"
+				"cpsie i\n"
+				"isb 0xF\n"
+				: /* no out */
+				: /* no in */
+				: "memory"
+			);
+
+			if(ret != USBD_OK)
+			{
+				if(ret == USBD_FAIL)
+				{
+					uart1_log<128>(LOG_LEVEL::ERROR, "USB_RX_task", "USBD_CDC_ReceivePacket returned USBD_FAIL");
+				}
+				else
+				{
+					uart1_log<128>(LOG_LEVEL::ERROR, "USB_RX_task", "USBD_CDC_ReceivePacket returned unk error");
+				}
+			}
 		}
 	}
 }
-
+#if 0
 int8_t USB_RX_task::handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
 	//cache the active ptr
-	USB_buf* active_buf = m_active_buf.load();
+	USB_buf_rx* active_buf = m_active_buf.load();
 
 	active_buf->len = in_buf_len;
 
@@ -114,3 +144,25 @@ int8_t USB_RX_task::handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len)
 
 	return (USBD_OK);
 }
+#else
+int8_t USB_RX_task::handle_rx_callback(uint8_t* in_buf, uint32_t in_buf_len)
+{
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+	//cache the active ptr
+	USB_buf_rx* active_buf = m_active_buf.load();
+	active_buf->len = in_buf_len;
+
+	m_full_buffers.push_back_isr(active_buf, &xHigherPriorityTaskWoken);
+
+	//update the active ptr
+	m_active_buf.store(nullptr);
+
+	//inform the user thread to start a read
+	m_rx_complete.give_from_isr();
+
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+	return (USBD_OK);
+}
+#endif

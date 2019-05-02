@@ -6,6 +6,7 @@
 
 #include "core_cm7.h"
 
+template<size_t BUFLEN>
 class USB_buf
 {
 public:
@@ -43,12 +44,14 @@ public:
 		SCB_CleanInvalidateDCache_by_Addr(inv_ptr, inv_len);	
 	}
 
-	alignas(32) std::array<uint8_t, CDC_DATA_HS_OUT_PACKET_SIZE> buf;
+	alignas(32) std::array<uint8_t, BUFLEN> buf;
 	size_t len;
 };
 
-typedef Object_pool<USB_buf, 16> USB_rx_pool_type;
+typedef USB_buf<CDC_DATA_HS_OUT_PACKET_SIZE> USB_buf_rx;
+typedef Object_pool<USB_buf_rx, 16> USB_rx_pool_type;
 extern USB_rx_pool_type rx_buf_pool;
 
-typedef Object_pool<USB_buf, 32> USB_tx_pool_type;
+typedef USB_buf<CDC_DATA_HS_IN_PACKET_SIZE> USB_buf_tx;
+typedef Object_pool<USB_buf_tx, 32> USB_tx_pool_type;
 extern USB_tx_pool_type tx_buf_pool;

@@ -32,7 +32,7 @@ protected:
 
 	//USB_MAX_EP0_SIZE
 	//CDC_DATA_HS_OUT_PACKET_SIZE
-	std::atomic<USB_buf*> m_active_buf;
+	std::atomic<USB_buf_rx*> m_active_buf;
 
-	Queue_static_pod<USB_buf*, 16> m_full_buffers;
+	Queue_static_pod<USB_buf_rx*, 16> m_full_buffers;
 };

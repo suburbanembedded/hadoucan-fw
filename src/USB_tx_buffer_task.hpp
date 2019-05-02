@@ -101,7 +101,7 @@ protected:
 			return false;
 		}
 
-		if(m_tx_buf.size() >= USB_HS_PACKET_MAX_LEN)
+		if(m_tx_buf.size() >= CDC_DATA_HS_IN_PACKET_SIZE)
 		{
 			//yay, full USB HS packet
 			return true;
@@ -111,7 +111,6 @@ protected:
 	}
 
 	static constexpr uint32_t USB_HS_PACKET_WAIT_MS = 50;
-	static constexpr uint32_t USB_HS_PACKET_MAX_LEN = 512;
 
 	std::deque<uint8_t> m_tx_buf;
 	Mutex_static m_tx_buf_mutex;

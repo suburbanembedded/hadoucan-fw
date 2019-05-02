@@ -14,22 +14,27 @@ pushd build/ram/release
 cmake -DCMAKE_BUILD_TYPE=Release $TINYXML2_OPTS $MBEDTLS_OPTS $RAM_TOOL $BASE_PATH
 popd
 
+mkdir -p build/ram/relwithdebinfo
+pushd build/ram/relwithdebinfo
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo $TINYXML2_OPTS $MBEDTLS_OPTS $RAM_TOOL $BASE_PATH
+popd
+
 mkdir -p build/ram/debug
 pushd build/ram/debug
 cmake -DCMAKE_BUILD_TYPE=Debug $TINYXML2_OPTS $MBEDTLS_OPTS $RAM_TOOL $BASE_PATH
 popd
 
-mkdir -p build/flash/release
-pushd build/flash/release
-cmake -DCMAKE_BUILD_TYPE=Release $TINYXML2_OPTS $MBEDTLS_OPTS $FLASH_TOOL $BASE_PATH
-popd
+#mkdir -p build/flash/release
+#pushd build/flash/release
+#cmake -DCMAKE_BUILD_TYPE=Release $TINYXML2_OPTS $MBEDTLS_OPTS $FLASH_TOOL $BASE_PATH
+#popd
 
-mkdir -p build/flash/relwithdebinfo
-pushd build/flash/relwithdebinfo
-cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo $TINYXML2_OPTS $MBEDTLS_OPTS $FLASH_TOOL $BASE_PATH
-popd
+#mkdir -p build/flash/relwithdebinfo
+#pushd build/flash/relwithdebinfo
+#cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo $TINYXML2_OPTS $MBEDTLS_OPTS $FLASH_TOOL $BASE_PATH
+#popd
 
-mkdir -p build/flash/debug
-pushd build/flash/debug
-cmake -DCMAKE_BUILD_TYPE=Debug $TINYXML2_OPTS $MBEDTLS_OPTS $FLASH_TOOL $BASE_PATH
-popd
+#mkdir -p build/flash/debug
+#pushd build/flash/debug
+#cmake -DCMAKE_BUILD_TYPE=Debug $TINYXML2_OPTS $MBEDTLS_OPTS $FLASH_TOOL $BASE_PATH
+#popd

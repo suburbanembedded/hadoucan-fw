@@ -97,13 +97,13 @@
 /*---------- -----------*/
 #define USBD_MAX_STR_DESC_SIZ     512
 /*---------- -----------*/
-#define USBD_SUPPORT_USER_STRING     0
+#define USBD_SUPPORT_USER_STRING     0U
 /*---------- -----------*/
-#define USBD_DEBUG_LEVEL     0
+#define USBD_DEBUG_LEVEL     0U
 /*---------- -----------*/
-#define USBD_LPM_ENABLED     0
+#define USBD_LPM_ENABLED     0U
 /*---------- -----------*/
-#define USBD_SELF_POWERED     0
+#define USBD_SELF_POWERED     0U
 
 /****************************************/
 /* #define for FS and HS identification */

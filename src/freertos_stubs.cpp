@@ -30,7 +30,8 @@ void vApplicationIdleHook( void )
    function, because it is the responsibility of the idle task to clean up
    memory allocated by the kernel to any task that has since been deleted. */
 
-  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+  // TODO: turn this back on
+  // HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 }
 
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)

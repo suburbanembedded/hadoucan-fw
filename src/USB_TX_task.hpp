@@ -32,7 +32,7 @@ public:
 
 protected:
 
-	uint8_t send_buffer(USB_buf* const buf);
+	uint8_t send_buffer(USB_buf_tx* const buf);
 
 	static const uint32_t USB_HS_PACKET_WAIT_MS = 50;
 
@@ -40,5 +40,5 @@ protected:
 	BSema_static m_init_complete;
 	BSema_static m_tx_idle;
 
-	Queue_static_pod<USB_buf*, 32> m_pending_tx_buffers;
+	Queue_static_pod<USB_buf_tx*, 32> m_pending_tx_buffers;
 };
