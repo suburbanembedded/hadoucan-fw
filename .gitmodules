@@ -34,6 +34,3 @@
 [submodule "external/stm32cube_fw_h7_v1_4_0"]
 	path = external/stm32cube_fw_h7_v1_4_0
 	url = git@bitbucket.org:suburbanmarine/stm32cube_fw_h7_v1_4_0.git
-[submodule "external/libusb_stm32"]
-	path = external/libusb_stm32
-	url = git@github.com:jacobschloss/libusb_stm32.git
