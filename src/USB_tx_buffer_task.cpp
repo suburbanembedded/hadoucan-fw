@@ -9,7 +9,7 @@ constexpr uint32_t USB_tx_buffer_task::USB_HS_PACKET_WAIT_MS;
 void USB_tx_buffer_task::work()
 {
 	std::vector<uint8_t> m_packet_buf;
-	m_packet_buf.reserve(CDC_DATA_HS_IN_PACKET_SIZE);
+	m_packet_buf.reserve(512);
 
 	std::function<bool(void)> has_buffer_pred = std::bind(&USB_tx_buffer_task::has_buffer, this);
 
@@ -25,7 +25,7 @@ void USB_tx_buffer_task::work()
 			if(!m_tx_buf.empty())
 			{
 				auto first = m_tx_buf.begin();
-				auto last  = std::next(first, std::min<size_t>(CDC_DATA_HS_IN_PACKET_SIZE, m_tx_buf.size()));
+				auto last  = std::next(first, std::min<size_t>(512, m_tx_buf.size()));
 				m_packet_buf.insert(m_packet_buf.begin(), first, last);
 
 				m_tx_buf.erase(first, last);

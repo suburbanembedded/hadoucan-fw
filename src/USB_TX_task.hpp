@@ -3,8 +3,6 @@
 #include "USB_buf.hpp"
 
 #include "main.h"
-#include "usb_device.h"
-#include "usbd_cdc_if.h"
 
 #include "freertos_cpp_util/BSema_static.hpp"
 #include "freertos_cpp_util/Mutex_static.hpp"
@@ -36,7 +34,6 @@ protected:
 
 	static const uint32_t USB_HS_PACKET_WAIT_MS = 50;
 
-	bool m_needs_send_null;
 	BSema_static m_init_complete;
 	BSema_static m_tx_idle;
 

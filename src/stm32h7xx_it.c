@@ -1,7 +1,8 @@
+#include "stm32h7xx_it.h"
 
 #include "main.h"
 #include "hal_inst.h"
-#include "stm32h7xx_it.h"
+
 #include "cmsis_os.h"
 
 extern PCD_HandleTypeDef hpcd_USB_OTG_HS;
@@ -67,11 +68,6 @@ void FDCAN1_IT1_IRQHandler(void)
 void FDCAN_CAL_IRQHandler(void)
 {
   HAL_FDCAN_IRQHandler(&hfdcan1);
-}
-
-void OTG_HS_IRQHandler(void)
-{
-  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
 }
 
 void QUADSPI_IRQHandler(void)

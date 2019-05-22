@@ -2,6 +2,8 @@
 
 #include "lawicel/STM32_FDCAN_DLC.hpp"
 
+#include "main.h"
+
 #include "uart1_printf.hpp"
 
 #include "stm32h7xx_hal_rcc.h"

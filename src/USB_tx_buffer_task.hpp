@@ -10,6 +10,8 @@
 #include <deque>
 #include <vector>
 
+#include <cstring>
+
 //aggregate small writes
 class USB_tx_buffer_task : public Task_static<1024>
 {
@@ -101,7 +103,7 @@ protected:
 			return false;
 		}
 
-		if(m_tx_buf.size() >= CDC_DATA_HS_IN_PACKET_SIZE)
+		if(m_tx_buf.size() >= 512)
 		{
 			//yay, full USB HS packet
 			return true;

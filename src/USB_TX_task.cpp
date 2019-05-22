@@ -1,9 +1,6 @@
 #include "USB_TX_task.hpp"
 
 #include "main.h"
-#include "hal_inst.h"
-#include "usb_device.h"
-#include "usbd_cdc_if.h"
 
 #include "uart1_printf.hpp"
 
@@ -13,9 +10,6 @@
 USB_TX_task::USB_TX_task()
 {
 	m_tx_idle.give();
-
-	//don't need to send this until we've sent data for the first time
-	m_needs_send_null = false;
 }
 
 void USB_TX_task::handle_init_callback()
@@ -34,63 +28,10 @@ void USB_TX_task::work()
 		USB_buf_tx* usb_buffer = nullptr;
 		if(!m_pending_tx_buffers.pop_front(&usb_buffer, pdMS_TO_TICKS(USB_HS_PACKET_WAIT_MS)))
 		{
-			//if we previously sent data, and don't have more to send we should send a null packet
-			//this is a hint to the OS to flush buffers / hand data to the application
-			if(m_needs_send_null)
-			{
-				uart1_log<128>(LOG_LEVEL::TRACE, "USB_TX_task", "tx idle for 50ms, send null buf");
-				const uint8_t ret = send_buffer(nullptr);
-
-				if(ret != USBD_OK)
-				{
-					switch(ret)
-					{
-						case USBD_BUSY:
-						{
-							uart1_log<128>(LOG_LEVEL::ERROR, "USB_TX_task", "send null: USBD_BUSY");
-							break;
-						}
-						case USBD_FAIL:
-						{
-							uart1_log<128>(LOG_LEVEL::ERROR, "USB_TX_task", "send null: USBD_FAIL");
-							break;
-						}
-						default:
-						{
-							uart1_log<128>(LOG_LEVEL::ERROR, "USB_TX_task", "send null: unk");
-							break;	
-						}
-					}
-				}
-
-				m_needs_send_null = false;
-			}
 			continue;
 		}
 
 		const uint8_t ret = send_buffer(usb_buffer);
-		m_needs_send_null = true;
-		if(ret != USBD_OK)
-		{
-			switch(ret)
-			{
-				case USBD_BUSY:
-				{
-					uart1_log<128>(LOG_LEVEL::ERROR, "USB_TX_task", "send usb_buffer: USBD_BUSY");
-					break;
-				}
-				case USBD_FAIL:
-				{
-					uart1_log<128>(LOG_LEVEL::ERROR, "USB_TX_task", "send usb_buffer: USBD_FAIL");
-					break;
-				}
-				default:
-				{
-					uart1_log<128>(LOG_LEVEL::ERROR, "USB_TX_task", "send usb_buffer: unk");
-					break;	
-				}
-			}
-		}
 
 		Object_pool_base<USB_buf_tx>::free(usb_buffer);
 	}
@@ -195,65 +136,18 @@ uint8_t USB_TX_task::send_buffer(USB_buf_tx* const buf)
     
 	m_tx_idle.take();
 
-	//we may need to mask the usb interrupt here based on a race condition with the usb rx interrupt
-	//https://github.com/GrumpyOldPizza/arduino-STM32L4/blob/master/system/STM32L4xx/Source/stm32l4_usbd_cdc.c
-	//ttps://community.st.com/s/question/0D50X00009XkYM6SAN/stm32-usb-library-naks-out-packets-from-host
-	//NVIC_DisableIRQ(USB_IRQn);
-	// HAL_NVIC_DisableIRQ(OTG_HS_IRQn);
-	asm volatile(
-		"cpsid i\n"
-		"dsb 0xF\n"
-		"isb 0xF\n"
-		: /* no out */
-		: /* no in */
-		: "memory"
-	);
-	
     if(buf)
     {
     	//ensure the store buffer is flushed before the next instruction
     	//the usb buffers are in non-cachable but buffered memory
     	__DSB();
-
-		USBD_CDC_SetTxBuffer(&hUsbDeviceHS, buf->buf.data(), buf->len);
     }
     else
     {
-		USBD_CDC_SetTxBuffer(&hUsbDeviceHS, nullptr, 0);
+
     }
 
-	const uint8_t ret = USBD_CDC_TransmitPacket(&hUsbDeviceHS);
+	wait_tx_finish();
 
-	asm volatile(
-		"dsb 0xF\n"
-		"isb 0xF\n"
-		"cpsie i\n"
-		"isb 0xF\n"
-		: /* no out */
-		: /* no in */
-		: "memory"
-	);
-	//we may need to restore the usb interrupt here based on a race condition with the usb rx interrupt
-	//NVIC_EnableIRQ(USB_IRQn);
-	// HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
-
-	if(ret != USBD_OK)
-	{
-		if(ret == USBD_FAIL)
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "USB_TX_task", "USBD_CDC_TransmitPacket returned USBD_FAIL");
-		}
-		else
-		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "USB_TX_task", "USBD_CDC_TransmitPacket returned unk error");
-		}
-	}
-
-	if(ret == USBD_OK)
-	{
-		//write sync
-		wait_tx_finish();
-	}
-
-	return ret;
+	return true;
 }

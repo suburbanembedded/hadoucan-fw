@@ -1,8 +1,5 @@
 #include "main.h"
 #include "cmsis_os.h"
-#include "usb_device.h"
-#include "usbd_desc.h"
-#include "usbd_cdc_if.h"
 
 #include "uart1_printf.hpp"
 
@@ -17,6 +14,9 @@
 #include "tasks/LED_task.hpp"
 #include "tasks/Timesync_task.hpp"
 #include "tasks/STM32_fdcan_rx.hpp"
+
+#include "libusb_dev_cpp/usb_core.hpp"
+#include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
@@ -44,6 +44,18 @@ USB_TX_task usb_tx_task __attribute__(( section(".ram_dtcm_noload") ));
 USB_rx_buffer_task usb_rx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
 USB_tx_buffer_task usb_tx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
 
+USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
+stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
+
+extern "C"
+{
+	void OTG_HS_IRQHandler(void)
+	{
+		//USB1 ISR handler
+		usb_core.poll();
+	}
+}
+
 LED_task led_task __attribute__(( section(".ram_dtcm_noload") ));
 
 USB_lawicel_task usb_lawicel_task __attribute__(( section(".ram_dtcm_noload") ));
@@ -62,6 +74,11 @@ public:
 	{
 		mount_fs();
 		load_config();
+
+		if(!init_usb())
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "main", "USB init failed");
+		}
 
 		CAN_USB_app_config::Config_Set config_struct;
 		can_usb_app.get_config(&config_struct);
@@ -108,6 +125,109 @@ public:
 		{
 			vTaskSuspend(nullptr);
 		}
+	}
+
+	void usb_evt_callback(const USB_common::USB_EVENTS event, const uint8_t ep)
+	{
+
+	}
+
+	bool usb_control_callback(Control_request* ctrl_req)
+	{
+		return false;	
+	}
+
+	bool usb_config_callback()
+	{
+		return false;
+	}
+
+	bool usb_get_descriptor_callback(Control_request* ctrl_req, uint8_t** address, size_t* size)
+	{
+		return false;	
+	}
+
+	bool init_usb()
+	{
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.initialize");
+		if(!usb_driver.initialize())
+		{
+			return false;	
+		}
+
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.initialize");
+		if(!usb_core.initialize(&usb_driver, 8))
+		{
+			return false;
+		}
+
+		__HAL_RCC_GPIOC_CLK_ENABLE();
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+		/**USB_OTG_HS GPIO Configuration    
+		PC0     ------> USB_OTG_HS_ULPI_STP
+		PC2_C     ------> USB_OTG_HS_ULPI_DIR
+		PC3_C     ------> USB_OTG_HS_ULPI_NXT
+		PA3     ------> USB_OTG_HS_ULPI_D0
+		PA5     ------> USB_OTG_HS_ULPI_CK
+		PB0     ------> USB_OTG_HS_ULPI_D1
+		PB1     ------> USB_OTG_HS_ULPI_D2
+		PB10     ------> USB_OTG_HS_ULPI_D3
+		PB11     ------> USB_OTG_HS_ULPI_D4
+		PB12     ------> USB_OTG_HS_ULPI_D5
+		PB13     ------> USB_OTG_HS_ULPI_D6
+		PB5     ------> USB_OTG_HS_ULPI_D7 
+		*/
+		GPIO_InitTypeDef GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_2|GPIO_PIN_3;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+		HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+		GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_5;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+		GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_10|GPIO_PIN_11 
+		                      |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_5;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+		HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+		// HAL_NVIC_SetPriority(OTG_HS_IRQn, 5, 0);
+		// HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
+
+		usb_core.set_control_callback(std::bind(&Main_task::usb_control_callback, this, std::placeholders::_1));
+		usb_core.set_config_callback(std::bind(&Main_task::usb_config_callback, this));
+		usb_core.set_descriptor_callback(std::bind(&Main_task::usb_get_descriptor_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.enable");
+		if(!usb_core.enable())
+		{
+			return false;
+		}
+
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.connect");
+		if(!usb_core.connect())
+		{
+			return false;
+		}
+
+		for(;;)
+		{
+			usb_core.poll();
+		}
+
+		return true;
 	}
 
 	bool mount_fs()

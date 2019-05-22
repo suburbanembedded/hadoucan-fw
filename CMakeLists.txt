@@ -62,6 +62,7 @@ add_subdirectory(external/bootloader_util)
 add_subdirectory(external/common_util)
 add_subdirectory(external/emb_fs_util)
 add_subdirectory(external/freertos_cpp_util)
+add_subdirectory(external/libusb_dev_cpp)
 add_subdirectory(external/mbedtls_util)
 add_subdirectory(external/tinyxml2_util)
 
@@ -91,11 +92,6 @@ add_executable(canusbfdiso.elf
 	src/freertos_new.cpp
 	src/newlib_stubs.c
 
-	src/usb/usbd_conf.c
-	src/usb/usbd_desc.c
-	src/usb/usb_device.c
-	src/usb/usbd_cdc_if.cpp
-
 	src/lawicel/CAN_DLC.cpp
 	src/lawicel/STM32_FDCAN_DLC.cpp
 	src/lawicel/Lawicel_parser.cpp
@@ -120,17 +116,14 @@ target_link_libraries(canusbfdiso.elf
 	stm32h7xx_ll
 	stm32h750xx_cmsis
 
-	stm32_usb_lib_core
-	stm32_usb_lib_cdc
-
 	freertos_v10_heap4
 	freertos_v10
 	freertos_v10_cmsis
 
 	bootloader_util
 	common_util
-
 	freertos_cpp_util
+	usb_dev_cpp
 	mbedtls_util
 	tinyxml2_util
 
