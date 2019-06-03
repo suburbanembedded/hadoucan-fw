@@ -17,6 +17,7 @@
 
 #include "libusb_dev_cpp/usb_core.hpp"
 #include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs.hpp"
+#include "libusb_dev_cpp/descriptor/Device_descriptor.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
@@ -67,7 +68,7 @@ bool can_rx_to_lawicel(const std::string& str)
 	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
 }
 
-class Main_task : public Task_static<1024>
+class Main_task : public Task_static<2048>
 {
 public:
 	void work() override
@@ -127,24 +128,32 @@ public:
 		}
 	}
 
-	void usb_evt_callback(const USB_common::USB_EVENTS event, const uint8_t ep)
+	Device_descriptor::Device_descriptor_array dev_desc_array;
+	bool usb_get_descriptor_callback(const Control_request& ctrl_req, uint8_t** address, size_t* size)
 	{
+		Device_descriptor dev_desc;
+		dev_desc.bcdUSB          = Device_descriptor::build_bcd(0x02, 0x0, 0x0);
+		dev_desc.bDeviceClass    = 0x00;
+		dev_desc.bDeviceSubClass = 0x00;
+		dev_desc.bDeviceProtocol = 0x00;
+		dev_desc.bMaxPacketSize0  = 0x08;
+		dev_desc.idVendor        = 0x1234;
+		dev_desc.idProduct       = 0x5678;
+		dev_desc.bcdDevice       = Device_descriptor::build_bcd(0x02, 0x0, 0x0);;
+		dev_desc.iManufacturer   = 0;
+		dev_desc.iProduct        = 0;
+		dev_desc.iSerialNumber   = 0;
+		dev_desc.bNumConfigurations = 1;
 
-	}
+		if(!dev_desc.serialize(&dev_desc_array))
+		{
+			return false;
+		}
 
-	bool usb_control_callback(Control_request* ctrl_req)
-	{
-		return false;	
-	}
+		*address = dev_desc_array.data();
+		*size = dev_desc_array.size();
 
-	bool usb_config_callback()
-	{
-		return false;
-	}
-
-	bool usb_get_descriptor_callback(Control_request* ctrl_req, uint8_t** address, size_t* size)
-	{
-		return false;	
+		return true;
 	}
 
 	bool init_usb()
@@ -155,8 +164,18 @@ public:
 			return false;	
 		}
 
+		std::vector<uint8_t> rx_buf;
+		rx_buf.resize(1024);
+		USB_core::buffer_adapter rx_buf_adapter;
+		rx_buf_adapter.reset(rx_buf.data(), rx_buf.size());
+
+		std::vector<uint8_t> tx_buf;
+		tx_buf.resize(1024);
+		USB_core::buffer_adapter tx_buf_adapter;
+		tx_buf_adapter.reset(tx_buf.data(), tx_buf.size());
+
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.initialize");
-		if(!usb_core.initialize(&usb_driver, 8))
+		if(!usb_core.initialize(&usb_driver, 8, tx_buf_adapter, rx_buf_adapter))
 		{
 			return false;
 		}
@@ -206,19 +225,21 @@ public:
 		// HAL_NVIC_SetPriority(OTG_HS_IRQn, 5, 0);
 		// HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
 
-		usb_core.set_control_callback(std::bind(&Main_task::usb_control_callback, this, std::placeholders::_1));
-		usb_core.set_config_callback(std::bind(&Main_task::usb_config_callback, this));
-		usb_core.set_descriptor_callback(std::bind(&Main_task::usb_get_descriptor_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		// usb_core.set_control_callback(std::bind(&Main_task::usb_control_callback, this, std::placeholders::_1));
+		// usb_core.set_config_callback(std::bind(&Main_task::usb_config_callback, this));
+		// usb_core.set_descriptor_callback(std::bind(&Main_task::usb_get_descriptor_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.enable");
 		if(!usb_core.enable())
 		{
+			uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.enable failed");
 			return false;
 		}
 
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.connect");
 		if(!usb_core.connect())
 		{
+			uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.connect failed");
 			return false;
 		}
 
@@ -831,6 +852,9 @@ int main(void)
 		// HAL_MPU_Enable(MPU_HARDFAULT_NMI);
 		
 	}
+
+	//enable core interrupts
+	SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk | SCB_SHCSR_MEMFAULTENA_Msk;
 
 	SCB_EnableICache();
 
