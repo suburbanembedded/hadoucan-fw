@@ -17,7 +17,10 @@
 
 #include "libusb_dev_cpp/usb_core.hpp"
 #include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs.hpp"
+#include "libusb_dev_cpp/util/Descriptor_table.hpp"
+
 #include "libusb_dev_cpp/descriptor/Device_descriptor.hpp"
+#include "libusb_dev_cpp/class/cdc/cdc_desc.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
@@ -68,7 +71,7 @@ bool can_rx_to_lawicel(const std::string& str)
 	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
 }
 
-class Main_task : public Task_static<2048>
+class Main_task : public Task_static<4096>
 {
 public:
 	void work() override
@@ -132,14 +135,14 @@ public:
 	bool usb_get_descriptor_callback(const Control_request& ctrl_req, uint8_t** address, size_t* size)
 	{
 		Device_descriptor dev_desc;
-		dev_desc.bcdUSB          = Device_descriptor::build_bcd(0x02, 0x0, 0x0);
+		dev_desc.bcdUSB          = USB_common::build_bcd(0x02, 0x0, 0x0);
 		dev_desc.bDeviceClass    = 0x00;
 		dev_desc.bDeviceSubClass = 0x00;
 		dev_desc.bDeviceProtocol = 0x00;
 		dev_desc.bMaxPacketSize0  = 0x08;
 		dev_desc.idVendor        = 0x1234;
 		dev_desc.idProduct       = 0x5678;
-		dev_desc.bcdDevice       = Device_descriptor::build_bcd(0x02, 0x0, 0x0);;
+		dev_desc.bcdDevice       = USB_common::build_bcd(0x02, 0x0, 0x0);;
 		dev_desc.iManufacturer   = 0;
 		dev_desc.iProduct        = 0;
 		dev_desc.iSerialNumber   = 0;
@@ -164,14 +167,121 @@ public:
 			return false;	
 		}
 
+		Descriptor_table desc_table;
+		{
+			Device_descriptor dev_desc;
+			dev_desc.bcdUSB = USB_common::build_bcd(2, 0, 0);
+			dev_desc.bDeviceClass    = static_cast<uint8_t>(USB_common::CLASS_DEF::CLASS_PER_INTERFACE);
+			dev_desc.bDeviceSubClass = static_cast<uint8_t>(USB_common::SUBCLASS_DEF::SUBCLASS_NONE);
+			dev_desc.bDeviceProtocol = static_cast<uint8_t>(USB_common::PROTO_DEF::PROTO_NONE);
+			// dev_desc.bMaxPacketSize0 = m_driver->get_ep0_config().size;
+			dev_desc.bMaxPacketSize0 = 64;
+			dev_desc.idVendor  = 0x0123;
+			dev_desc.idProduct = 0x4567;
+			dev_desc.bcdDevice = USB_common::build_bcd(1, 0, 0);
+			dev_desc.iManufacturer      = 0;
+			dev_desc.iProduct           = 0;
+			dev_desc.iSerialNumber      = 0;
+			dev_desc.bNumConfigurations = 1;
+
+			desc_table.set_device_descriptor(dev_desc, 0);
+		}
+		{
+			//9 byte ea
+			Iface_desc_table::Iface_desc_ptr desc_ptr = std::make_shared<Interface_descriptor>();
+			desc_ptr->bInterfaceNumber   = 0;
+			desc_ptr->bAlternateSetting  = 0;
+			desc_ptr->bNumEndpoints      = 1;
+			desc_ptr->bInterfaceClass    = static_cast<uint8_t>(CDC_CLASS_CODE::CDC);
+			desc_ptr->bInterfaceSubClass = static_cast<uint8_t>(CDC_SUBCLASS_CODE::ACM);
+			desc_ptr->bInterfaceProtocol = static_cast<uint8_t>(CDC_PROTO_CODE::NONE);
+			desc_ptr->iInterface         = 0;
+			desc_table.set_interface_descriptor(desc_ptr, 0);
+		}
+		{
+			Iface_desc_table::Iface_desc_ptr desc_ptr = std::make_shared<Interface_descriptor>();
+			desc_ptr->bInterfaceNumber   = 1;
+			desc_ptr->bAlternateSetting  = 0;
+			desc_ptr->bNumEndpoints      = 2;
+			desc_ptr->bInterfaceClass    = static_cast<uint8_t>(CDC_CLASS_CODE::CDC_DATA);
+			desc_ptr->bInterfaceSubClass = static_cast<uint8_t>(USB_common::SUBCLASS_DEF::SUBCLASS_NONE);
+			desc_ptr->bInterfaceProtocol = static_cast<uint8_t>(USB_common::PROTO_DEF::PROTO_NONE);
+			desc_ptr->iInterface         = 0;
+			desc_table.set_interface_descriptor(desc_ptr, 1);
+		}
+		{
+			//7 byte ea
+			Endpoint_descriptor desc;
+			desc.bEndpointAddress = 0x00 | 0x01;
+			desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
+			desc.wMaxPacketSize   = 512;
+			desc.bInterval        = 16;
+
+			desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
+
+			desc.bEndpointAddress = 0x80 | 0x01;
+			desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
+			desc.wMaxPacketSize   = 512;
+			desc.bInterval        = 16;
+			desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
+
+			desc.bEndpointAddress = 0x80 | 0x02;
+			desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::INTERRUPT);
+			desc.wMaxPacketSize   = 8;
+			desc.bInterval        = 255;
+			desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
+		}
+		{
+			//9 byte ea
+			Config_desc_table::Config_desc_ptr desc_ptr = std::make_shared<Configuration_descriptor>();
+			desc_ptr->wTotalLength = 0;//updated later
+			desc_ptr->bNumInterfaces = 2;
+			desc_ptr->bConfigurationValue = 0;
+			desc_ptr->iConfiguration = 0;
+			desc_ptr->bmAttributes = static_cast<uint8_t>(Configuration_descriptor::ATTRIBUTES::NONE);
+			desc_ptr->bMaxPower = Configuration_descriptor::ma_to_maxpower(150);
+
+			desc_table.set_config_descriptor(desc_ptr, 0);
+		}
+
+		std::shared_ptr<CDC_header_descriptor> cdc_header_desc = std::make_shared<CDC_header_descriptor>();
+		cdc_header_desc->bcdCDC = USB_common::build_bcd(1,1,0);
+
+		std::shared_ptr<CDC_call_management_descriptor> cdc_call_mgmt_desc = std::make_shared<CDC_call_management_descriptor>();
+		cdc_call_mgmt_desc->bmCapabilities = 0;
+		cdc_call_mgmt_desc->bDataInterface = 1;
+
+		std::shared_ptr<CDC_acm_descriptor> cdc_acm_desc = std::make_shared<CDC_acm_descriptor>();
+		cdc_acm_desc->bmCapabilities = 0;
+
+		std::shared_ptr<CDC_union_descriptor> cdc_union_desc = std::make_shared<CDC_union_descriptor>();
+		cdc_union_desc->bMasterInterface = 0;
+		cdc_union_desc->bSlaveInterface0 = 1;
+		
+		Config_desc_table::Config_desc_ptr desc_ptr = desc_table.get_config_descriptor(0);
+
+		//register iface and ep to configuration
+		desc_ptr->get_desc_list().push_back( desc_table.get_interface_descriptor(0).get() );
+		desc_ptr->get_desc_list().push_back( cdc_header_desc.get() );
+		desc_ptr->get_desc_list().push_back( cdc_call_mgmt_desc.get() );
+		desc_ptr->get_desc_list().push_back( cdc_acm_desc.get() );
+		desc_ptr->get_desc_list().push_back( cdc_union_desc.get() );
+		desc_ptr->get_desc_list().push_back( desc_table.get_endpoint_descriptor(0x82).get() );
+
+		desc_ptr->get_desc_list().push_back( desc_table.get_interface_descriptor(1).get() );
+		desc_ptr->get_desc_list().push_back( desc_table.get_endpoint_descriptor(0x01).get() );
+		desc_ptr->get_desc_list().push_back( desc_table.get_endpoint_descriptor(0x81).get() );
+
+		desc_ptr->wTotalLength = desc_ptr->get_total_size();
+
 		std::vector<uint8_t> rx_buf;
 		rx_buf.resize(1024);
-		USB_core::buffer_adapter rx_buf_adapter;
+		Buffer_adapter rx_buf_adapter;
 		rx_buf_adapter.reset(rx_buf.data(), rx_buf.size());
 
 		std::vector<uint8_t> tx_buf;
 		tx_buf.resize(1024);
-		USB_core::buffer_adapter tx_buf_adapter;
+		Buffer_adapter tx_buf_adapter;
 		tx_buf_adapter.reset(tx_buf.data(), tx_buf.size());
 
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.initialize");
@@ -179,6 +289,8 @@ public:
 		{
 			return false;
 		}
+
+		usb_core.set_descriptor_table(&desc_table);
 
 		__HAL_RCC_GPIOC_CLK_ENABLE();
 		__HAL_RCC_GPIOA_CLK_ENABLE();
