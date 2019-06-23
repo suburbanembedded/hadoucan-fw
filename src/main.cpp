@@ -228,7 +228,7 @@ public:
 			desc.bEndpointAddress = 0x80 | 0x02;
 			desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::INTERRUPT);
 			desc.wMaxPacketSize   = 8;
-			desc.bInterval        = 255;
+			desc.bInterval        = 16;
 			desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 		}
 		{
