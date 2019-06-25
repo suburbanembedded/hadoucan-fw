@@ -132,7 +132,7 @@ public:
 	}
 
 	Device_descriptor::Device_descriptor_array dev_desc_array;
-	bool usb_get_descriptor_callback(const Control_request& ctrl_req, uint8_t** address, size_t* size)
+	bool usb_get_descriptor_callback(const Setup_packet& req, uint8_t** address, size_t* size)
 	{
 		Device_descriptor dev_desc;
 		dev_desc.bcdUSB          = USB_common::build_bcd(0x02, 0x0, 0x0);
@@ -179,35 +179,35 @@ public:
 			dev_desc.idVendor  = 0x0123;
 			dev_desc.idProduct = 0x4567;
 			dev_desc.bcdDevice = USB_common::build_bcd(1, 0, 0);
-			dev_desc.iManufacturer      = 0;
-			dev_desc.iProduct           = 0;
-			dev_desc.iSerialNumber      = 0;
+			dev_desc.iManufacturer      = 1;
+			dev_desc.iProduct           = 2;
+			dev_desc.iSerialNumber      = 3;
 			dev_desc.bNumConfigurations = 1;
 
 			desc_table.set_device_descriptor(dev_desc, 0);
 		}
 		{
 			//9 byte ea
-			Iface_desc_table::Iface_desc_ptr desc_ptr = std::make_shared<Interface_descriptor>();
-			desc_ptr->bInterfaceNumber   = 0;
-			desc_ptr->bAlternateSetting  = 0;
-			desc_ptr->bNumEndpoints      = 1;
-			desc_ptr->bInterfaceClass    = static_cast<uint8_t>(CDC_CLASS_CODE::CDC);
-			desc_ptr->bInterfaceSubClass = static_cast<uint8_t>(CDC_SUBCLASS_CODE::ACM);
-			desc_ptr->bInterfaceProtocol = static_cast<uint8_t>(CDC_PROTO_CODE::NONE);
-			desc_ptr->iInterface         = 0;
-			desc_table.set_interface_descriptor(desc_ptr, 0);
+			Interface_descriptor desc;
+			desc.bInterfaceNumber   = 0;
+			desc.bAlternateSetting  = 0;
+			desc.bNumEndpoints      = 1;
+			desc.bInterfaceClass    = static_cast<uint8_t>(CDC::COMM_INTERFACE_CLASS_CODE);
+			desc.bInterfaceSubClass = static_cast<uint8_t>(CDC::COMM_INTERFACE_SUBCLASS_CODE::ACM);
+			desc.bInterfaceProtocol = static_cast<uint8_t>(CDC::COMM_CLASS_PROTO_CODE::NONE);
+			desc.iInterface         = 5;
+			desc_table.set_interface_descriptor(desc, 0);
 		}
 		{
-			Iface_desc_table::Iface_desc_ptr desc_ptr = std::make_shared<Interface_descriptor>();
-			desc_ptr->bInterfaceNumber   = 1;
-			desc_ptr->bAlternateSetting  = 0;
-			desc_ptr->bNumEndpoints      = 2;
-			desc_ptr->bInterfaceClass    = static_cast<uint8_t>(CDC_CLASS_CODE::CDC_DATA);
-			desc_ptr->bInterfaceSubClass = static_cast<uint8_t>(USB_common::SUBCLASS_DEF::SUBCLASS_NONE);
-			desc_ptr->bInterfaceProtocol = static_cast<uint8_t>(USB_common::PROTO_DEF::PROTO_NONE);
-			desc_ptr->iInterface         = 0;
-			desc_table.set_interface_descriptor(desc_ptr, 1);
+			Interface_descriptor desc;
+			desc.bInterfaceNumber   = 1;
+			desc.bAlternateSetting  = 0;
+			desc.bNumEndpoints      = 2;
+			desc.bInterfaceClass    = static_cast<uint8_t>(CDC::DATA_INTERFACE_CLASS_CODE);
+			desc.bInterfaceSubClass = static_cast<uint8_t>(CDC::DATA_INTERFACE_SUBCLASS_CODE);
+			desc.bInterfaceProtocol = static_cast<uint8_t>(CDC::DATA_INTERFACE_PROTO_CODE::NONE);
+			desc.iInterface         = 6;
+			desc_table.set_interface_descriptor(desc, 1);
 		}
 		{
 			//7 byte ea
@@ -237,24 +237,61 @@ public:
 			desc_ptr->wTotalLength = 0;//updated later
 			desc_ptr->bNumInterfaces = 2;
 			desc_ptr->bConfigurationValue = 0;
-			desc_ptr->iConfiguration = 0;
+			desc_ptr->iConfiguration = 4;
 			desc_ptr->bmAttributes = static_cast<uint8_t>(Configuration_descriptor::ATTRIBUTES::NONE);
 			desc_ptr->bMaxPower = Configuration_descriptor::ma_to_maxpower(150);
 
 			desc_table.set_config_descriptor(desc_ptr, 0);
 		}
+		{
+			std::shared_ptr<String_descriptor_zero> desc_ptr = std::make_shared<String_descriptor_zero>();
 
-		std::shared_ptr<CDC_header_descriptor> cdc_header_desc = std::make_shared<CDC_header_descriptor>();
+			static String_descriptor_zero::LANGID lang[] = {String_descriptor_zero::LANGID::ENUS};
+			desc_ptr->assign(lang, 1);
+
+			desc_table.set_string_descriptor(desc_ptr, 0);
+		}
+		{
+			String_descriptor_base desc;
+			desc.assign("Suburban Marine, Inc.");
+			desc_table.set_string_descriptor(desc, 1);
+		}
+		{
+			String_descriptor_base desc;
+			desc.assign("SM-1301");
+			desc_table.set_string_descriptor(desc, 2);
+		}
+		{
+			String_descriptor_base desc;
+			desc.assign("123456789A");
+			desc_table.set_string_descriptor(desc, 3);
+		}
+		{
+			String_descriptor_base desc;
+			desc.assign("Default configuration");
+			desc_table.set_string_descriptor(desc, 4);
+		}
+		{
+			String_descriptor_base desc;
+			desc.assign("Communications");
+			desc_table.set_string_descriptor(desc, 5);
+		}
+		{
+			String_descriptor_base desc;
+			desc.assign("CDC Data");
+			desc_table.set_string_descriptor(desc, 6);
+		}
+		std::shared_ptr<CDC::CDC_header_descriptor> cdc_header_desc = std::make_shared<CDC::CDC_header_descriptor>();
 		cdc_header_desc->bcdCDC = USB_common::build_bcd(1,1,0);
 
-		std::shared_ptr<CDC_call_management_descriptor> cdc_call_mgmt_desc = std::make_shared<CDC_call_management_descriptor>();
+		std::shared_ptr<CDC::CDC_call_management_descriptor> cdc_call_mgmt_desc = std::make_shared<CDC::CDC_call_management_descriptor>();
 		cdc_call_mgmt_desc->bmCapabilities = 0;
 		cdc_call_mgmt_desc->bDataInterface = 1;
 
-		std::shared_ptr<CDC_acm_descriptor> cdc_acm_desc = std::make_shared<CDC_acm_descriptor>();
+		std::shared_ptr<CDC::CDC_acm_descriptor> cdc_acm_desc = std::make_shared<CDC::CDC_acm_descriptor>();
 		cdc_acm_desc->bmCapabilities = 0;
 
-		std::shared_ptr<CDC_union_descriptor> cdc_union_desc = std::make_shared<CDC_union_descriptor>();
+		std::shared_ptr<CDC::CDC_union_descriptor> cdc_union_desc = std::make_shared<CDC::CDC_union_descriptor>();
 		cdc_union_desc->bMasterInterface = 0;
 		cdc_union_desc->bSlaveInterface0 = 1;
 		
