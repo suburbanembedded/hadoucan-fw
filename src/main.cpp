@@ -249,37 +249,37 @@ public:
 			static String_descriptor_zero::LANGID lang[] = {String_descriptor_zero::LANGID::ENUS};
 			desc_ptr->assign(lang, 1);
 
-			desc_table.set_string_descriptor(desc_ptr, 0);
+			desc_table.set_string_descriptor(desc_ptr, String_descriptor_zero::LANGID::NONE, 0);
 		}
 		{
 			String_descriptor_base desc;
 			desc.assign("Suburban Marine, Inc.");
-			desc_table.set_string_descriptor(desc, 1);
+			desc_table.set_string_descriptor(desc, String_descriptor_zero::LANGID::ENUS, 1);
 		}
 		{
 			String_descriptor_base desc;
 			desc.assign("SM-1301");
-			desc_table.set_string_descriptor(desc, 2);
+			desc_table.set_string_descriptor(desc, String_descriptor_zero::LANGID::ENUS, 2);
 		}
 		{
 			String_descriptor_base desc;
 			desc.assign("123456789A");
-			desc_table.set_string_descriptor(desc, 3);
+			desc_table.set_string_descriptor(desc, String_descriptor_zero::LANGID::ENUS, 3);
 		}
 		{
 			String_descriptor_base desc;
 			desc.assign("Default configuration");
-			desc_table.set_string_descriptor(desc, 4);
+			desc_table.set_string_descriptor(desc, String_descriptor_zero::LANGID::ENUS, 4);
 		}
 		{
 			String_descriptor_base desc;
 			desc.assign("Communications");
-			desc_table.set_string_descriptor(desc, 5);
+			desc_table.set_string_descriptor(desc, String_descriptor_zero::LANGID::ENUS, 5);
 		}
 		{
 			String_descriptor_base desc;
 			desc.assign("CDC Data");
-			desc_table.set_string_descriptor(desc, 6);
+			desc_table.set_string_descriptor(desc, String_descriptor_zero::LANGID::ENUS, 6);
 		}
 		std::shared_ptr<CDC::CDC_header_descriptor> cdc_header_desc = std::make_shared<CDC::CDC_header_descriptor>();
 		cdc_header_desc->bcdCDC = USB_common::build_bcd(1,1,0);
