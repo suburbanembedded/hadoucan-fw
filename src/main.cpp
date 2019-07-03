@@ -37,6 +37,8 @@
 
 #include "../external/tinyxml2/tinyxml2.h"
 
+#include <memory>
+
 #include <cstdio>
 #include <cinttypes>
 
@@ -50,9 +52,10 @@ USB_tx_buffer_task usb_tx_buffer_task __attribute__(( section(".ram_dtcm_noload"
 
 USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
 stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
-Descriptor_table usb_desc_table;
 EP_buffer_mgr_freertos<2, 2, 512, 32> usb_tx_buffer __attribute__(( section(".ram_dtcm_noload") ));
 EP_buffer_mgr_freertos<2, 2, 512, 32> usb_rx_buffer __attribute__(( section(".ram_dtcm_noload") ));
+
+Descriptor_table usb_desc_table;
 
 extern "C"
 {
@@ -96,12 +99,12 @@ public:
 	{
 		for(;;)
 		{
-			Buffer_adapter_base* buf = usb_rx_buffer.wait_buffer(1, -1);
+			Buffer_adapter_base* buf = usb_driver.wait_rx_buffer(1);
 			if(buf)
 			{
 				uart1_log<64>(LOG_LEVEL::INFO, "Test_USB_RX_task", "Got buffer: %.*s", buf->size(), buf->data());
 
-				usb_rx_buffer.release_buffer(1, buf);
+				usb_driver.release_rx_buffer(1, buf);
 			}
 			else
 			{
@@ -120,7 +123,7 @@ public:
 		mount_fs();
 		load_config();
 
-		// test_usb_core.launch("usb_core", 14);
+		test_usb_core.launch("usb_core", 14);
 		test_usb_rx.launch("usb_rx", 16);
 
 		if(!init_usb())
@@ -211,6 +214,12 @@ public:
 
 	bool init_usb()
 	{
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.set_tx_buffer");
+		usb_driver.set_tx_buffer(&usb_tx_buffer);
+		
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.set_rx_buffer");
+		usb_driver.set_rx_buffer(&usb_rx_buffer);
+
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.initialize");
 		if(!usb_driver.initialize())
 		{
@@ -296,7 +305,7 @@ public:
 		{
 			std::shared_ptr<String_descriptor_zero> desc_ptr = std::make_shared<String_descriptor_zero>();
 
-			static String_descriptor_zero::LANGID lang[] = {String_descriptor_zero::LANGID::ENUS};
+			const static String_descriptor_zero::LANGID lang[] = {String_descriptor_zero::LANGID::ENUS};
 			desc_ptr->assign(lang, 1);
 
 			usb_desc_table.set_string_descriptor(desc_ptr, String_descriptor_zero::LANGID::NONE, 0);
@@ -333,33 +342,37 @@ public:
 		}
 		std::shared_ptr<CDC::CDC_header_descriptor> cdc_header_desc = std::make_shared<CDC::CDC_header_descriptor>();
 		cdc_header_desc->bcdCDC = USB_common::build_bcd(1,1,0);
+		usb_desc_table.add_other_descriptor(cdc_header_desc);
 
 		std::shared_ptr<CDC::CDC_call_management_descriptor> cdc_call_mgmt_desc = std::make_shared<CDC::CDC_call_management_descriptor>();
 		cdc_call_mgmt_desc->bmCapabilities = 0;
 		cdc_call_mgmt_desc->bDataInterface = 1;
+		usb_desc_table.add_other_descriptor(cdc_call_mgmt_desc);
 
 		std::shared_ptr<CDC::CDC_acm_descriptor> cdc_acm_desc = std::make_shared<CDC::CDC_acm_descriptor>();
 		cdc_acm_desc->bmCapabilities = 0;
+		usb_desc_table.add_other_descriptor(cdc_acm_desc);
 
 		std::shared_ptr<CDC::CDC_union_descriptor> cdc_union_desc = std::make_shared<CDC::CDC_union_descriptor>();
 		cdc_union_desc->bMasterInterface = 0;
 		cdc_union_desc->bSlaveInterface0 = 1;
+		usb_desc_table.add_other_descriptor(cdc_union_desc);
 		
-		Config_desc_table::Config_desc_ptr desc_ptr = usb_desc_table.get_config_descriptor(0);
+		Config_desc_table::Config_desc_ptr config_desc_ptr = usb_desc_table.get_config_descriptor(0);
 
 		//register iface and ep to configuration
-		desc_ptr->get_desc_list().push_back( usb_desc_table.get_interface_descriptor(0).get() );
-		desc_ptr->get_desc_list().push_back( cdc_header_desc.get() );
-		desc_ptr->get_desc_list().push_back( cdc_call_mgmt_desc.get() );
-		desc_ptr->get_desc_list().push_back( cdc_acm_desc.get() );
-		desc_ptr->get_desc_list().push_back( cdc_union_desc.get() );
-		desc_ptr->get_desc_list().push_back( usb_desc_table.get_endpoint_descriptor(0x82).get() );
+		config_desc_ptr->get_desc_list().push_back( usb_desc_table.get_interface_descriptor(0).get() );
+		config_desc_ptr->get_desc_list().push_back( cdc_header_desc.get() );
+		config_desc_ptr->get_desc_list().push_back( cdc_call_mgmt_desc.get() );
+		config_desc_ptr->get_desc_list().push_back( cdc_acm_desc.get() );
+		config_desc_ptr->get_desc_list().push_back( cdc_union_desc.get() );
+		config_desc_ptr->get_desc_list().push_back( usb_desc_table.get_endpoint_descriptor(0x82).get() );
 
-		desc_ptr->get_desc_list().push_back( usb_desc_table.get_interface_descriptor(1).get() );
-		desc_ptr->get_desc_list().push_back( usb_desc_table.get_endpoint_descriptor(0x01).get() );
-		desc_ptr->get_desc_list().push_back( usb_desc_table.get_endpoint_descriptor(0x81).get() );
+		config_desc_ptr->get_desc_list().push_back( usb_desc_table.get_interface_descriptor(1).get() );
+		config_desc_ptr->get_desc_list().push_back( usb_desc_table.get_endpoint_descriptor(0x01).get() );
+		config_desc_ptr->get_desc_list().push_back( usb_desc_table.get_endpoint_descriptor(0x81).get() );
 
-		desc_ptr->wTotalLength = desc_ptr->get_total_size();
+		config_desc_ptr->wTotalLength = config_desc_ptr->get_total_size();
 
 		std::vector<uint8_t> rx_buf;
 		rx_buf.resize(1024);
@@ -370,9 +383,6 @@ public:
 		tx_buf.resize(1024);
 		Buffer_adapter tx_buf_adapter;
 		tx_buf_adapter.reset(tx_buf.data(), tx_buf.size());
-
-		usb_driver.set_tx_buffer(&usb_tx_buffer);
-		usb_driver.set_rx_buffer(&usb_rx_buffer);
 
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.initialize");
 		if(!usb_core.initialize(&usb_driver, 8, tx_buf_adapter, rx_buf_adapter))
@@ -443,13 +453,6 @@ public:
 		{
 			uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.connect failed");
 			return false;
-		}
-
-		for(;;)
-		{
-			usb_core.poll();
-
-			vTaskDelay(0);
 		}
 
 		return true;
