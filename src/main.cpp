@@ -38,6 +38,7 @@
 #include "../external/tinyxml2/tinyxml2.h"
 
 #include <memory>
+#include <sstream>
 
 #include <cstdio>
 #include <cinttypes>
@@ -52,8 +53,8 @@ USB_tx_buffer_task usb_tx_buffer_task __attribute__(( section(".ram_dtcm_noload"
 
 USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
 stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
-EP_buffer_mgr_freertos<2, 2, 512, 32> usb_tx_buffer __attribute__(( section(".ram_dtcm_noload") ));
-EP_buffer_mgr_freertos<2, 2, 512, 32> usb_rx_buffer __attribute__(( section(".ram_dtcm_noload") ));
+EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
+EP_buffer_mgr_freertos<3, 4, 512, 32> usb_rx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 
 Descriptor_table usb_desc_table;
 
@@ -62,7 +63,7 @@ extern "C"
 	void OTG_HS_IRQHandler(void)
 	{
 		//USB1 ISR handler
-		usb_core.poll();
+		usb_core.poll_driver();
 	}
 }
 
@@ -84,7 +85,8 @@ public:
 	{
 		for(;;)
 		{
-			usb_core.poll();
+			usb_core.poll_driver();
+			usb_core.poll_event_loop();
 
 			vTaskDelay(0);
 		}
@@ -99,16 +101,34 @@ public:
 	{
 		for(;;)
 		{
-			Buffer_adapter_base* buf = usb_driver.wait_rx_buffer(1);
-			if(buf)
 			{
-				uart1_log<64>(LOG_LEVEL::INFO, "Test_USB_RX_task", "Got buffer: %.*s", buf->size(), buf->data());
+				Buffer_adapter_base* rx_buf = usb_driver.wait_rx_buffer(1);
+				if(rx_buf)
+				{
+					uart1_log<64>(LOG_LEVEL::INFO, "Test_USB_RX_task", "Got rx buffer: %.*s", rx_buf->size(), rx_buf->data());
 
-				usb_driver.release_rx_buffer(1, buf);
-			}
-			else
-			{
-				uart1_log<64>(LOG_LEVEL::ERROR, "Test_USB_RX_task", "Got nullptr!");
+					Buffer_adapter_base* tx_buf = usb_driver.wait_tx_buffer(0x81);
+					if(tx_buf)
+					{
+						tx_buf->reset();
+						tx_buf->insert(rx_buf->data(), rx_buf->size());
+
+						if(!usb_driver.enqueue_tx_buffer(0x81, tx_buf))
+						{
+							uart1_log<64>(LOG_LEVEL::ERROR, "Test_USB_RX_task", "tx enqueue failed");
+						}
+					}
+					else
+					{
+						uart1_log<64>(LOG_LEVEL::ERROR, "Test_USB_RX_task", "Got tx nullptr!");
+					}
+
+					usb_driver.release_rx_buffer(1, rx_buf);
+				}
+				else
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "Test_USB_RX_task", "Got rx nullptr!");
+				}
 			}
 		}
 	}
