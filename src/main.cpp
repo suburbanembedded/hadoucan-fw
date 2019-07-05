@@ -45,8 +45,8 @@
 
 CAN_USB_app can_usb_app __attribute__(( section(".ram_dtcm_noload") ));
 
-USB_RX_task usb_rx_task __attribute__(( section(".ram_dtcm_noload") ));
-USB_TX_task usb_tx_task __attribute__(( section(".ram_dtcm_noload") ));
+// USB_RX_task usb_rx_task __attribute__(( section(".ram_dtcm_noload") ));
+// USB_TX_task usb_tx_task __attribute__(( section(".ram_dtcm_noload") ));
 
 USB_rx_buffer_task usb_rx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
 USB_tx_buffer_task usb_tx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
@@ -143,8 +143,8 @@ public:
 		mount_fs();
 		load_config();
 
-		test_usb_core.launch("usb_core", 14);
-		test_usb_rx.launch("usb_rx", 16);
+		test_usb_core.launch("usb_core", 1);
+		// test_usb_rx.launch("usb_rx", 16);
 
 		if(!init_usb())
 		{
@@ -152,10 +152,10 @@ public:
 		}
 
 		//todo: after usb is done, remove
-		for(;;)
-		{
-			vTaskSuspend(nullptr);
-		}
+		// for(;;)
+		// {
+		// 	vTaskSuspend(nullptr);
+		// }
 
 		CAN_USB_app_config::Config_Set config_struct;
 		can_usb_app.get_config(&config_struct);
@@ -166,8 +166,8 @@ public:
 		can_usb_app.get_can_tx().set_bitrate_table(bitrate_table);
 
 		//init
-		usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
-		usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
+		usb_rx_buffer_task.set_usb_driver(&usb_driver);
+		usb_tx_buffer_task.set_usb_driver(&usb_driver);
 
 		usb_lawicel_task.set_can_tx(&can_usb_app.get_can_tx());
 		usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
@@ -190,8 +190,8 @@ public:
 		usb_tx_buffer_task.launch("usb_tx_buf", 5);
 
 		//actually send usb packets on the wire
-		usb_rx_task.launch("usb_rx", 3);
-		usb_tx_task.launch("usb_tx", 4);
+		// usb_rx_task.launch("usb_rx", 3);
+		// usb_tx_task.launch("usb_tx", 4);
 
 		led_task.launch("led", 1);
 		timesync_task.launch("timesync", 1);
