@@ -151,12 +151,6 @@ public:
 			uart1_log<64>(LOG_LEVEL::ERROR, "main", "USB init failed");
 		}
 
-		//todo: after usb is done, remove
-		// for(;;)
-		// {
-		// 	vTaskSuspend(nullptr);
-		// }
-
 		CAN_USB_app_config::Config_Set config_struct;
 		can_usb_app.get_config(&config_struct);
 		CAN_USB_app_bitrate_table bitrate_table;
@@ -180,10 +174,10 @@ public:
 		stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
 
 		//can RX
-		stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 1);
+		stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 2);
 
 		//protocol state machine
-		usb_lawicel_task.launch("usb_lawicel", 2);
+		usb_lawicel_task.launch("usb_lawicel", 3);
 
 		//process usb packets
 		usb_rx_buffer_task.launch("usb_rx_buf", 4);
@@ -453,6 +447,9 @@ public:
 		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 		GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
 		HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+		__HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+		__HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
 
 		// HAL_NVIC_SetPriority(OTG_HS_IRQn, 5, 0);
 		// HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
@@ -1125,14 +1122,23 @@ int main(void)
 	//TODO: make this config
 	if(1)
 	{
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+
 		GPIO_InitTypeDef GPIO_InitStruct = {0};
 		GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
-		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 		GPIO_InitStruct.Pull = GPIO_NOPULL;
 		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+		HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
 
-		HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_SET);
+		GPIO_InitStruct.Pin = CAN_SILENT_Pin|CAN_STDBY_Pin;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+		HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 	}
 
 	{

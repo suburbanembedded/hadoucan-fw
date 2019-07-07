@@ -15,6 +15,8 @@
 
 bool set_can_clk(const uint32_t can_clk)
 {
+	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "set_can_clk %d", can_clk);
+
 	const uint32_t hse_clk = HSE_VALUE;
 	if(hse_clk != 24000000U)
 	{
@@ -798,7 +800,7 @@ void STM32_fdcan_tx::set_can_slew_slow()
 {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
 	HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
@@ -809,7 +811,7 @@ void STM32_fdcan_tx::set_can_slew_high()
 {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
 	HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
