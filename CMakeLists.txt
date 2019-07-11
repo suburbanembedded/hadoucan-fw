@@ -79,6 +79,8 @@ add_executable(canusbfdiso.elf
 	src/main_cube.c
 	src/hal_inst.c
 
+	src/global_app_inst.cpp
+
 	src/USB_RX_task.cpp
 	src/USB_TX_task.cpp
 	src/USB_buf.cpp
@@ -103,7 +105,8 @@ add_executable(canusbfdiso.elf
 	src/tasks/LED_task.cpp
 	src/tasks/Timesync_task.cpp
 	src/tasks/USB_lawicel_task.cpp
-
+	src/tasks/Main_task.cpp
+	src/tasks/Task_instances.cpp
 
 	src/CAN_USB_app.cpp
 	src/CAN_USB_app_config.cpp
