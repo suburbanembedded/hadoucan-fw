@@ -807,7 +807,7 @@ void set_all_gpio_low_power()
 int main(void)
 {
 	//confg mpu
-	if(0)
+	if(1)
 	{
 		/*
 		ITCMRAM, 0x00000000, 64K
@@ -1040,18 +1040,17 @@ int main(void)
 		//MPU enabled during MMI
 		// HAL_MPU_Enable(MPU_HARDFAULT_NMI);
 		
+		if(1)
+		{
+			SCB_EnableICache();
+			SCB_EnableDCache();
+		}
 	}
 
 	//enable core interrupts
 	SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk | SCB_SHCSR_MEMFAULTENA_Msk;
 	// SCB->CCR   &= ~(SCB_CCR_UNALIGN_TRP_Msk);
 	// SCB->CCR   |= SCB_CCR_UNALIGN_TRP_Msk;
-
-	if(1)
-	{
-		SCB_EnableICache();
-		SCB_EnableDCache();
-	}
 
 	HAL_Init();
 
@@ -1160,7 +1159,7 @@ int main(void)
 			}
 			default:
 			{
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "Unk rev ID");
+				uart1_log<64>(LOG_LEVEL::WARN, "main", "Silicon rev unknown");
 				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
 				break;
 			}
