@@ -25,7 +25,7 @@ protected:
 	void get_unique_id_str(std::array<char, 25>* id_str);
 
 	Descriptor_table usb_desc_table;
-	std::array<char, 25> usb_id_str;
+	std::array<char, 25> usb_id_str;//this is read by the usb core, and sent as a descriptor payload
 };
 
 
