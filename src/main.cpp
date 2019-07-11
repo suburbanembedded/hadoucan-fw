@@ -55,8 +55,10 @@ Timesync_task timesync_task __attribute__(( section(".ram_dtcm_noload") ));
 USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
 stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
 Descriptor_table usb_desc_table;
+std::array<char, 25> usb_id_str __attribute__(( section(".ram_dtcm_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_rx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
+
 
 extern "C"
 {
@@ -300,7 +302,7 @@ public:
 		}
 		{
 			String_descriptor_base desc;
-			desc.assign("123456789A");
+			desc.assign(usb_id_str.data());
 			usb_desc_table.set_string_descriptor(desc, String_descriptor_zero::LANGID::ENUS, 3);
 		}
 		{
@@ -1110,12 +1112,11 @@ int main(void)
 	}
 
 	{
-		std::array<char, 25> id_str;
-		get_unique_id_str(&id_str);
+		get_unique_id_str(&usb_id_str);
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "Initialing");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "CAN FD <-> USB Adapter");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
+		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", usb_id_str.data());
 	}
 
 	{
@@ -1174,4 +1175,6 @@ int main(void)
 	{
 
 	}
+
+	return 0;
 }
