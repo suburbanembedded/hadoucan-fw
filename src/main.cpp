@@ -3,8 +3,6 @@
 
 #include "uart1_printf.hpp"
 
-#include "USB_RX_task.hpp"
-#include "USB_TX_task.hpp"
 #include "USB_rx_buffer_task.hpp"
 #include "USB_tx_buffer_task.hpp"
 
