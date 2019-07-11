@@ -1,10 +1,13 @@
 #include "Lawicel_parser_stm32.hpp"
 
 #include "bootloader_util/Bootloader_key.hpp"
+#include "common_util/Byte_util.hpp"
 
 #include "global_app_inst.hpp"
 
 #include "uart1_printf.hpp"
+
+#include <mbedtls/md5.h>
 
 #include <algorithm>
 
@@ -158,12 +161,53 @@ bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 }
 bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 {
-	ver->fill(0);
+	const std::array<char, 2> hw_ver = {'0', '1'};
+	const std::array<char, 2> sw_ver = {'0', '1'};
+	
+	ver->data()[0] = static_cast<uint8_t>(hw_ver[0]);
+	ver->data()[1] = static_cast<uint8_t>(hw_ver[1]);
+
+	ver->data()[2] = static_cast<uint8_t>(sw_ver[0]);
+	ver->data()[3] = static_cast<uint8_t>(sw_ver[1]);
+
 	return true;
 }
 bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
 {
-	sn->fill(0);
+	//CAN232 has a 4 hex digit serial number, eg 2 bytes
+	//hash down our real id to 2 bytes, as uniform as we can
+	//this is not globally unique
+	//TODO: add extended serial number that is globally unique
+
+	//get stm32 id, 12 bytes globally unique. something like fab + date + wafer location i think
+	std::array<uint32_t, 3> id;
+	CAN_USB_app::get_unique_id(&id);
+
+	//md5 hash to mix
+	mbedtls_md5_context md5_ctx;
+	mbedtls_md5_init(&md5_ctx);
+	mbedtls_md5_starts_ret(&md5_ctx);
+
+	mbedtls_md5_update_ret(&md5_ctx, reinterpret_cast<uint8_t*>(id.data()), id.size() * sizeof(uint32_t) / sizeof(uint8_t));
+
+	std::array<uint8_t, 16> md5_output;
+	mbedtls_md5_finish_ret(&md5_ctx, md5_output.data() );
+	mbedtls_md5_free(&md5_ctx);
+	
+	std::array<uint8_t, 2> sn_bin;
+	sn_bin.fill(0);
+
+	//mix md5 down to 2 bytes
+	for(size_t i = 0; i < 8; i++)
+	{
+		sn_bin[0] ^= md5_output[i + 0];
+		sn_bin[1] ^= md5_output[i + 1];
+	}
+
+	//convert to hex
+	Byte_util::u8_to_hex(sn_bin[0], reinterpret_cast<char*>(sn->data() + 0));
+	Byte_util::u8_to_hex(sn_bin[1], reinterpret_cast<char*>(sn->data() + 2));
+
 	return true;
 }
 bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
@@ -288,6 +332,16 @@ bool Lawicel_parser_stm32::handle_ext_bootloader()
 	{
 
 	}
+
+	return true;
+}
+
+bool Lawicel_parser_stm32::handle_ext_serial()
+{
+	std::array<char, 25> id_str;
+	CAN_USB_app::get_unique_id_str(&id_str);
+
+	write_string(id_str.data());
 
 	return true;
 }

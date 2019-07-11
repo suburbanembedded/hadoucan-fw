@@ -21,13 +21,12 @@ bool can_rx_to_lawicel(const std::string& str)
 void Main_task::work()
 {
 	{
-		get_unique_id_str(&usb_id_str);
+		CAN_USB_app::get_unique_id_str(&usb_id_str);
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "Initialing");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "CAN FD <-> USB Adapter");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
 		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", usb_id_str.data());
 	}
-
 	{
 		const uint32_t idcode = DBGMCU->IDCODE;
 		const uint16_t rev_id = (idcode & 0xFFFF0000) >> 16;
@@ -544,20 +543,4 @@ bool Main_task::load_config()
 	}
 
 	return true;
-}
-
-void Main_task::get_unique_id(std::array<uint32_t, 3>* id)
-{
-	volatile uint32_t* addr = reinterpret_cast<uint32_t*>(0x1FF1E800);
-
-	std::copy_n(addr, 3, id->data());
-}
-
-void Main_task::get_unique_id_str(std::array<char, 25>* id_str)
-{
-	//0x012345670123456701234567
-	std::array<uint32_t, 3> id;
-	get_unique_id(&id);
-
-	snprintf(id_str->data(), id_str->size(), "%08" PRIX32 "%08" PRIX32 "%08" PRIX32, id[0], id[1], id[2]);
 }

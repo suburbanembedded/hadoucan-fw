@@ -64,6 +64,9 @@ public:
 		return can_tx;
 	}
 
+	static void get_unique_id(std::array<uint32_t, 3>* id);
+	static void get_unique_id_str(std::array<char, 25>* id_str);
+
 protected:
 
 	CAN_USB_app_config m_config;

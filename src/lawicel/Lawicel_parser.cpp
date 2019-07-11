@@ -1121,6 +1121,9 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	const char bootloader_str[] = "!bootloader\r";
 	const size_t bootloader_str_len = strlen(bootloader_str);
 
+	const char serial_str[] = "!serial\r";
+	const size_t serial_str_len = strlen(serial_str);
+
 	bool ret = false;
 
 	//TODO: this does not compare substrings as true
@@ -1165,6 +1168,12 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Rebooting to bootloader");
 
 		ret = handle_ext_bootloader();
+	}
+	else if(strncmp(in_str, serial_str, serial_str_len) == 0)
+	{
+		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended serial number");
+
+		ret = handle_ext_serial();
 	}
 	else
 	{

@@ -2,6 +2,8 @@
 
 #include "uart1_printf.hpp"
 
+#include <algorithm>
+
 CAN_USB_app::CAN_USB_app()
 {
 
@@ -209,4 +211,20 @@ bool CAN_USB_app::write_xml_file(spiffs* const fs, const char* name, const tinyx
 	uart1_log<128>(LOG_LEVEL::INFO, "CAN_USB_app", "Write %s success", name);
 
 	return true;
+}
+
+void CAN_USB_app::get_unique_id(std::array<uint32_t, 3>* id)
+{
+	volatile uint32_t* addr = reinterpret_cast<uint32_t*>(0x1FF1E800);
+
+	std::copy_n(addr, 3, id->data());
+}
+
+void CAN_USB_app::get_unique_id_str(std::array<char, 25>* id_str)
+{
+	//0x012345670123456701234567
+	std::array<uint32_t, 3> id;
+	get_unique_id(&id);
+
+	snprintf(id_str->data(), id_str->size(), "%08" PRIX32 "%08" PRIX32 "%08" PRIX32, id[0], id[1], id[2]);
 }

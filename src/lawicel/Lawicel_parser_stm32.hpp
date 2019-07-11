@@ -47,6 +47,7 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 	bool handle_ext_print_bitrate_table() override;
 	bool handle_ext_defconfig() override;
 	bool handle_ext_bootloader() override;
+	bool handle_ext_serial() override;
 
 	protected:
 

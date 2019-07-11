@@ -111,6 +111,7 @@ class Lawicel_parser
 	virtual bool handle_ext_print_bitrate_table() = 0;
 	virtual bool handle_ext_defconfig() = 0;
 	virtual bool handle_ext_bootloader() = 0;
+	virtual bool handle_ext_serial() = 0;
 
 	protected:
 
