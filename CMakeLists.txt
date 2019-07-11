@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(CANUSBFDISO C CXX ASM)
+project(canusbfdiso C CXX ASM)
 
 set(INSTALL_GTEST OFF)
 
@@ -25,7 +25,7 @@ add_definitions(
 	-DSPIFFS_LOCK=spiffs_lock_dispatch
 	-DSPIFFS_UNLOCK=spiffs_unlock_dispatch
 	-DSPIFFS_HAL_CALLBACK_EXTRA
-
+	-DSPIFFS_ALIGNED_OBJECT_INDEX_TABLES=1
 
 	#we will provide the syscalls
 	#-D_REENT_ONLY
