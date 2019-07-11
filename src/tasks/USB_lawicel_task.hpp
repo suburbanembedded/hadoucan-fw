@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <vector>
 
-class USB_lawicel_task : public Task_static<1024>
+class USB_lawicel_task : public Task_static<4096>
 {
 public:
 

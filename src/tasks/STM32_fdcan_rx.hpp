@@ -10,7 +10,7 @@
 #include <atomic>
 #include <functional>
 
-class STM32_fdcan_rx : public Task_static<1024>
+class STM32_fdcan_rx : public Task_static<2048>
 {
 public:
 
