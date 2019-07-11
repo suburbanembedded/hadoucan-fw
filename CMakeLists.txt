@@ -81,10 +81,8 @@ add_executable(canusbfdiso.elf
 
 	src/global_app_inst.cpp
 
-	src/USB_RX_task.cpp
-	src/USB_TX_task.cpp
-	src/USB_buf.cpp
 	
+	src/USB_buf.cpp
 	src/USB_tx_buffer_task.cpp
 	src/USB_rx_buffer_task.cpp
 
