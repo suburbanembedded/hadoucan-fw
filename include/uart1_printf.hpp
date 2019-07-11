@@ -111,3 +111,9 @@ bool uart1_log(const LOG_LEVEL level, const char* module_name, const char* fmt, 
 
 	return uartret == HAL_OK;
 }
+
+template<size_t LEN>
+bool uart1_log_isr(const LOG_LEVEL level, const char* module_name, const char* fmt, ...)
+{
+	return true;
+}

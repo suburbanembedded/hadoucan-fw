@@ -1,13 +1,8 @@
 #include "main.h"
 #include "cmsis_os.h"
-#include "usb_device.h"
-#include "usbd_desc.h"
-#include "usbd_cdc_if.h"
 
 #include "uart1_printf.hpp"
 
-#include "USB_RX_task.hpp"
-#include "USB_TX_task.hpp"
 #include "USB_rx_buffer_task.hpp"
 #include "USB_tx_buffer_task.hpp"
 
@@ -17,6 +12,14 @@
 #include "tasks/LED_task.hpp"
 #include "tasks/Timesync_task.hpp"
 #include "tasks/STM32_fdcan_rx.hpp"
+#include "tasks/Task_instances.hpp"
+
+#include "libusb_dev_cpp/usb_core.hpp"
+#include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs.hpp"
+#include "libusb_dev_cpp/util/Descriptor_table.hpp"
+
+#include "libusb_dev_cpp/descriptor/Device_descriptor.hpp"
+#include "libusb_dev_cpp/class/cdc/cdc_desc.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
@@ -29,262 +32,22 @@
 #include "W25Q16JV.hpp"
 #include "W25Q16JV_conf_region.hpp"
 
-#include "CAN_USB_app.hpp"
-
 #include "../external/tinyxml2/tinyxml2.h"
+
+#include <memory>
+#include <sstream>
 
 #include <cstdio>
 #include <cinttypes>
 
-CAN_USB_app can_usb_app __attribute__(( section(".ram_dtcm_noload") ));
-
-USB_RX_task usb_rx_task __attribute__(( section(".ram_dtcm_noload") ));
-USB_TX_task usb_tx_task __attribute__(( section(".ram_dtcm_noload") ));
-
-USB_rx_buffer_task usb_rx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
-USB_tx_buffer_task usb_tx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
-
-LED_task led_task __attribute__(( section(".ram_dtcm_noload") ));
-
-USB_lawicel_task usb_lawicel_task __attribute__(( section(".ram_dtcm_noload") ));
-
-Timesync_task timesync_task __attribute__(( section(".ram_dtcm_noload") ));
-
-bool can_rx_to_lawicel(const std::string& str)
+extern "C"
 {
-	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
+	void OTG_HS_IRQHandler(void)
+	{
+		//USB1 ISR handler
+		usb_core.poll_driver();
+	}
 }
-
-class Main_task : public Task_static<1024>
-{
-public:
-	void work() override
-	{
-		mount_fs();
-		load_config();
-
-		CAN_USB_app_config::Config_Set config_struct;
-		can_usb_app.get_config(&config_struct);
-		CAN_USB_app_bitrate_table bitrate_table;
-		can_usb_app.get_bitrate_tables(&bitrate_table);
-		
-		can_usb_app.get_can_tx().set_config(config_struct);
-		can_usb_app.get_can_tx().set_bitrate_table(bitrate_table);
-
-		//init
-		usb_rx_buffer_task.set_usb_rx(&usb_rx_task);
-		usb_tx_buffer_task.set_usb_tx(&usb_tx_task);
-
-		usb_lawicel_task.set_can_tx(&can_usb_app.get_can_tx());
-		usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
-		usb_lawicel_task.set_usb_rx(&usb_rx_buffer_task);
-
-		//TODO: refactor can handle init
-		hfdcan1.Instance = FDCAN1;
-		stm32_fdcan_rx_task.set_packet_callback(&can_rx_to_lawicel);
-		stm32_fdcan_rx_task.set_can_instance(FDCAN1);
-		stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
-
-		//can RX
-		stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 1);
-
-		//protocol state machine
-		usb_lawicel_task.launch("usb_lawicel", 2);
-
-		//process usb packets
-		usb_rx_buffer_task.launch("usb_rx_buf", 4);
-		usb_tx_buffer_task.launch("usb_tx_buf", 5);
-
-		//actually send usb packets on the wire
-		usb_rx_task.launch("usb_rx", 3);
-		usb_tx_task.launch("usb_tx", 4);
-
-		led_task.launch("led", 1);
-		timesync_task.launch("timesync", 1);
-
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
-
-		for(;;)
-		{
-			vTaskSuspend(nullptr);
-		}
-	}
-
-	bool mount_fs()
-	{
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
-
-		{
-			std::lock_guard<Mutex_static_recursive> lock(can_usb_app.get_mutex());
-
-			W25Q16JV& m_qspi = can_usb_app.get_flash();
-			W25Q16JV_conf_region& m_fs = can_usb_app.get_fs();
-
-			m_qspi.set_handle(&hqspi);
-
-			if(!m_qspi.init())
-			{
-				uart1_log<64>(LOG_LEVEL::ERROR, "main", "m_qspi.init failed");
-
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
-			}
-
-			m_fs.initialize();
-			m_fs.set_flash(&m_qspi);
-
-			uint8_t mfg_id = 0;
-			uint16_t flash_pn = 0;
-			if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
-			{
-				uart1_log<128>(LOG_LEVEL::INFO, "main", "flash mfg id %02" PRIX32, uint32_t(mfg_id));
-				uart1_log<128>(LOG_LEVEL::INFO, "main", "flash pn %04" PRIX32, uint32_t(flash_pn));
-			}
-			else
-			{
-				uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_jdec_id failed");
-			}
-
-			uint64_t unique_id = 0;
-			if(m_qspi.get_unique_id(&unique_id))
-			{
-				// uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %016" PRIX64, unique_id);
-				//aparently PRIX64 is broken
-				uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
-			}
-			else
-			{
-				uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_unique_id failed");
-			}
-
-			uart1_log<64>(LOG_LEVEL::INFO, "main", "Mounting flash fs");
-			int mount_ret = m_fs.mount();
-			if(mount_ret != SPIFFS_OK)
-			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "main", "Flash mount failed: %d", mount_ret);
-				uart1_log<128>(LOG_LEVEL::ERROR, "main", "You will need to reload the config");
-
-				uart1_log<128>(LOG_LEVEL::INFO, "main", "Format flash");
-				int format_ret = m_fs.format();
-				if(format_ret != SPIFFS_OK)
-				{
-					uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash format failed: %d", format_ret);
-					uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
-
-					for(;;)
-					{
-						vTaskSuspend(nullptr);
-					}
-				}
-
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Mounting flash fs");
-				mount_ret = m_fs.mount();
-				if(mount_ret != SPIFFS_OK)
-				{
-					uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash mount failed right after we formatted it: %d", mount_ret);
-					uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
-
-					for(;;)
-					{
-						vTaskSuspend(nullptr);
-					}
-				}
-				else
-				{
-					uart1_log<64>(LOG_LEVEL::INFO, "main", "Flash mount ok");
-				}
-
-				//write default config
-				if(!can_usb_app.write_default_config())
-				{
-					uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default config failed");
-
-					for(;;)
-					{
-						vTaskSuspend(nullptr);
-					}
-				}
-				if(!can_usb_app.write_default_bitrate_table())
-				{
-					uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
-
-					for(;;)
-					{
-						vTaskSuspend(nullptr);
-					}
-				}
-			}
-			else
-			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Flash mount ok");
-			}
-		}
-
-		return true;
-	}
-
-	bool load_config()
-	{
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "Load config");
-		if(!can_usb_app.load_config())
-		{
-			uart1_log<64>(LOG_LEVEL::WARN, "main", "Config load failed, restoring default");
-
-			if(!can_usb_app.write_default_config())
-			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default config load failed");
-
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
-			}
-			else
-			{
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "Default config wrote ok");
-			}
-		}
-		else
-		{
-			uart1_log<64>(LOG_LEVEL::INFO, "main", "Config ok");
-		}
-
-		if(!can_usb_app.load_bitrate_table())
-		{
-			uart1_log<64>(LOG_LEVEL::WARN, "main", "Bitrate table load failed, restoring default");
-
-			if(!can_usb_app.write_default_bitrate_table())
-			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
-
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
-			}
-			else
-			{
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "Default bitrate table wrote ok");
-			}
-		}
-		else
-		{
-			uart1_log<64>(LOG_LEVEL::INFO, "main", "Bitrate table ok");
-		}
-
-		return true;
-	}
-protected:
-	
-
-
-};
-
-Main_task main_task __attribute__(( section(".ram_dtcm_noload") ));
-
-
 
 /*
 class TinyXML_inc_printer : public tinyxml2::XMLVisitor
@@ -409,22 +172,6 @@ extern "C"
 	}
 }
 
-void get_unique_id(std::array<uint32_t, 3>* id)
-{
-	volatile uint32_t* addr = reinterpret_cast<uint32_t*>(0x1FF1E800);
-
-	std::copy_n(addr, 3, id->data());
-}
-
-void get_unique_id_str(std::array<char, 25>* id_str)
-{
-	//0x012345670123456701234567
-	std::array<uint32_t, 3> id;
-	get_unique_id(&id);
-
-	snprintf(id_str->data(), id_str->size(), "%08" PRIX32 "%08" PRIX32 "%08" PRIX32, id[0], id[1], id[2]);
-}
-
 void set_gpio_low_power(GPIO_TypeDef* const gpio)
 {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -539,6 +286,7 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// FLASH
+		// Outer and inner write-through. No Write-Allocate.
 		mpu_reg.Enable = MPU_REGION_ENABLE;
 		mpu_reg.Number = MPU_REGION_NUMBER2;
 		mpu_reg.BaseAddress = 0x08000000;
@@ -629,17 +377,17 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// AHB_D3_SRAM4
-		// Write-back, no write allocate
+		// Normal, Non-cacheable
 		mpu_reg.Enable = MPU_REGION_ENABLE;
 		mpu_reg.Number = MPU_REGION_NUMBER8;
 		mpu_reg.BaseAddress = 0x38000000;
 		mpu_reg.Size = MPU_REGION_SIZE_64KB;
 		mpu_reg.SubRegionDisable = 0x00;
 		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
-		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
 		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
-		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
@@ -710,11 +458,17 @@ int main(void)
 		//MPU enabled during MMI
 		// HAL_MPU_Enable(MPU_HARDFAULT_NMI);
 		
+		if(1)
+		{
+			SCB_EnableICache();
+			SCB_EnableDCache();
+		}
 	}
 
-	SCB_EnableICache();
-
-	SCB_EnableDCache();
+	//enable core interrupts
+	SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk | SCB_SHCSR_MEMFAULTENA_Msk;
+	// SCB->CCR   &= ~(SCB_CCR_UNALIGN_TRP_Msk);
+	// SCB->CCR   |= SCB_CCR_UNALIGN_TRP_Msk;
 
 	HAL_Init();
 
@@ -754,71 +508,23 @@ int main(void)
 	//TODO: make this config
 	if(1)
 	{
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+
 		GPIO_InitTypeDef GPIO_InitStruct = {0};
 		GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
-		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 		GPIO_InitStruct.Pull = GPIO_NOPULL;
 		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+		HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
 
-		HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_SET);
-	}
-
-	{
-		std::array<char, 25> id_str;
-		get_unique_id_str(&id_str);
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "Initialing");
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "CAN FD <-> USB Adapter");
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", id_str.data());
-	}
-
-	{
-		const uint32_t idcode = DBGMCU->IDCODE;
-		const uint16_t rev_id = (idcode & 0xFFFF0000) >> 16;
-		const uint16_t dev_id = (idcode & 0x000007FF);
-
-		if(dev_id == 0x450)
-		{
-			uart1_log<64>(LOG_LEVEL::INFO, "main", "Dev ID STM32H7xx (42, 43/53, 50)");
-		}
-		else
-		{
-			uart1_log<64>(LOG_LEVEL::WARN, "main", "Unk dev ID");
-		}
-
-		switch(rev_id)
-		{
-			case 0x1001:
-			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev Z");
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
-				break;
-			}
-			case 0x1003:
-			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev Y");
-				break;
-			}
-			case 0x2001:
-			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev X");
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
-				break;
-			}
-			case 0x2003:
-			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev V");
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported, but will be soon");
-				break;
-			}
-			default:
-			{
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "Unk rev ID");
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
-				break;
-			}
-		}
+		GPIO_InitStruct.Pin = CAN_SILENT_Pin|CAN_STDBY_Pin;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+		HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 	}
 
 	main_task.launch("main_task", 15);
@@ -829,4 +535,6 @@ int main(void)
 	{
 
 	}
+
+	return 0;
 }

@@ -1,5 +1,7 @@
 #include "Timesync_task.hpp"
 
+#include "main.h"
+
 #include "uart1_printf.hpp"
 
 #include "stm32h7xx_hal.h"

@@ -10,7 +10,7 @@
 extern "C"
 {
 
-uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__ (( section(".ram_d2_s1_noload") ));
+uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__ (( section(".ram_d2_s2_noload") ));
 
 void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
 
@@ -31,7 +31,7 @@ void vApplicationIdleHook( void )
    memory allocated by the kernel to any task that has since been deleted. */
 
   // TODO: turn this back on
-  // HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 }
 
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)

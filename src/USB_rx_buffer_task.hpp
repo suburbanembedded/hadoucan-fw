@@ -1,6 +1,6 @@
 #pragma once
 
-#include "USB_RX_task.hpp"
+#include "libusb_dev_cpp/driver/usb_driver_base.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/Mutex_static.hpp"
@@ -21,12 +21,12 @@ public:
 
   USB_rx_buffer_task()
   {
-    m_usb_rx_task = nullptr;
+    m_usb_driver = nullptr;
   }
 
-  void set_usb_rx(USB_RX_task* const usb_rx_task)
+  void set_usb_driver(usb_driver_base* const usb_driver)
   {
-    m_usb_rx_task = usb_rx_task;
+    m_usb_driver = usb_driver;
   }
 
   void work() override;
@@ -115,5 +115,5 @@ protected:
   Condition_variable m_rx_buf_read_condvar;///< this is notified when data is removed from the buffer
   std::deque<uint8_t> m_rx_buf;
 
-  USB_RX_task* m_usb_rx_task;
+  usb_driver_base* m_usb_driver;
 };

@@ -62,6 +62,7 @@ add_subdirectory(external/bootloader_util)
 add_subdirectory(external/common_util)
 add_subdirectory(external/emb_fs_util)
 add_subdirectory(external/freertos_cpp_util)
+add_subdirectory(external/libusb_dev_cpp)
 add_subdirectory(external/mbedtls_util)
 add_subdirectory(external/tinyxml2_util)
 
@@ -78,10 +79,10 @@ add_executable(canusbfdiso.elf
 	src/main_cube.c
 	src/hal_inst.c
 
-	src/USB_RX_task.cpp
-	src/USB_TX_task.cpp
-	src/USB_buf.cpp
+	src/global_app_inst.cpp
+
 	
+	src/USB_buf.cpp
 	src/USB_tx_buffer_task.cpp
 	src/USB_rx_buffer_task.cpp
 
@@ -90,11 +91,6 @@ add_executable(canusbfdiso.elf
 	src/freertos_stubs.cpp
 	src/freertos_new.cpp
 	src/newlib_stubs.c
-
-	src/usb/usbd_conf.c
-	src/usb/usbd_desc.c
-	src/usb/usb_device.c
-	src/usb/usbd_cdc_if.cpp
 
 	src/lawicel/CAN_DLC.cpp
 	src/lawicel/STM32_FDCAN_DLC.cpp
@@ -107,7 +103,8 @@ add_executable(canusbfdiso.elf
 	src/tasks/LED_task.cpp
 	src/tasks/Timesync_task.cpp
 	src/tasks/USB_lawicel_task.cpp
-
+	src/tasks/Main_task.cpp
+	src/tasks/Task_instances.cpp
 
 	src/CAN_USB_app.cpp
 	src/CAN_USB_app_config.cpp
@@ -120,17 +117,14 @@ target_link_libraries(canusbfdiso.elf
 	stm32h7xx_ll
 	stm32h750xx_cmsis
 
-	stm32_usb_lib_core
-	stm32_usb_lib_cdc
-
 	freertos_v10_heap4
 	freertos_v10
 	freertos_v10_cmsis
 
 	bootloader_util
 	common_util
-
 	freertos_cpp_util
+	usb_dev_cpp
 	mbedtls_util
 	tinyxml2_util
 

@@ -2,8 +2,7 @@
 
 #include "freertos_cpp_util/object_pool/Object_pool.hpp"
 
-#include "usbd_cdc_if.h"
-
+#include "STM32H7xx/Include/stm32h7xx.h"
 #include "core_cm7.h"
 
 template<size_t BUFLEN>
@@ -48,10 +47,10 @@ public:
 	size_t len;
 };
 
-typedef USB_buf<CDC_DATA_HS_OUT_PACKET_SIZE> USB_buf_rx;
+typedef USB_buf<512> USB_buf_rx;
 typedef Object_pool<USB_buf_rx, 16> USB_rx_pool_type;
 extern USB_rx_pool_type rx_buf_pool;
 
-typedef USB_buf<CDC_DATA_HS_IN_PACKET_SIZE> USB_buf_tx;
+typedef USB_buf<512> USB_buf_tx;
 typedef Object_pool<USB_buf_tx, 32> USB_tx_pool_type;
 extern USB_tx_pool_type tx_buf_pool;

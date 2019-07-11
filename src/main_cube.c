@@ -51,7 +51,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -665,7 +664,8 @@ void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  // huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 921600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -761,7 +761,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
 
 }
@@ -777,6 +777,7 @@ void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
+#if 0
 void StartDefaultTask(void const * argument)
 {
   /* init code for USB_DEVICE */
@@ -790,6 +791,7 @@ void StartDefaultTask(void const * argument)
   }
   /* USER CODE END 5 */ 
 }
+#endif
 
 /**
   * @brief  Period elapsed callback in non blocking mode

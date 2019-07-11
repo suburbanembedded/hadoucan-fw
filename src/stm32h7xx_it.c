@@ -1,8 +1,10 @@
+#include "stm32h7xx_it.h"
 
 #include "main.h"
 #include "hal_inst.h"
-#include "stm32h7xx_it.h"
+
 #include "cmsis_os.h"
+#include "core_cm7.h"
 
 extern PCD_HandleTypeDef hpcd_USB_OTG_HS;
 extern TIM_HandleTypeDef htim17;
@@ -19,6 +21,21 @@ void NMI_Handler(void)
 
 void HardFault_Handler(void)
 {
+  // Configurable Fault Status Register
+  volatile uint32_t CFSR = SCB->CFSR;
+  // Hard Fault Status Register
+  volatile uint32_t HFSR = SCB->HFSR;
+  // Debug Fault Status Register
+  volatile uint32_t DFSR = SCB->DFSR;
+  // Auxiliary Fault Status Register
+  volatile uint32_t AFSR = SCB->AFSR;
+  // MemManage Fault Address Register
+  volatile uint32_t MMFAR = SCB->MMFAR;
+  // BusFault Address Register
+  volatile uint32_t BFAR = SCB->BFAR;
+  //System Handler Control and State Register
+  volatile uint32_t SHCSR = SCB->SHCSR;
+  
   for(;;)
   {
 
@@ -27,6 +44,21 @@ void HardFault_Handler(void)
 
 void MemManage_Handler(void)
 {
+  // Configurable Fault Status Register
+  volatile uint32_t CFSR = SCB->CFSR;
+  // Hard Fault Status Register
+  volatile uint32_t HFSR = SCB->HFSR;
+  // Debug Fault Status Register
+  volatile uint32_t DFSR = SCB->DFSR;
+  // Auxiliary Fault Status Register
+  volatile uint32_t AFSR = SCB->AFSR;
+  // MemManage Fault Address Register
+  volatile uint32_t MMFAR = SCB->MMFAR;
+  // BusFault Address Register
+  volatile uint32_t BFAR = SCB->BFAR;
+  //System Handler Control and State Register
+  volatile uint32_t SHCSR = SCB->SHCSR;
+
   for(;;)
   {
 
@@ -35,6 +67,21 @@ void MemManage_Handler(void)
 
 void BusFault_Handler(void)
 {
+  // Configurable Fault Status Register
+  volatile uint32_t CFSR = SCB->CFSR;
+  // Hard Fault Status Register
+  volatile uint32_t HFSR = SCB->HFSR;
+  // Debug Fault Status Register
+  volatile uint32_t DFSR = SCB->DFSR;
+  // Auxiliary Fault Status Register
+  volatile uint32_t AFSR = SCB->AFSR;
+  // MemManage Fault Address Register
+  volatile uint32_t MMFAR = SCB->MMFAR;
+  // BusFault Address Register
+  volatile uint32_t BFAR = SCB->BFAR;
+  //System Handler Control and State Register
+  volatile uint32_t SHCSR = SCB->SHCSR;
+
   for(;;)
   {
 
@@ -43,6 +90,21 @@ void BusFault_Handler(void)
 
 void UsageFault_Handler(void)
 {
+  // Configurable Fault Status Register
+  volatile uint32_t CFSR = SCB->CFSR;
+  // Hard Fault Status Register
+  volatile uint32_t HFSR = SCB->HFSR;
+  // Debug Fault Status Register
+  volatile uint32_t DFSR = SCB->DFSR;
+  // Auxiliary Fault Status Register
+  volatile uint32_t AFSR = SCB->AFSR;
+  // MemManage Fault Address Register
+  volatile uint32_t MMFAR = SCB->MMFAR;
+  // BusFault Address Register
+  volatile uint32_t BFAR = SCB->BFAR;
+  //System Handler Control and State Register
+  volatile uint32_t SHCSR = SCB->SHCSR;
+
   for(;;)
   {
 
@@ -67,11 +129,6 @@ void FDCAN1_IT1_IRQHandler(void)
 void FDCAN_CAL_IRQHandler(void)
 {
   HAL_FDCAN_IRQHandler(&hfdcan1);
-}
-
-void OTG_HS_IRQHandler(void)
-{
-  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
 }
 
 void QUADSPI_IRQHandler(void)

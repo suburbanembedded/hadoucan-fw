@@ -2,7 +2,7 @@
 
 #include "freertos_cpp_util/Task_static.hpp"
 
-class Timesync_task : public Task_static<512>
+class Timesync_task : public Task_static<2048>
 {
 public:
 

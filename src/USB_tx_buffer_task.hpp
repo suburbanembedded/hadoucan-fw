@@ -1,6 +1,6 @@
 #pragma once
 
-#include "USB_TX_task.hpp"
+#include "libusb_dev_cpp/driver/usb_driver_base.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/Mutex_static.hpp"
@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <deque>
 #include <vector>
+
+#include <cstring>
 
 //aggregate small writes
 class USB_tx_buffer_task : public Task_static<1024>
@@ -20,12 +22,12 @@ public:
 
 	USB_tx_buffer_task()
 	{
-		m_usb_tx_task = nullptr;
+		m_usb_driver = nullptr;
 	}
 
-	void set_usb_tx(USB_TX_task* const usb_tx_task)
+	void set_usb_driver(usb_driver_base* const usb_driver)
 	{
-		m_usb_tx_task = usb_tx_task;
+		m_usb_driver = usb_driver;
 	}
 
 	void work() override;
@@ -101,7 +103,7 @@ protected:
 			return false;
 		}
 
-		if(m_tx_buf.size() >= CDC_DATA_HS_IN_PACKET_SIZE)
+		if(m_tx_buf.size() >= 512)
 		{
 			//yay, full USB HS packet
 			return true;
@@ -117,5 +119,5 @@ protected:
 	Condition_variable m_tx_buf_condvar;
 	Condition_variable m_tx_buf_drain_condvar;
 
-	USB_TX_task* m_usb_tx_task;
+	usb_driver_base* m_usb_driver;
 };
