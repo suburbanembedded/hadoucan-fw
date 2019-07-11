@@ -45,18 +45,18 @@
 
 CAN_USB_app can_usb_app __attribute__(( section(".ram_dtcm_noload") ));
 
-// USB_RX_task usb_rx_task __attribute__(( section(".ram_dtcm_noload") ));
-// USB_TX_task usb_tx_task __attribute__(( section(".ram_dtcm_noload") ));
-
 USB_rx_buffer_task usb_rx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
 USB_tx_buffer_task usb_tx_buffer_task __attribute__(( section(".ram_dtcm_noload") ));
 
+LED_task led_task __attribute__(( section(".ram_dtcm_noload") ));
+USB_lawicel_task usb_lawicel_task __attribute__(( section(".ram_dtcm_noload") ));
+Timesync_task timesync_task __attribute__(( section(".ram_dtcm_noload") ));
+
 USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
 stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
+Descriptor_table usb_desc_table;
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_rx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
-
-Descriptor_table usb_desc_table;
 
 extern "C"
 {
@@ -67,11 +67,6 @@ extern "C"
 	}
 }
 
-LED_task led_task __attribute__(( section(".ram_dtcm_noload") ));
-
-USB_lawicel_task usb_lawicel_task __attribute__(( section(".ram_dtcm_noload") ));
-
-Timesync_task timesync_task __attribute__(( section(".ram_dtcm_noload") ));
 
 bool can_rx_to_lawicel(const std::string& str)
 {
@@ -92,7 +87,7 @@ public:
 		}
 	}
 };
-Test_USB_Core_task test_usb_core;
+Test_USB_Core_task test_usb_core __attribute__(( section(".ram_dtcm_noload") ));
 
 class Test_USB_RX_task : public Task_static<4096>
 {
@@ -133,7 +128,7 @@ public:
 		}
 	}
 };
-Test_USB_RX_task test_usb_rx;
+Test_USB_RX_task test_usb_rx __attribute__(( section(".ram_dtcm_noload") ));
 
 class Main_task : public Task_static<4096>
 {
@@ -183,10 +178,6 @@ public:
 		usb_rx_buffer_task.launch("usb_rx_buf", 4);
 		usb_tx_buffer_task.launch("usb_tx_buf", 5);
 
-		//actually send usb packets on the wire
-		// usb_rx_task.launch("usb_rx", 3);
-		// usb_tx_task.launch("usb_tx", 4);
-
 		led_task.launch("led", 1);
 		timesync_task.launch("timesync", 1);
 
@@ -196,34 +187,6 @@ public:
 		{
 			vTaskSuspend(nullptr);
 		}
-	}
-
-	Device_descriptor::Device_descriptor_array dev_desc_array;
-	bool usb_get_descriptor_callback(const Setup_packet& req, uint8_t** address, size_t* size)
-	{
-		Device_descriptor dev_desc;
-		dev_desc.bcdUSB          = USB_common::build_bcd(0x02, 0x0, 0x0);
-		dev_desc.bDeviceClass    = 0x00;
-		dev_desc.bDeviceSubClass = 0x00;
-		dev_desc.bDeviceProtocol = 0x00;
-		dev_desc.bMaxPacketSize0  = 0x08;
-		dev_desc.idVendor        = 0x1234;
-		dev_desc.idProduct       = 0x5678;
-		dev_desc.bcdDevice       = USB_common::build_bcd(0x02, 0x0, 0x0);;
-		dev_desc.iManufacturer   = 0;
-		dev_desc.iProduct        = 0;
-		dev_desc.iSerialNumber   = 0;
-		dev_desc.bNumConfigurations = 1;
-
-		if(!dev_desc.serialize(&dev_desc_array))
-		{
-			return false;
-		}
-
-		*address = dev_desc_array.data();
-		*size = dev_desc_array.size();
-
-		return true;
 	}
 
 	bool init_usb()
@@ -304,12 +267,13 @@ public:
 			desc.bInterval        = 16;
 			usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 		}
+
 		{
-			//9 byte ea
+			//configuration 1
 			Config_desc_table::Config_desc_ptr desc_ptr = std::make_shared<Configuration_descriptor>();
 			desc_ptr->wTotalLength = 0;//updated later
 			desc_ptr->bNumInterfaces = 2;
-			desc_ptr->bConfigurationValue = 0;
+			desc_ptr->bConfigurationValue = 1;
 			desc_ptr->iConfiguration = 4;
 			desc_ptr->bmAttributes = static_cast<uint8_t>(Configuration_descriptor::ATTRIBUTES::NONE);
 			desc_ptr->bMaxPower = Configuration_descriptor::ma_to_maxpower(150);
@@ -843,7 +807,7 @@ void set_all_gpio_low_power()
 int main(void)
 {
 	//confg mpu
-	if(1)
+	if(0)
 	{
 		/*
 		ITCMRAM, 0x00000000, 64K
@@ -904,6 +868,7 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// FLASH
+		// Outer and inner write-through. No Write-Allocate.
 		mpu_reg.Enable = MPU_REGION_ENABLE;
 		mpu_reg.Number = MPU_REGION_NUMBER2;
 		mpu_reg.BaseAddress = 0x08000000;
@@ -994,17 +959,17 @@ int main(void)
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
 		// AHB_D3_SRAM4
-		// Write-back, no write allocate
+		// Normal, Non-cacheable
 		mpu_reg.Enable = MPU_REGION_ENABLE;
 		mpu_reg.Number = MPU_REGION_NUMBER8;
 		mpu_reg.BaseAddress = 0x38000000;
 		mpu_reg.Size = MPU_REGION_SIZE_64KB;
 		mpu_reg.SubRegionDisable = 0x00;
 		mpu_reg.AccessPermission = MPU_REGION_FULL_ACCESS;
-		mpu_reg.TypeExtField = MPU_TEX_LEVEL0;
+		mpu_reg.TypeExtField = MPU_TEX_LEVEL1;
 		mpu_reg.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-		mpu_reg.IsCacheable = MPU_ACCESS_CACHEABLE;
-		mpu_reg.IsBufferable = MPU_ACCESS_BUFFERABLE;
+		mpu_reg.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+		mpu_reg.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 		mpu_reg.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
 		HAL_MPU_ConfigRegion(&mpu_reg);
 
@@ -1079,10 +1044,14 @@ int main(void)
 
 	//enable core interrupts
 	SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk | SCB_SHCSR_MEMFAULTENA_Msk;
+	// SCB->CCR   &= ~(SCB_CCR_UNALIGN_TRP_Msk);
+	// SCB->CCR   |= SCB_CCR_UNALIGN_TRP_Msk;
 
-	SCB_EnableICache();
-
-	SCB_EnableDCache();
+	if(1)
+	{
+		SCB_EnableICache();
+		SCB_EnableDCache();
+	}
 
 	HAL_Init();
 
