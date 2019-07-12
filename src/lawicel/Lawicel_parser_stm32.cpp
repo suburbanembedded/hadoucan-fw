@@ -199,7 +199,7 @@ bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
 	mbedtls_md5_finish_ret(&md5_ctx, md5_output.data());
 	mbedtls_md5_free(&md5_ctx);
 
-	for(size_t i = 0; i < 15; i++)
+	for(size_t i = 0; i < 8; i++)
 	{
 		sn_bin[0] ^= md5_output[0 + i];
 		sn_bin[1] ^= md5_output[8 + i];

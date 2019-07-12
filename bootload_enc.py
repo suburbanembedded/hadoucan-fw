@@ -4,6 +4,7 @@ import os
 import sys
 import shutil
 import serial
+import argparse
 
 def fastboot_send_file(tty_port, infile, outname):
 	img_info = os.stat(infile)
@@ -54,6 +55,23 @@ def fastboot_send_file(tty_port, infile, outname):
 
 
 def main():
+	
+	parser = argparse.ArgumentParser(description='Send new firmware to a SM-1301')
+
+	parser.add_argument('--img', dest='img_path', action='store',
+		default='app.bin.enc',
+		help='Path to the encrypted firmwware image')
+
+	parser.add_argument('--aux', dest='aux_img_path', action='store',
+		default='app.bin.enc.xml',
+		help='Path to the aux file')
+
+	parser.add_argument('--tty', dest='tty_path', action='store',
+		default='/dev/ttyACM0',
+		help='A path to a serial port')
+
+	args = parser.parse_args()
+
 	img_path = '/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/build/ram/release/app.bin.enc'
 	aux_img_path = '/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/build/ram/release/app.bin.enc.xml'
 	tty_path = '/dev/ttyACM0'
