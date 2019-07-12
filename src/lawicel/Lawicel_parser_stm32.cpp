@@ -188,34 +188,21 @@ bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
 	std::array<uint8_t, 2> sn_bin;
 	sn_bin.fill(0);
 
-	if(true)
+	//md5 hash to mix
+	mbedtls_md5_context md5_ctx;
+	mbedtls_md5_init(&md5_ctx);
+	mbedtls_md5_starts_ret(&md5_ctx);
+
+	mbedtls_md5_update_ret(&md5_ctx, reinterpret_cast<uint8_t*>(id.data()), id.size() * sizeof(uint32_t) / sizeof(uint8_t));
+
+	std::array<uint8_t, 16> md5_output;
+	mbedtls_md5_finish_ret(&md5_ctx, md5_output.data());
+	mbedtls_md5_free(&md5_ctx);
+
+	for(size_t i = 0; i < 15; i++)
 	{
-		//md5 hash to mix
-		mbedtls_md5_context md5_ctx;
-		mbedtls_md5_init(&md5_ctx);
-		mbedtls_md5_starts_ret(&md5_ctx);
-
-		mbedtls_md5_update_ret(&md5_ctx, reinterpret_cast<uint8_t*>(id.data()), id.size() * sizeof(uint32_t) / sizeof(uint8_t));
-
-		std::array<uint8_t, 16> md5_output;
-		mbedtls_md5_finish_ret(&md5_ctx, md5_output.data() );
-		mbedtls_md5_free(&md5_ctx);
-
-		//crc16 to mix
-		crc_16_ccitt::crc_t crc16 = crc_16_ccitt::crc_init();
-		crc16 = crc_16_ccitt::crc_update(crc16, md5_output.data(), md5_output.size());
-		crc16 = crc_16_ccitt::crc_finalize(crc16);
-		sn_bin[0] = Byte_util::get_b0(static_cast<uint16_t>(crc16));
-		sn_bin[1] = Byte_util::get_b1(static_cast<uint16_t>(crc16));
-	}
-	else
-	{
-		//crc16 to mix
-		crc_16_ccitt::crc_t crc16 = crc_16_ccitt::crc_init();
-		crc16 = crc_16_ccitt::crc_update(crc16, reinterpret_cast<uint8_t*>(id.data()), id.size() * sizeof(uint32_t) / sizeof(uint8_t));
-		crc16 = crc_16_ccitt::crc_finalize(crc16);
-		sn_bin[0] = Byte_util::get_b0(static_cast<uint16_t>(crc16));
-		sn_bin[1] = Byte_util::get_b1(static_cast<uint16_t>(crc16));
+		sn_bin[0] ^= md5_output[0 + i];
+		sn_bin[1] ^= md5_output[8 + i];
 	}
 
 	//convert to hex
