@@ -13,9 +13,12 @@ stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_rx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 
-bool can_rx_to_lawicel(const std::string& str)
+namespace
 {
-	return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
+	bool can_rx_to_lawicel(const std::string& str)
+	{
+		return usb_lawicel_task.get_lawicel()->queue_rx_packet(str);
+	}
 }
 
 void Main_task::work()
@@ -308,6 +311,7 @@ bool Main_task::init_usb()
 	}
 
 	usb_core.set_descriptor_table(&usb_desc_table);
+	usb_core.set_config_callback(&handle_usb_set_config_thunk, this);
 
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -543,4 +547,62 @@ bool Main_task::load_config()
 	}
 
 	return true;
+}
+
+bool Main_task::handle_usb_set_config_thunk(void* ctx, const uint16_t config)
+{
+	return static_cast<Main_task*>(ctx)->handle_usb_set_config(config);
+}
+
+bool Main_task::handle_usb_set_config(const uint8_t config)
+{
+	bool ret = false;
+
+	switch(config)
+	{
+		case 0:
+		{
+			usb_core.get_driver()->ep_stall(0x01);
+			usb_core.get_driver()->ep_stall(0x81);
+			usb_core.get_driver()->ep_stall(0x82);
+			ret = true;
+			break;
+		}
+		case 1:
+		{
+			//out 1
+			{
+				usb_driver_base::ep_cfg ep1;
+				ep1.num = 0x01;
+				ep1.size = 512;
+				ep1.type = usb_driver_base::EP_TYPE::BULK;
+				usb_core.get_driver()->ep_config(ep1);
+			}
+			//in 1
+			{
+				usb_driver_base::ep_cfg ep2;
+				ep2.num = 0x80 | 0x01;
+				ep2.size = 512;
+				ep2.type = usb_driver_base::EP_TYPE::BULK;
+				usb_core.get_driver()->ep_config(ep2);
+			}
+			//in 2
+			{
+				usb_driver_base::ep_cfg ep3;
+				ep3.num = 0x80 | 0x02;
+				ep3.size = 8;
+				ep3.type = usb_driver_base::EP_TYPE::INTERRUPT;
+				usb_core.get_driver()->ep_config(ep3);
+			}
+			ret = true;
+			break;
+		}
+		default:
+		{
+			ret = false;
+			break;
+		}
+	}
+
+	return ret;
 }
