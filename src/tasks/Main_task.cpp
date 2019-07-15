@@ -121,7 +121,7 @@ void Main_task::work()
 	usb_tx_buffer_task.launch("usb_tx_buf", 5);
 
 	led_task.launch("led", 1);
-	// timesync_task.launch("timesync", 1);
+	timesync_task.launch("timesync", 1);
 
 	uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
 

@@ -62,6 +62,7 @@ protected:
 	static bool append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, std::string* const s);
 	static bool append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std::string* const s);
 	static bool append_packet_data(const CAN_fd_packet& rxheader, std::string* const s);
+	static bool append_packet_timestamp(const FDCAN_RxHeaderTypeDef& rxheader, std::string* const s);
 
 	FDCAN_GlobalTypeDef* m_fdcan;
 	FDCAN_HandleTypeDef* m_fdcan_handle;

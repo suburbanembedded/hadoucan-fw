@@ -1,6 +1,8 @@
 #include "STM32_fdcan_rx.hpp"
 
 #include "uart1_printf.hpp"
+#include "CAN_USB_app_config.hpp"
+#include "global_app_inst.hpp"
 
 #include "common_util/Byte_util.hpp"
 
@@ -165,13 +167,24 @@ bool STM32_fdcan_rx::append_packet_data(const CAN_fd_packet& pk, std::string* co
 
 	return true;
 }
+bool STM32_fdcan_rx::append_packet_timestamp(const FDCAN_RxHeaderTypeDef& rxheader, std::string* const s)
+{
+	std::array<char, 4+1> str;
 
+	Byte_util::u8_to_hex(Byte_util::get_b1(rxheader.RxTimestamp), str.data() + 0);
+	Byte_util::u8_to_hex(Byte_util::get_b0(rxheader.RxTimestamp), str.data() + 2);
+	str.back() = '\0';
+	
+	s->append(str.data());
+
+	return true;
+}
 void STM32_fdcan_rx::work()
 {
 	CAN_fd_packet pk;
 
 	std::string packet_str;
-	packet_str.reserve(1+8+128+1);
+	packet_str.reserve(1+8+128+4+1);
 
 	for(;;)
 	{
@@ -367,6 +380,23 @@ void STM32_fdcan_rx::work()
 		{
 			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_data failed");
 			continue;
+		}
+
+		{
+			//it seems rather expensive to get a copy of this every cycle
+			bool append_timestamp = false;
+			{
+				std::unique_lock<Mutex_static_recursive> lock;
+				append_timestamp = can_usb_app.get_config(&lock).timestamp_enable;
+			}
+			if(append_timestamp)
+			{
+				if(!append_packet_timestamp(pk.rxheader, &packet_str))
+				{
+					uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_timestamp failed");
+					continue;
+				}
+			}
 		}
 		packet_str.push_back('\r');
 

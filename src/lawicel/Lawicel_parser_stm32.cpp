@@ -222,12 +222,14 @@ bool Lawicel_parser_stm32::handle_ext_config(const std::vector<char>& config_str
 	tinyxml2::XMLError err = config_doc.Parse(config_str.data(), config_str.size());
 	if(err != tinyxml2::XML_SUCCESS)
 	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_ext_config", "config_doc.Parse failed, %s", tinyxml2::XMLDocument::ErrorIDToName(err));
 		return false;
 	}
 
 	CAN_USB_app_config config;
 	if(!config.from_xml(config_doc))
 	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_ext_config", "config.from_xml failed");
 		return false;
 	}
 
