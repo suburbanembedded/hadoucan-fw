@@ -163,7 +163,7 @@ bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 {
 	const std::array<char, 2> hw_ver = {'0', '1'};
-	const std::array<char, 2> sw_ver = {'0', '1'};
+	const std::array<char, 2> sw_ver = {'0', '2'};
 	
 	ver->data()[0] = static_cast<uint8_t>(hw_ver[0]);
 	ver->data()[1] = static_cast<uint8_t>(hw_ver[1]);
