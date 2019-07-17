@@ -12,7 +12,7 @@ void USB_rx_buffer_task::work()
 			// in_buf->clean_invalidate_cache();
 			// in_buf->invalidate_cache();
 
-			uart1_log<64>(LOG_LEVEL::INFO, "USB_rx_buffer_task", "got buf");
+			uart1_log<64>(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "got buf");
 
 			volatile uint8_t* in_ptr = in_buf->data();
 			{
@@ -34,7 +34,7 @@ void USB_rx_buffer_task::work()
 			m_usb_driver->release_rx_buffer(0x01, in_buf);
 		}
 
-		uart1_log<64>(LOG_LEVEL::INFO, "USB_rx_buffer_task", "added buf to stream");
+		uart1_log<64>(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "added buf to stream");
 
 		m_rx_buf_write_condvar.notify_one();
 	}

@@ -38,12 +38,12 @@ void USB_tx_buffer_task::work()
 			//notify we drained some from the buffer
 			m_tx_buf_drain_condvar.notify_one();
 
-			uart1_log<64>(LOG_LEVEL::INFO, "USB_tx_buffer_task", "Waiting for buffer");
+			uart1_log<64>(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Waiting for buffer");
 			
 			//wait for a free tx buffer from driver
 			Buffer_adapter_base* tx_buf = m_usb_driver->wait_tx_buffer(0x81);
 
-			uart1_log<64>(LOG_LEVEL::INFO, "USB_tx_buffer_task", "Got buffer");
+			uart1_log<64>(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Got buffer");
 
 			tx_buf->reset();
 			tx_buf->insert(m_packet_buf.data(), m_packet_buf.size());
@@ -54,7 +54,7 @@ void USB_tx_buffer_task::work()
 				uart1_log<64>(LOG_LEVEL::ERROR, "USB_tx_buffer_task", "failed to enqueue tx buffer");
 			}
 
-			uart1_log<64>(LOG_LEVEL::INFO, "USB_tx_buffer_task", "Sent buffer: %.*s", tx_buf->size(), tx_buf->data());
+			uart1_log<64>(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Sent buffer: %.*s", tx_buf->size(), tx_buf->data());
 		}
 	}
 }
