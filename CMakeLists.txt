@@ -122,9 +122,11 @@ target_link_libraries(canusbfdiso.elf
 	bootloader_util
 	common_util
 	freertos_cpp_util
-	usb_dev_cpp
 	mbedtls_util
 	tinyxml2_util
+	
+	usb_dev_cpp
+	usb_dev_cpp_stm32
 
 	spi_flash
 	spiffs_flash
