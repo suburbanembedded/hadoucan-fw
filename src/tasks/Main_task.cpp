@@ -294,18 +294,14 @@ bool Main_task::init_usb()
 
 	config_desc_ptr->wTotalLength = config_desc_ptr->get_total_size();
 
-	std::vector<uint8_t> rx_buf;
-	rx_buf.resize(1024);
-	Buffer_adapter rx_buf_adapter;
-	rx_buf_adapter.reset(rx_buf.data(), rx_buf.size());
+	m_rx_buf.resize(1024);
+	m_rx_buf_adapter.reset(m_rx_buf.data(), m_rx_buf.size());
 
-	std::vector<uint8_t> tx_buf;
-	tx_buf.resize(1024);
-	Buffer_adapter tx_buf_adapter;
-	tx_buf_adapter.reset(tx_buf.data(), tx_buf.size());
+	m_tx_buf.resize(1024);
+	m_tx_buf_adapter.reset(m_tx_buf.data(), m_tx_buf.size());
 
 	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.initialize");
-	if(!usb_core.initialize(&usb_driver, 8, tx_buf_adapter, rx_buf_adapter))
+	if(!usb_core.initialize(&usb_driver, 8, m_tx_buf_adapter, m_rx_buf_adapter))
 	{
 		return false;
 	}
