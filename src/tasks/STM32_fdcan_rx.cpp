@@ -4,13 +4,13 @@
 #include "CAN_USB_app_config.hpp"
 #include "global_app_inst.hpp"
 
+#include "Task_instances.hpp"
+
 #include "common_util/Byte_util.hpp"
 
 #include "freertos_cpp_util/Critical_section.hpp"
 
 #include <string>
-
-STM32_fdcan_rx stm32_fdcan_rx_task __attribute__ (( section(".ram_dtcm_noload") ));
 
 namespace
 {

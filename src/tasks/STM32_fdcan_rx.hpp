@@ -82,5 +82,3 @@ protected:
 	std::atomic_bool m_can_fifo1_full;
 	std::atomic_uint m_can_fifo1_msg_lost;
 };
-
-extern STM32_fdcan_rx stm32_fdcan_rx_task;

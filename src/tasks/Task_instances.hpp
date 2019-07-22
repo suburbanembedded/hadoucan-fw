@@ -17,4 +17,6 @@ extern LED_task led_task;
 extern USB_lawicel_task usb_lawicel_task;
 extern Timesync_task timesync_task;
 
+extern STM32_fdcan_rx stm32_fdcan_rx_task;
+
 extern Main_task main_task;
