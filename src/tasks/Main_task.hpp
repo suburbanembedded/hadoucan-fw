@@ -30,10 +30,10 @@ protected:
 
 	Descriptor_table usb_desc_table;
 	std::array<char, 25> usb_id_str;//this is read by the usb core, and sent as a descriptor payload
-	Buffer_adapter m_rx_buf_adapter;
 	std::vector<uint8_t> m_rx_buf;
-	Buffer_adapter m_tx_buf_adapter;
+	Buffer_adapter m_rx_buf_adapter;
 	std::vector<uint8_t> m_tx_buf;
+	Buffer_adapter m_tx_buf_adapter;
 };
 
 extern USB_core         usb_core;
