@@ -75,13 +75,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   uint32_t              uwTimclock = 0;
   uint32_t              uwPrescalerValue = 0;
   uint32_t              pFLatency;
-  
-  /*Configure the TIM17 IRQ priority */
-  HAL_NVIC_SetPriority(TIM17_IRQn, TickPriority ,0); 
-  
-  /* Enable the TIM17 global Interrupt */
-  HAL_NVIC_EnableIRQ(TIM17_IRQn); 
-  
+   
   /* Enable TIM17 clock */
   __HAL_RCC_TIM17_CLK_ENABLE();
   
@@ -112,6 +106,12 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     /* Start the TIM time Base generation in interrupt mode */
     return HAL_TIM_Base_Start_IT(&htim17);
   }
+  
+  /*Configure the TIM17 IRQ priority */
+  HAL_NVIC_SetPriority(TIM17_IRQn, TickPriority ,0); 
+  
+  /* Enable the TIM17 global Interrupt */
+  HAL_NVIC_EnableIRQ(TIM17_IRQn); 
   
   /* Return function status */
   return HAL_ERROR;

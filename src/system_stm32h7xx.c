@@ -217,6 +217,10 @@ void SystemInit (void)
   //Enable D3 BKPRAM
   __HAL_RCC_BKPRAM_CLK_ENABLE();
 
+  //Disable TIM17 that the bootloader left on
+  TIM17->DIER = 0;
+  NVIC_DisableIRQ(TIM17_IRQn);
+
   //copy all init mem
   // memcpy(&start_ram_itcm,  &start_ram_itcm_laddr,  &end_ram_itcm  - &start_ram_itcm);
   memcpy(&start_ram_dtcm,  &start_ram_dtcm_laddr,  &end_ram_dtcm  - &start_ram_dtcm);
