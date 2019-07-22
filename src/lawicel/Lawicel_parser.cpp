@@ -1135,10 +1135,12 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_extended_cmd", "Parsing config failed");
 		}
-
-		//it points to the ':', start one after
-		std::vector<char> config_str(it+1, in_str+in_str_len);
-		ret = handle_ext_config(config_str);
+		else
+		{
+			//it points to the ':', start one after
+			std::vector<char> config_str(it+1, in_str+in_str_len);
+			ret = handle_ext_config(config_str);
+		}
 	}
 	else if(strncmp(in_str, printconfig_str, printconfig_str_len) == 0)
 	{
