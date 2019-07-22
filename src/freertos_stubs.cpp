@@ -10,7 +10,7 @@
 extern "C"
 {
 
-uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__ (( section(".ram_d2_s2_noload") ));
+uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__ (( section(".ram_d2_s1_noload") ));
 
 void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
 
