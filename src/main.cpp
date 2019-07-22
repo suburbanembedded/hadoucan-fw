@@ -529,6 +529,9 @@ int main(void)
 
 	main_task.launch("main_task", 15);
 
+	uart1_log<64>(LOG_LEVEL::INFO, "main", "Starting kernel");
+
+	HAL_NVIC_SetPriorityGrouping( NVIC_PRIORITYGROUP_4 );
 	vTaskStartScheduler();
 
 	for(;;)
