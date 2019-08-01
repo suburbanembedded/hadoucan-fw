@@ -473,7 +473,7 @@ int main(void)
 	HAL_Init();
 
 	//TODO: fix this to keep JTAG/SWD on, maybe
-	// set_all_gpio_low_power();
+	set_all_gpio_low_power();
 
 	SystemClock_Config();
 
