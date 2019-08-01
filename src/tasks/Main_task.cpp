@@ -154,8 +154,8 @@ bool Main_task::init_usb()
 		dev_desc.bDeviceProtocol = static_cast<uint8_t>(USB_common::PROTO_DEF::PROTO_NONE);
 		// dev_desc.bMaxPacketSize0 = m_driver->get_ep0_config().size;
 		dev_desc.bMaxPacketSize0 = 64;
-		dev_desc.idVendor  = 0x0123;
-		dev_desc.idProduct = 0x4567;
+		dev_desc.idVendor  = 0x0483;
+		dev_desc.idProduct = 0x5740;
 		dev_desc.bcdDevice = USB_common::build_bcd(1, 0, 0);
 		dev_desc.iManufacturer      = 1;
 		dev_desc.iProduct           = 2;
