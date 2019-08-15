@@ -10,6 +10,7 @@
 
 USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
 stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
+EP_buffer_mgr_freertos<1, 8, 64,  32> usb_ep0_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_rx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 
@@ -133,6 +134,9 @@ void Main_task::work()
 
 bool Main_task::init_usb()
 {
+	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.set_ep0_buffer");
+	usb_driver.set_ep0_buffer(&usb_ep0_buffer);
+
 	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.set_tx_buffer");
 	usb_driver.set_tx_buffer(&usb_tx_buffer);
 	
