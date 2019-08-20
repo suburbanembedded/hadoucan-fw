@@ -325,7 +325,13 @@ void STM32_fdcan_rx::work()
 			{
 				//no data in hw fifo either, go back to sleep
 				continue;
-			}			
+			}
+			else
+			{
+				//there was a packet
+				//update led status
+				led_task.notify_can_rx();
+			}		
 		}
 
 		//check more flags
@@ -420,6 +426,9 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 {
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_WATERMARK) != 0U)
 	{
+		//update led status
+		led_task.notify_can_rx();
+
 		//insert as many as we can
 		//if we can't drain below the watermark, the isr will get called again...
 		//TODO: in that case we turn off the isr and fall back to thread-mode drain, then re-enable
