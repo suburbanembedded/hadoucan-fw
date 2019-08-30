@@ -105,6 +105,8 @@ class Lawicel_parser
 	
 	virtual bool handle_set_timestamp(const bool enable) = 0;
 
+	virtual bool handle_set_autostartup(const bool enable) = 0;
+
 	virtual bool handle_ext_config(const std::vector<char>& config) = 0;
 	virtual bool handle_ext_print_config() = 0;
 	virtual bool handle_ext_bitrate_table(const std::vector<char>& table) = 0;
@@ -112,6 +114,7 @@ class Lawicel_parser
 	virtual bool handle_ext_defconfig() = 0;
 	virtual bool handle_ext_bootloader() = 0;
 	virtual bool handle_ext_serial() = 0;
+	virtual bool handle_ext_version() = 0;
 
 	protected:
 
@@ -144,6 +147,8 @@ class Lawicel_parser
 	bool parse_get_version(const char* in_str);
 	bool parse_get_serial(const char* in_str);
 	bool parse_set_timestamp(const char* in_str);
+
+	bool parse_set_autostartup(const char* in_str);
 
 	bool parse_poll_one(const char* in_str);
 	bool parse_poll_all(const char* in_str);

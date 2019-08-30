@@ -49,13 +49,13 @@ void CAN_USB_app_bitrate_table::set_defualt()
 		entry.rate  = 125000;
 		entry.pre   = 12;
 		entry.tseg1 = 13;
-		entry.tseg2 = 3;
+		entry.tseg2 = 2;
 		entry.sjw   = 1;
 		table_24mhz.m_nominal_table[entry.rate] = entry;
 
 		entry.rate  = 250000;
 		entry.pre   = 6;
-		entry.tseg1 = 12;
+		entry.tseg1 = 13;
 		entry.tseg2 = 2;
 		entry.sjw   = 1;
 		table_24mhz.m_nominal_table[entry.rate] = entry;

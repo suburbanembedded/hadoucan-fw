@@ -75,9 +75,6 @@ public:
 
 	void work() override
 	{
-		m_can->set_can_instance(FDCAN1);
-		m_can->set_can_handle(&hfdcan1);
-
 		m_parser.set_can(m_can);
 		m_parser.set_write_string_func(
 			std::bind(&USB_lawicel_task::write_string_usb, this, std::placeholders::_1)

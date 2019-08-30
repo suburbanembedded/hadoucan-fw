@@ -24,6 +24,10 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 	node = config_doc->NewElement("listen_only");
 	node->SetText(m_config.listen_only);
 	config_doc_root->InsertEndChild(node);
+
+	node = config_doc->NewElement("auto_startup");
+	node->SetText(m_config.auto_startup);
+	config_doc_root->InsertEndChild(node);
 	
 	{
 		node = config_doc->NewElement("timesync_mode");
@@ -221,6 +225,12 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 	if(!get_bool_text(config_root, "listen_only", &m_config.listen_only))
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element listen_only");
+		return false;
+	}
+
+	if(!get_bool_text(config_root, "auto_startup", &m_config.auto_startup))
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element auto_startup");
 		return false;
 	}
 	

@@ -75,7 +75,7 @@ bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
 
 	if(config.get_config().bitrate_nominal != stm32_baud)
 	{
-		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32::handle_std_baud", "Updating baud");
+		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32::handle_std_baud", "Updating baud to %u", stm32_baud);
 
 		config.get_config().bitrate_nominal = stm32_baud;
 
@@ -206,7 +206,7 @@ bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 {
 	const std::array<char, 2> hw_ver = {'0', '1'};
-	const std::array<char, 2> sw_ver = {'0', '2'};
+	const std::array<char, 2> sw_ver = {'0', '3'};
 	
 	ver->data()[0] = static_cast<uint8_t>(hw_ver[0]);
 	ver->data()[1] = static_cast<uint8_t>(hw_ver[1]);
@@ -256,7 +256,22 @@ bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
 }
 bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
 {
-	return false;
+	CAN_USB_app_config config;
+	can_usb_app.get_config(&config);
+
+	config.get_config().timestamp_enable = enable;
+
+	return can_usb_app.write_config(config);
+}
+
+bool Lawicel_parser_stm32::handle_set_autostartup(const bool enable)
+{
+	CAN_USB_app_config config;
+	can_usb_app.get_config(&config);
+
+	config.get_config().auto_startup = enable;
+
+	return can_usb_app.write_config(config);	
 }
 
 bool Lawicel_parser_stm32::handle_ext_config(const std::vector<char>& config_str)
@@ -388,6 +403,22 @@ bool Lawicel_parser_stm32::handle_ext_serial()
 	CAN_USB_app::get_unique_id_str(&id_str);
 
 	write_string(id_str.data());
+
+	return true;
+}
+
+bool Lawicel_parser_stm32::handle_ext_version()
+{
+	std::array<uint8_t, 4> ver;
+	handle_get_version(&ver);
+
+	std::array<uint8_t, 7> resp;
+	resp[0] = 'V';
+	std::copy_n(ver.data(), 4, resp.data()+1);
+	resp[5] = '\r';
+	resp[6] = '\0';
+
+	write_string((char*)(resp.data()));
 
 	return true;
 }

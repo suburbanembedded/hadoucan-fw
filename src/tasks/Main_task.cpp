@@ -96,6 +96,8 @@ void Main_task::work()
 	CAN_USB_app_bitrate_table bitrate_table;
 	can_usb_app.get_bitrate_tables(&bitrate_table);
 	
+	can_usb_app.get_can_tx().set_can_instance(FDCAN1);
+	can_usb_app.get_can_tx().set_can_handle(&hfdcan1);
 	can_usb_app.get_can_tx().set_config(config_struct);
 	can_usb_app.get_can_tx().set_bitrate_table(bitrate_table);
 
@@ -124,6 +126,14 @@ void Main_task::work()
 	usb_tx_buffer_task.launch("usb_tx_buf", 5);
 
 	timesync_task.launch("timesync", 1);
+
+	if(config_struct.auto_startup)
+	{
+		if(!can_usb_app.get_can_tx().open())
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "main", "CAN was requested to auto-start, but it failed");
+		}
+	}
 
 	led_task.set_mode_normal();
 	uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");

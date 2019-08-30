@@ -31,6 +31,8 @@ public:
 		bool autopoll;
 		bool listen_only;
 
+		bool auto_startup;
+
 		TIMESYNC_MODE timesync_mode;
 
 		SLOPE_CONTROL slope_ctrl;
@@ -71,6 +73,8 @@ public:
 
 		m_config.autopoll = false;
 		m_config.listen_only = false;
+
+		m_config.auto_startup = false;
 
 		m_config.timesync_mode = TIMESYNC_MODE::SLAVE;
 

@@ -268,6 +268,11 @@ bool Lawicel_parser::parse_string(const char* in_str)
 			ret = parse_set_timestamp(in_str);
 			break;
 		}
+		case 'Q':
+		{
+			ret = parse_set_autostartup(in_str);
+			break;
+		}
 		case '!':
 		{
 			ret = parse_extended_cmd(in_str);
@@ -276,6 +281,8 @@ bool Lawicel_parser::parse_string(const char* in_str)
 		default:
 		{
 			uart1_log<128>(LOG_LEVEL::WARN, "Lawicel_parser::parse_string", "no handler for %c", in_str[0]);
+
+			write_bell();
 
 			ret = false;
 			break;
@@ -1024,6 +1031,28 @@ bool Lawicel_parser::parse_set_timestamp(const char* in_str)
 	return true;
 }
 
+bool Lawicel_parser::parse_set_autostartup(const char* in_str)
+{
+	unsigned int autostartup = 0;
+	{
+		const int ret = sscanf(in_str, "Q%u\r", &autostartup);
+		if(ret != 1)
+		{
+			write_bell();
+			return false;
+		}
+	}
+
+	if(!handle_set_autostartup(autostartup))
+	{
+		write_bell();
+		return false;
+	}
+
+	write_cr();
+	return true;
+}
+
 bool Lawicel_parser::parse_poll_one(const char* in_str)
 {
 	const int ret = strncmp("P\r", in_str, 2);
@@ -1124,6 +1153,9 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	const char serial_str[] = "!serial\r";
 	const size_t serial_str_len = strlen(serial_str);
 
+	const char version_str[] = "!version";
+	const size_t version_str_len = strlen(version_str);
+
 	bool ret = false;
 
 	//TODO: this does not compare substrings as true
@@ -1177,6 +1209,12 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended serial number");
 
 		ret = handle_ext_serial();
+	}
+	else if(strncmp(in_str, version_str, version_str_len) == 0)
+	{
+		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended version number");
+
+		ret = handle_ext_version();
 	}
 	else
 	{
