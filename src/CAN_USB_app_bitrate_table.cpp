@@ -156,61 +156,61 @@ void CAN_USB_app_bitrate_table::set_defualt()
 		entry.tseg2 = 2;
 		entry.sjw   = 1;
 		table_60mhz.m_data_table[entry.rate] = entry;
+	}
 
-		/// 80MHz
-		{
-			const int clock = 80000000;
-			auto& table_80mhz = m_bitrate_tables[clock];
+	/// 80MHz
+	{
+		const int clock = 80000000;
+		auto& table_80mhz = m_bitrate_tables[clock];
 
-			entry.rate  = 250000;
-			entry.pre   = 20;
-			entry.tseg1 = 12;
-			entry.tseg2 = 3;
-			entry.sjw   = 1;
-			table_80mhz.m_nominal_table[entry.rate] = entry;
+		entry.rate  = 250000;
+		entry.pre   = 20;
+		entry.tseg1 = 12;
+		entry.tseg2 = 3;
+		entry.sjw   = 1;
+		table_80mhz.m_nominal_table[entry.rate] = entry;
 
-			entry.rate  = 500000;
-			entry.pre   = 10;
-			entry.tseg1 = 12;
-			entry.tseg2 = 3;
-			entry.sjw   = 1;
-			table_80mhz.m_nominal_table[entry.rate] = entry;
+		entry.rate  = 500000;
+		entry.pre   = 10;
+		entry.tseg1 = 12;
+		entry.tseg2 = 3;
+		entry.sjw   = 1;
+		table_80mhz.m_nominal_table[entry.rate] = entry;
 
-			entry.rate  = 1000000;
-			entry.pre   = 10;
-			entry.tseg1 = 5;
-			entry.tseg2 = 2;
-			entry.sjw   = 1;
-			table_80mhz.m_nominal_table[entry.rate] = entry;
+		entry.rate  = 1000000;
+		entry.pre   = 10;
+		entry.tseg1 = 5;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_80mhz.m_nominal_table[entry.rate] = entry;
 
-			entry.rate  = 2000000;
-			entry.pre   = 4;
-			entry.tseg1 = 7;
-			entry.tseg2 = 2;
-			entry.sjw   = 1;
-			table_80mhz.m_data_table[entry.rate] = entry;
+		entry.rate  = 2000000;
+		entry.pre   = 4;
+		entry.tseg1 = 7;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_80mhz.m_data_table[entry.rate] = entry;
 
-			entry.rate  = 4000000;
-			entry.pre   = 2;
-			entry.tseg1 = 7;
-			entry.tseg2 = 2;
-			entry.sjw   = 1;
-			table_80mhz.m_data_table[entry.rate] = entry;
+		entry.rate  = 4000000;
+		entry.pre   = 2;
+		entry.tseg1 = 7;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_80mhz.m_data_table[entry.rate] = entry;
 
-			entry.rate  = 8000000;
-			entry.pre   = 4;
-			entry.tseg1 = 7;
-			entry.tseg2 = 2;
-			entry.sjw   = 1;
-			table_80mhz.m_data_table[entry.rate] = entry;
+		entry.rate  = 8000000;
+		entry.pre   = 4;
+		entry.tseg1 = 7;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_80mhz.m_data_table[entry.rate] = entry;
 
-			entry.rate  = 10000000;
-			entry.pre   = 1;
-			entry.tseg1 = 5;
-			entry.tseg2 = 2;
-			entry.sjw   = 1;
-			table_80mhz.m_data_table[entry.rate] = entry;
-		}
+		entry.rate  = 10000000;
+		entry.pre   = 1;
+		entry.tseg1 = 5;
+		entry.tseg2 = 2;
+		entry.sjw   = 1;
+		table_80mhz.m_data_table[entry.rate] = entry;
 	}
 }
 
