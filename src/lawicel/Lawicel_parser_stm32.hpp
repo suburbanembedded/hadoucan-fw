@@ -22,7 +22,7 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 	}
 
 	bool handle_std_baud(const CAN_NOM_BPS baud) override;
-	bool handle_cust_baud(const uint8_t b0, const uint8_t b1) override;
+	bool handle_cust_baud(const uint8_t BTR0, const uint8_t BTR1) override;
 	bool handle_open() override;
 	bool handle_open_listen() override;
 	bool handle_close() override;

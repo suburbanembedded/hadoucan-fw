@@ -2,6 +2,7 @@
 
 #include "bootloader_util/Bootloader_key.hpp"
 #include "common_util/Byte_util.hpp"
+#include "common_util/Comparison_util.hpp"
 
 #include "global_app_inst.hpp"
 #include "tasks/Task_instances.hpp"
@@ -93,24 +94,127 @@ bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
 
 	return true;
 }
-bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t b0, const uint8_t b1)
+bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t BTR0, const uint8_t BTR1)
 {
+	//number of clock cycles a bit period maybe shortened or lengthened
+	const uint8_t sjw = (BTR0 & 0xC0) >> 6;
+
+	//s031C = 125kbps according to datasheet
+	//brp = 4
+	//tseg1 = 13
+	//tseg2 = 2
+	//so 8MHz external osc
+	const uint32_t CAN232_clock = 8000000U;
+
+	//tsci = 2*tclk*(brp+1)
+	//fsci = fxtal / ( 2 * brp + 1)
+	//fxtal 24MHz max
+	const uint8_t brp = ((BTR0 & 0x3F) >> 0) + 1;
+
+	// samp = 1 means triple sampling for low / medium speed
+	// samp = 1 means single sampling for high speed
+	// we will ignore
+	// const uint8_t samp  = (BTR1 & 0x80) >> 7;
+	const uint8_t tseg2 = ((BTR1 & 0x70) >> 4) + 1;
+	const uint8_t tseg1 = ((BTR1 & 0x0F) >> 0) + 1;
+
+	CAN_USB_app_config config;
+	can_usb_app.get_config(&config);
+	const uint32_t kernel_clock = config.get_config().can_clock;	
+
+	//calculate the desired kernel clock
+	const uint32_t prescaler_multiplier = kernel_clock / CAN232_clock;
+	const uint32_t prescaler_multiplier_remainder = kernel_clock % CAN232_clock;
+
+	if(prescaler_multiplier_remainder != 0)
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "CAN kernel clock is not a multiple of 8MHz so cannot use SJA1000 bitrate commands");
+		return false;
+	}
+
+	//what prescaler of our higher speed clock is this?
+	//either we should use a 8MHz kernel, or use a 24MHz kernel and mul the divider by 3
+
+	CAN_USB_app_bitrate_table::Bitrate_Table_Entry new_baud;
+	new_baud.pre = brp * prescaler_multiplier;//1-512
+	new_baud.sjw = sjw;//1-128
+	new_baud.tseg1 = tseg1;//1-256 
+	new_baud.tseg2 = tseg2;//1-128
+
+	if(!Comparison_util::is_within_inclusive(new_baud.pre, 1, 512))
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "PRE out of range");
+		return false;
+	}
+	if(!Comparison_util::is_within_inclusive(new_baud.sjw, 1, 128))
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "SJW out of range");	
+		return false;
+	}
+	if(!Comparison_util::is_within_inclusive(new_baud.tseg1, 1, 256))
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "TSEG1 out of range");
+		return false;
+	}
+	if(!Comparison_util::is_within_inclusive(new_baud.tseg2, 1, 128))
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "TSEG2 out of range");
+		return false;
+	}
+
 	return false;
 }
 bool Lawicel_parser_stm32::handle_open()
 {
+	//check if we need to update the default mode
+	{
+		CAN_USB_app_config config;
+		can_usb_app.get_config(&config);
+
+		if(config.get_config().listen_only)
+		{
+			config.get_config().timestamp_enable = false;
+		
+			if(!can_usb_app.write_config(config))
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "config update failed");
+				return false;
+			}
+		}
+	}
+
 	if(!m_fdcan->open())
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->open() failed");
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->open() ok");
+	uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser_stm32::handle_open", "fdcan->open() ok");
 
 	return true;
 }
 bool Lawicel_parser_stm32::handle_open_listen()
 {
+	//check if we need to update the default mode
+	{
+		CAN_USB_app_config config;
+		can_usb_app.get_config(&config);
+
+		if(!config.get_config().listen_only)
+		{
+			config.get_config().timestamp_enable = true;
+			
+			if(!can_usb_app.write_config(config))
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open_listen", "config update failed");
+				return false;
+			}
+		}
+	}
+
+	//TODO actually open listen only
+	uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->open_listen() needs to be implemented");
+
 	return false;
 }
 bool Lawicel_parser_stm32::handle_close()
