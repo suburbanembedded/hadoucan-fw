@@ -170,8 +170,10 @@ bool Main_task::init_usb()
 		dev_desc.bDeviceProtocol = static_cast<uint8_t>(USB_common::PROTO_DEF::PROTO_NONE);
 		// dev_desc.bMaxPacketSize0 = m_driver->get_ep0_config().size;
 		dev_desc.bMaxPacketSize0 = 64;
-		dev_desc.idVendor  = 0x0483;
-		dev_desc.idProduct = 0x5740;
+		// dev_desc.idVendor  = 0x0483;
+		// dev_desc.idProduct = 0x5740;
+		dev_desc.idVendor  = 0xFFFF;
+		dev_desc.idProduct = 0x0001;
 		dev_desc.bcdDevice = USB_common::build_bcd(1, 0, 0);
 		dev_desc.iManufacturer      = 1;
 		dev_desc.iProduct           = 2;
@@ -281,12 +283,13 @@ bool Main_task::init_usb()
 	usb_desc_table.add_other_descriptor(cdc_header_desc);
 
 	std::shared_ptr<CDC::CDC_call_management_descriptor> cdc_call_mgmt_desc = std::make_shared<CDC::CDC_call_management_descriptor>();
-	cdc_call_mgmt_desc->bmCapabilities = 0;
-	cdc_call_mgmt_desc->bDataInterface = 1;
+	cdc_call_mgmt_desc->bmCapabilities = 0x00;
+	cdc_call_mgmt_desc->bDataInterface = 0;
 	usb_desc_table.add_other_descriptor(cdc_call_mgmt_desc);
 
 	std::shared_ptr<CDC::CDC_acm_descriptor> cdc_acm_desc = std::make_shared<CDC::CDC_acm_descriptor>();
-	cdc_acm_desc->bmCapabilities = 0;
+	cdc_acm_desc->bmCapabilities = 0x00;
+	// cdc_acm_desc->bmCapabilities = 0x03;
 	usb_desc_table.add_other_descriptor(cdc_acm_desc);
 
 	std::shared_ptr<CDC::CDC_union_descriptor> cdc_union_desc = std::make_shared<CDC::CDC_union_descriptor>();
@@ -299,9 +302,9 @@ bool Main_task::init_usb()
 	//register iface and ep to configuration
 	config_desc_ptr->get_desc_list().push_back( usb_desc_table.get_interface_descriptor(0).get() );
 	config_desc_ptr->get_desc_list().push_back( cdc_header_desc.get() );
-	config_desc_ptr->get_desc_list().push_back( cdc_call_mgmt_desc.get() );
 	config_desc_ptr->get_desc_list().push_back( cdc_acm_desc.get() );
 	config_desc_ptr->get_desc_list().push_back( cdc_union_desc.get() );
+	config_desc_ptr->get_desc_list().push_back( cdc_call_mgmt_desc.get() );
 	config_desc_ptr->get_desc_list().push_back( usb_desc_table.get_endpoint_descriptor(0x82).get() );
 
 	config_desc_ptr->get_desc_list().push_back( usb_desc_table.get_interface_descriptor(1).get() );
