@@ -212,8 +212,11 @@ bool Lawicel_parser_stm32::handle_open_listen()
 		}
 	}
 
-	//TODO actually open listen only
-	uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->open_listen() needs to be implemented");
+	if(!m_fdcan->open())
+	{
+		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open_listen", "fdcan->open() failed");
+		return false;
+	}
 
 	return false;
 }

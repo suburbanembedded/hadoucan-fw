@@ -79,11 +79,6 @@ bool CAN_USB_app::write_config(const CAN_USB_app_config& config)
 
 		//update master in-mem copy
 		m_config = config;
-
-		//update fdcan's copy
-		//it will be re-examined on next call to open
-		//this is not a race condition, since this function is called from the same context as open
-		get_can_tx().set_config(config.get_config());
 	}
 
 	return true;

@@ -98,8 +98,6 @@ void Main_task::work()
 	
 	can_usb_app.get_can_tx().set_can_instance(FDCAN1);
 	can_usb_app.get_can_tx().set_can_handle(&hfdcan1);
-	can_usb_app.get_can_tx().set_config(config_struct);
-	can_usb_app.get_can_tx().set_bitrate_table(bitrate_table);
 
 	//init
 	usb_rx_buffer_task.set_usb_driver(&usb_driver);

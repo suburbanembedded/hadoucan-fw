@@ -2,6 +2,8 @@
 
 #include "lawicel/STM32_FDCAN_DLC.hpp"
 
+#include "global_app_inst.hpp"
+
 #include "main.h"
 
 #include "uart1_printf.hpp"
@@ -155,86 +157,91 @@ bool STM32_fdcan_tx::init()
 
 	m_fdcan_handle->Instance = m_fdcan;
 
-	//classic, no brs, brs
-	if(m_config.protocol_fd)
 	{
-		if(m_config.protocol_brs)
-		{
-			m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_FD_BRS;
-		}
-		else
-		{
-			m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
-		}
-	}
-	else
-	{
-		m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-	}
-	
-	if(m_config.listen_only)
-	{
-		m_fdcan_handle->Init.Mode = FDCAN_MODE_BUS_MONITORING;
-	}
-	else
-	{
-		m_fdcan_handle->Init.Mode = FDCAN_MODE_NORMAL;
-	}
+		std::unique_lock<Mutex_static_recursive> config_lock;
+		const CAN_USB_app_config::Config_Set& m_config = can_usb_app.get_config(&config_lock);
 
-	m_fdcan_handle->Init.AutoRetransmission = ENABLE;
-	m_fdcan_handle->Init.TransmitPause = DISABLE;
-	m_fdcan_handle->Init.ProtocolException = ENABLE;
-
-	//handle the slew rate control based on the setting and baud rate
-	switch(m_config.slope_ctrl)
-	{
-		case CAN_USB_app_config::SLOPE_CONTROL::SLOW:
-		{
-			set_can_slew_slow();
-			break;
-		}
-		case CAN_USB_app_config::SLOPE_CONTROL::FAST:
-		{
-			set_can_slew_high();
-			break;
-		}
-		case CAN_USB_app_config::SLOPE_CONTROL::AUTO:
+		//classic, no brs, brs
+		if(m_config.protocol_fd)
 		{
 			if(m_config.protocol_brs)
 			{
-				if((m_config.bitrate_nominal > 500000) || (m_config.bitrate_data > 500000))
-				{
-					set_can_slew_high();
-				}
-				else
-				{
-					set_can_slew_slow();
-				}
+				m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_FD_BRS;
 			}
 			else
 			{
-				if(m_config.bitrate_nominal > 500000)
+				m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+			}
+		}
+		else
+		{
+			m_fdcan_handle->Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+		}
+		
+		if(m_config.listen_only)
+		{
+			m_fdcan_handle->Init.Mode = FDCAN_MODE_BUS_MONITORING;
+		}
+		else
+		{
+			m_fdcan_handle->Init.Mode = FDCAN_MODE_NORMAL;
+		}
+
+		m_fdcan_handle->Init.AutoRetransmission = ENABLE;
+		m_fdcan_handle->Init.TransmitPause = DISABLE;
+		m_fdcan_handle->Init.ProtocolException = ENABLE;
+
+		//handle the slew rate control based on the setting and baud rate
+		switch(m_config.slope_ctrl)
+		{
+			case CAN_USB_app_config::SLOPE_CONTROL::SLOW:
+			{
+				set_can_slew_slow();
+				break;
+			}
+			case CAN_USB_app_config::SLOPE_CONTROL::FAST:
+			{
+				set_can_slew_high();
+				break;
+			}
+			default:
+			{
+				uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::init", "slope control setting corrupt, setting to auto");
+				//fall through here
+			}
+			case CAN_USB_app_config::SLOPE_CONTROL::AUTO:
+			{
+				if(m_config.protocol_brs)
 				{
-					set_can_slew_high();
+					if((m_config.bitrate_nominal > 500000) || (m_config.bitrate_data > 500000))
+					{
+						set_can_slew_high();
+					}
+					else
+					{
+						set_can_slew_slow();
+					}
 				}
 				else
 				{
-					set_can_slew_slow();
+					if(m_config.bitrate_nominal > 500000)
+					{
+						set_can_slew_high();
+					}
+					else
+					{
+						set_can_slew_slow();
+					}
 				}
+				break;
 			}
-			break;
 		}
-		default:
-		{
-			set_can_slew_slow();
-			break;
-		}
-	}
 
-	if(!set_baud(m_config.bitrate_nominal, m_config.bitrate_data))
-	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "set_baud failed");
-		return false;
+		if(!set_baud(m_config.bitrate_nominal, m_config.bitrate_data))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "set_baud failed");
+			return false;
+		}
 	}
 
 	m_fdcan_handle->Init.MessageRAMOffset = 0;
@@ -401,6 +408,12 @@ bool STM32_fdcan_tx::init()
 
 bool STM32_fdcan_tx::set_baud(const int std_baud)
 {
+	std::unique_lock<Mutex_static_recursive> config_lock;
+	const CAN_USB_app_config::Config_Set& m_config = can_usb_app.get_config(&config_lock);
+	
+	std::unique_lock<Mutex_static_recursive> bitrate_table_lock;
+	const CAN_USB_app_bitrate_table& m_bitrate_table = can_usb_app.get_bitrate_tables(&bitrate_table_lock);
+
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry nominal_entry;
 	if(!m_bitrate_table.get_nominal_entry(m_config.can_clock, std_baud, &nominal_entry))
 	{
@@ -423,6 +436,12 @@ bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Ent
 
 bool STM32_fdcan_tx::set_baud(const int std_baud, const int fd_baud)
 {
+	std::unique_lock<Mutex_static_recursive> config_lock;
+	const CAN_USB_app_config::Config_Set& m_config = can_usb_app.get_config(&config_lock);
+	
+	std::unique_lock<Mutex_static_recursive> bitrate_table_lock;
+	const CAN_USB_app_bitrate_table& m_bitrate_table = can_usb_app.get_bitrate_tables(&bitrate_table_lock);
+
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry nominal_entry;
 	if(!m_bitrate_table.get_nominal_entry(m_config.can_clock, std_baud, &nominal_entry))
 	{

@@ -63,6 +63,18 @@ public:
 
 		return m_config.get_config();
 	}
+
+	const CAN_USB_app_bitrate_table& get_bitrate_tables(std::unique_lock<Mutex_static_recursive>* const out_lock) const
+	{
+		//lock
+		std::unique_lock<Mutex_static_recursive> lock(m_mutex);
+
+		//transfer ownership to calling scope
+		*out_lock = std::move(lock);
+
+		return m_bitrate_tables;
+	}
+	
 	void get_bitrate_tables(CAN_USB_app_bitrate_table* const out_table) const
 	{
 		std::lock_guard<Mutex_static_recursive> lock(m_mutex);

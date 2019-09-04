@@ -26,8 +26,6 @@ public:
 	{		
 		m_is_open = false;
 		m_fdcan = nullptr;
-
-		m_config = CAN_USB_app_config::get_defualt();
 	}
 
 	void set_can_instance(FDCAN_GlobalTypeDef* can)
@@ -38,16 +36,6 @@ public:
 	void set_can_handle(FDCAN_HandleTypeDef* const can_handle)
 	{
 		m_fdcan_handle = can_handle;
-	}
-
-	void set_config(const CAN_USB_app_config::Config_Set& config)
-	{
-		m_config = config;
-	}
-
-	void set_bitrate_table(const CAN_USB_app_bitrate_table& table)
-	{
-		m_bitrate_table = table;
 	}
 
 	bool init();
@@ -73,9 +61,6 @@ protected:
 
 	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, FDCAN_HandleTypeDef* const handle);
 	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& fd_baud, FDCAN_HandleTypeDef* const handle);
-
-	CAN_USB_app_config::Config_Set m_config;
-	CAN_USB_app_bitrate_table m_bitrate_table;
 
 	bool m_is_open;
 
