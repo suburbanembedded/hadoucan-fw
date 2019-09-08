@@ -7,6 +7,7 @@
 #include "Timesync_task.hpp"
 #include "USB_lawicel_task.hpp"
 #include "USB_poll.hpp"
+#include "Logging_task.hpp"
 
 extern USB_rx_buffer_task usb_rx_buffer_task;
 extern USB_tx_buffer_task usb_tx_buffer_task;
@@ -16,6 +17,7 @@ extern Test_USB_Core_task test_usb_core;
 extern LED_task led_task;
 extern USB_lawicel_task usb_lawicel_task;
 extern Timesync_task timesync_task;
+extern Logging_task logging_task;
 
 extern STM32_fdcan_rx stm32_fdcan_rx_task;
 

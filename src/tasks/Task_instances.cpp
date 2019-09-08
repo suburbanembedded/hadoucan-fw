@@ -8,6 +8,7 @@ Test_USB_Core_task test_usb_core __attribute__(( section(".ram_dtcm_noload") ));
 LED_task led_task __attribute__(( section(".ram_d2_s1_noload") ));
 USB_lawicel_task usb_lawicel_task __attribute__(( section(".ram_dtcm_noload") ));
 Timesync_task timesync_task __attribute__(( section(".ram_d2_s1_noload") ));
+Logging_task logging_task __attribute__(( section(".ram_d2_s1_noload") ));
 
 STM32_fdcan_rx stm32_fdcan_rx_task __attribute__ (( section(".ram_dtcm_noload") ));
 

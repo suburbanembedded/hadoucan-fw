@@ -102,6 +102,7 @@ add_executable(canusbfdiso.elf
 	src/tasks/Timesync_task.cpp
 	src/tasks/USB_lawicel_task.cpp
 	src/tasks/Main_task.cpp
+	src/tasks/Logging_task.cpp
 	src/tasks/Task_instances.cpp
 
 	src/CAN_USB_app.cpp
