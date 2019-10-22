@@ -16,3 +16,21 @@
 [submodule "external/libusb_dev_cpp"]
 	path = external/libusb_dev_cpp
 	url = git@github.com:jacobschloss/libusb_dev_cpp.git
+[submodule "external/common_util"]
+	path = external/common_util
+	url = git@github.com:suburbanembedded/common_util.git
+[submodule "external/mbedtls_util"]
+	path = external/mbedtls_util
+	url = git@github.com:suburbanembedded/mbedtls_util.git
+[submodule "external/emb_fs_util"]
+	path = external/emb_fs_util
+	url = git@github.com:suburbanembedded/emb_fs_util.git
+[submodule "external/crc"]
+	path = external/crc
+	url = git@github.com:suburbanembedded/crc.git
+[submodule "external/bootloader_util"]
+	path = external/bootloader_util
+	url = git@github.com:suburbanembedded/bootloader_util.git
+[submodule "external/tinyxml2_util"]
+	path = external/tinyxml2_util
+	url = git@github.com:suburbanembedded/tinyxml2_util.git
