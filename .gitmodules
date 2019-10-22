@@ -31,3 +31,6 @@
 [submodule "external/tinyxml2_util"]
 	path = external/tinyxml2_util
 	url = git@github.com:suburbanembedded/tinyxml2_util.git
+[submodule "external/mbedtls"]
+	path = external/mbedtls
+	url = git@github.com:ARMmbed/mbedtls.git
