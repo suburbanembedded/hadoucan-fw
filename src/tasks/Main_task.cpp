@@ -371,6 +371,7 @@ bool Main_task::init_usb()
 	__HAL_RCC_USB_OTG_HS_CLK_ENABLE();
 	__HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
 
+	// TODO: switch to isr mode
 	// HAL_NVIC_SetPriority(OTG_HS_IRQn, 5, 0);
 	// HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
 
