@@ -31,3 +31,6 @@
 [submodule "external/mbedtls"]
 	path = external/mbedtls
 	url = git@github.com:ARMmbed/mbedtls.git
+[submodule "external/stm32cube_fw_h7_v1_4_0"]
+	path = external/stm32cube_fw_h7_v1_4_0
+	url = git@github.com:suburbanembedded/stm32cube_fw_h7_v1_4_0.git
