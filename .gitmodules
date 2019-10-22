@@ -7,9 +7,6 @@
 [submodule "external/tinyxml2"]
 	path = external/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
-[submodule "external/mbedtls"]
-	path = external/mbedtls
-	url = git@bitbucket.org:suburbanmarine/mbedtls.git
 [submodule "external/stm32cube_fw_h7_v1_4_0"]
 	path = external/stm32cube_fw_h7_v1_4_0
 	url = git@bitbucket.org:suburbanmarine/stm32cube_fw_h7_v1_4_0.git
