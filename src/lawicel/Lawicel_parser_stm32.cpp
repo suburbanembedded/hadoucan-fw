@@ -96,6 +96,8 @@ bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
 }
 bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t BTR0, const uint8_t BTR1)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_cust_baud", "");
+
 	//number of clock cycles a bit period maybe shortened or lengthened
 	const uint8_t sjw = (BTR0 & 0xC0) >> 6;
 
@@ -166,6 +168,8 @@ bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t BTR0, const uint8_t BT
 }
 bool Lawicel_parser_stm32::handle_open()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_open", "");
+
 	//check if we need to update the default mode
 	{
 		CAN_USB_app_config config;
@@ -195,6 +199,8 @@ bool Lawicel_parser_stm32::handle_open()
 }
 bool Lawicel_parser_stm32::handle_open_listen()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_open_listen", "");
+
 	//check if we need to update the default mode
 	{
 		CAN_USB_app_config config;
@@ -222,6 +228,8 @@ bool Lawicel_parser_stm32::handle_open_listen()
 }
 bool Lawicel_parser_stm32::handle_close()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_close", "");
+
 	if(!m_fdcan->close())
 	{
 		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->close() failed");
@@ -234,6 +242,8 @@ bool Lawicel_parser_stm32::handle_close()
 }
 bool Lawicel_parser_stm32::handle_tx_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_std", "");
+
 	if(!m_fdcan->tx_std(id, data_len, data))
 	{
 		return false;
@@ -245,6 +255,8 @@ bool Lawicel_parser_stm32::handle_tx_std(const uint32_t id, const uint8_t data_l
 }
 bool Lawicel_parser_stm32::handle_tx_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_ext", "");
+
 	if(m_fdcan->tx_ext(id, data_len, data))
 	{
 		return false;
@@ -256,6 +268,8 @@ bool Lawicel_parser_stm32::handle_tx_ext(const uint32_t id, const uint8_t data_l
 }
 bool Lawicel_parser_stm32::handle_tx_rtr_std(const uint32_t id, const uint8_t data_len)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_rtr_std", "");
+
 	if(m_fdcan->tx_std_rtr(id, data_len))
 	{
 		return false;
@@ -267,6 +281,8 @@ bool Lawicel_parser_stm32::handle_tx_rtr_std(const uint32_t id, const uint8_t da
 }
 bool Lawicel_parser_stm32::handle_tx_rtr_ext(const uint32_t id, const uint8_t data_len)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_rtr_ext", "");
+
 	if(m_fdcan->tx_ext_rtr(id, data_len))
 	{
 		return false;
@@ -278,6 +294,8 @@ bool Lawicel_parser_stm32::handle_tx_rtr_ext(const uint32_t id, const uint8_t da
 }
 bool Lawicel_parser_stm32::handle_tx_fd_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_std", "");
+
 	if(m_fdcan->tx_fd_std(id, STM32_fdcan_tx::BRS::ON, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
 	{
 		return false;
@@ -289,6 +307,8 @@ bool Lawicel_parser_stm32::handle_tx_fd_std(const uint32_t id, const uint8_t dat
 }
 bool Lawicel_parser_stm32::handle_tx_fd_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_ext", "");
+
 	if(m_fdcan->tx_fd_ext(id, STM32_fdcan_tx::BRS::ON, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
 	{
 		return false;
@@ -300,18 +320,26 @@ bool Lawicel_parser_stm32::handle_tx_fd_ext(const uint32_t id, const uint8_t dat
 }
 bool Lawicel_parser_stm32::handle_get_flags()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_get_flags", "");
+
 	return false;
 }
 bool Lawicel_parser_stm32::handle_set_accept_code(const uint32_t code)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_accept_code", "");
+
 	return false;
 }
 bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_accept_mask", "");
+
 	return false;
 }
 bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_get_version", "");
+
 	const std::array<char, 2> hw_ver = {'0', '1'};
 	const std::array<char, 2> sw_ver = {'0', '3'};
 	
@@ -325,6 +353,8 @@ bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 }
 bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_get_serial", "");
+
 	//CAN232 has a 4 hex digit serial number, eg 2 bytes
 	//hash down our real id to 2 bytes, as uniform as we can
 	//this is not globally unique
@@ -363,6 +393,8 @@ bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
 }
 bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_timestamp", "");
+
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
 
@@ -373,6 +405,8 @@ bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
 
 bool Lawicel_parser_stm32::handle_set_autostartup(const bool enable)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_autostartup", "");
+
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
 
@@ -383,6 +417,8 @@ bool Lawicel_parser_stm32::handle_set_autostartup(const bool enable)
 
 bool Lawicel_parser_stm32::handle_ext_config(const std::vector<char>& config_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_config", "");
+
 	tinyxml2::XMLDocument config_doc;
 	tinyxml2::XMLError err = config_doc.Parse(config_str.data(), config_str.size());
 	if(err != tinyxml2::XML_SUCCESS)
@@ -402,6 +438,8 @@ bool Lawicel_parser_stm32::handle_ext_config(const std::vector<char>& config_str
 }
 bool Lawicel_parser_stm32::handle_ext_print_config()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_print_config", "");
+
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
 
@@ -426,6 +464,8 @@ bool Lawicel_parser_stm32::handle_ext_print_config()
 }
 bool Lawicel_parser_stm32::handle_ext_bitrate_table(const std::vector<char>& table_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_table", "");
+
 	tinyxml2::XMLDocument table_doc;
 	tinyxml2::XMLError err = table_doc.Parse(table_str.data(), table_str.size());
 	if(err != tinyxml2::XML_SUCCESS)
@@ -443,6 +483,8 @@ bool Lawicel_parser_stm32::handle_ext_bitrate_table(const std::vector<char>& tab
 }
 bool Lawicel_parser_stm32::handle_ext_print_bitrate_table()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_print_bitrate_table", "");
+
 	CAN_USB_app_bitrate_table table;
 	can_usb_app.get_bitrate_tables(&table);
 
@@ -467,6 +509,8 @@ bool Lawicel_parser_stm32::handle_ext_print_bitrate_table()
 }
 bool Lawicel_parser_stm32::handle_ext_defconfig()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_defconfig", "");
+
 	if(!can_usb_app.write_default_config())
 	{
 		return false;
@@ -480,6 +524,8 @@ bool Lawicel_parser_stm32::handle_ext_defconfig()
 }
 bool Lawicel_parser_stm32::handle_ext_bootloader()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bootloader", "");
+
 	const Bootloader_key key = Bootloader_key::get_key_boot();
 	key.to_addr(reinterpret_cast<uint8_t*>(0x38800000));
 
@@ -506,6 +552,8 @@ bool Lawicel_parser_stm32::handle_ext_bootloader()
 
 bool Lawicel_parser_stm32::handle_ext_serial()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_serial", "");
+
 	std::array<char, 25> id_str;
 	CAN_USB_app::get_unique_id_str(&id_str);
 
@@ -516,6 +564,8 @@ bool Lawicel_parser_stm32::handle_ext_serial()
 
 bool Lawicel_parser_stm32::handle_ext_version()
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_version", "");
+	
 	std::array<uint8_t, 4> ver;
 	handle_get_version(&ver);
 

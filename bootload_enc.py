@@ -72,8 +72,8 @@ def main():
 
 	# args = parser.parse_args()
 
-	img_path = '/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/build/ram/release/app.bin.enc'
-	aux_img_path = '/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/build/ram/release/app.bin.enc.xml'
+	img_path = 'app.bin.enc'
+	aux_img_path = 'app.bin.enc.xml'
 	tty_path = '/dev/ttyACM0'
 
 	tty_port = serial.Serial(tty_path, 115200, timeout=10)

@@ -45,7 +45,7 @@ public:
 		return m_bitrate_tables;
 	}
 
-	bool get_nominal_entry(int can_clock, int nominal_bitrate, Bitrate_Table_Entry* const entry) const
+	bool get_nominal_entry(const int can_clock, const int nominal_bitrate, Bitrate_Table_Entry* const entry) const
 	{
 		CAN_USB_app_bitrate_table::Bitrate_Table_Set::const_iterator table = m_bitrate_tables.find(can_clock);
 		if(table == m_bitrate_tables.end())

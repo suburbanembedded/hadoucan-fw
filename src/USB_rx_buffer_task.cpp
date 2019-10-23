@@ -31,6 +31,7 @@ void USB_rx_buffer_task::work()
 			}
 
 			//return buffer to the driver
+			uart1_log<64>(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "release buf");
 			m_usb_driver->release_rx_buffer(0x01, in_buf);
 		}
 

@@ -23,6 +23,8 @@ bool Lawicel_parser::write_cr()
 
 bool Lawicel_parser::parse_std_id(const char* in_str, uint32_t* const id)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_id", "");
+
 	//tiiildd
 	std::array<char, 4> id_str;
 	id_str.fill(0);
@@ -46,6 +48,8 @@ bool Lawicel_parser::parse_std_id(const char* in_str, uint32_t* const id)
 }
 bool Lawicel_parser::parse_ext_id(const char* in_str, uint32_t* const id)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_id", "");
+
 	//Tiiiiiiiildd
 	std::array<char, 9> id_str;
 	id_str.fill(0);
@@ -70,6 +74,8 @@ bool Lawicel_parser::parse_ext_id(const char* in_str, uint32_t* const id)
 
 bool Lawicel_parser::parse_std_dlc(const char dlc_char, uint8_t* const data_len)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_dlc", "");
+
 	CAN_DLC can_dlc;
 	if(!can_dlc.from_ascii(dlc_char))
 	{
@@ -88,6 +94,8 @@ bool Lawicel_parser::parse_std_dlc(const char dlc_char, uint8_t* const data_len)
 }
 bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 8>* const data)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_data", "");
+
 	if(data_len > 8)
 	{
 		return false;
@@ -115,6 +123,8 @@ bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t data_len
 
 bool Lawicel_parser::parse_fd_dlc(const char dlc_char, uint8_t* const data_len)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_fd_dlc", "");
+
 	CAN_DLC can_dlc;
 	if(!can_dlc.from_ascii(dlc_char))
 	{
@@ -133,6 +143,8 @@ bool Lawicel_parser::parse_fd_dlc(const char dlc_char, uint8_t* const data_len)
 }
 bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 64>* const data)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_fd_data", "");
+
 	if(data_len > 64)
 	{
 		return false;
@@ -160,6 +172,8 @@ bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t data_len,
 
 bool Lawicel_parser::parse_string(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_string", "");
+
 	if(in_str == nullptr)
 	{
 		return false;
@@ -294,6 +308,8 @@ bool Lawicel_parser::parse_string(const char* in_str)
 
 bool Lawicel_parser::parse_std_baud(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_baud", "");
+
 	const size_t in_str_len = strnlen(in_str, 3);
 
 	if(in_str_len != 3)
@@ -343,6 +359,8 @@ bool Lawicel_parser::parse_std_baud(const char* in_str)
 }
 bool Lawicel_parser::parse_cust_baud(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_cust_baud", "");
+
 	const size_t in_str_len = strnlen(in_str, 6);
 
 	if(in_str_len != 6)
@@ -404,6 +422,8 @@ bool Lawicel_parser::parse_cust_baud(const char* in_str)
 
 bool Lawicel_parser::parse_open(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_open", "");
+
 	const int ret = strncmp("O\r", in_str, 2);
 	if(ret != 0)
 	{
@@ -424,6 +444,8 @@ bool Lawicel_parser::parse_open(const char* in_str)
 }
 bool Lawicel_parser::parse_open_listen(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_open_listen", "");
+
 	const int ret = strncmp("L\r", in_str, 2);
 	if(ret != 0)
 	{
@@ -442,6 +464,8 @@ bool Lawicel_parser::parse_open_listen(const char* in_str)
 }
 bool Lawicel_parser::parse_close(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_close", "");
+
 	int ret = strncmp("C\r", in_str, 2);
 	if(ret != 0)
 	{
@@ -463,6 +487,8 @@ bool Lawicel_parser::parse_close(const char* in_str)
 
 bool Lawicel_parser::parse_tx_std(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_std", "");
+
 	const size_t in_str_len = strlen(in_str);
 
 	//tiiil\r
@@ -539,6 +565,8 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 }
 bool Lawicel_parser::parse_tx_ext(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_ext", "");
+
 	const size_t in_str_len = strlen(in_str);
 
 	//Tiiiiiiiil\r
@@ -615,6 +643,8 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 
 bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_rtr_std", "");
+
 	const size_t in_str_len = strlen(in_str);
 
 	//riiil\r
@@ -677,6 +707,8 @@ bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 }
 bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_rtr_ext", "");
+
 	const size_t in_str_len = strlen(in_str);
 
 	//Riiiiiiiil\r
@@ -739,6 +771,8 @@ bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 
 bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_fd_std", "");
+
 	//diiil\r
 	const size_t in_str_len = strlen(in_str);
 
@@ -833,6 +867,8 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 }
 bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_fd_ext", "");
+
 	//diiiiiiiil\r
 	const size_t in_str_len = strlen(in_str);
 
@@ -928,6 +964,8 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 
 bool Lawicel_parser::parse_get_flags(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_get_flags", "");
+
 	int ret = strncmp("F\r", in_str, 2);
 	if(ret != 0)
 	{
@@ -947,17 +985,23 @@ bool Lawicel_parser::parse_get_flags(const char* in_str)
 
 bool Lawicel_parser::parse_set_accept_code(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "");
+
 	write_bell();
 	return false;
 }
 bool Lawicel_parser::parse_set_accept_mask(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_mask", "");
+
 	write_bell();
 	return false;
 }
 
 bool Lawicel_parser::parse_get_version(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_get_version", "");
+
 	const int ret = strncmp("V\r", in_str, 2);
 	if(ret != 0)
 	{
@@ -984,6 +1028,8 @@ bool Lawicel_parser::parse_get_version(const char* in_str)
 }
 bool Lawicel_parser::parse_get_serial(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_get_serial", "");
+
 	const int ret = strncmp("N\r", in_str, 2);
 	if(ret != 0)
 	{
@@ -1011,6 +1057,8 @@ bool Lawicel_parser::parse_get_serial(const char* in_str)
 
 bool Lawicel_parser::parse_set_timestamp(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_timestamp", "");
+
 	unsigned int timestamp = 0;
 	{
 		const int ret = sscanf(in_str, "Z%u\r", &timestamp);
@@ -1033,6 +1081,8 @@ bool Lawicel_parser::parse_set_timestamp(const char* in_str)
 
 bool Lawicel_parser::parse_set_autostartup(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_autostartup", "");
+
 	unsigned int autostartup = 0;
 	{
 		const int ret = sscanf(in_str, "Q%u\r", &autostartup);
@@ -1055,6 +1105,8 @@ bool Lawicel_parser::parse_set_autostartup(const char* in_str)
 
 bool Lawicel_parser::parse_poll_one(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_poll_one", "");
+
 	const int ret = strncmp("P\r", in_str, 2);
 	if(ret != 0)
 	{
@@ -1083,6 +1135,8 @@ bool Lawicel_parser::parse_poll_one(const char* in_str)
 
 bool Lawicel_parser::parse_poll_all(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_poll_all", "");
+
 	const int ret = strncmp("A\r", in_str, 2);
 	if(ret != 0)
 	{
@@ -1102,6 +1156,8 @@ bool Lawicel_parser::parse_poll_all(const char* in_str)
 
 bool Lawicel_parser::parse_auto_poll(const char* in_str)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_auto_poll", "");
+
 	unsigned int auto_poll = 0;
 	{
 		const int ret = sscanf(in_str, "X%u\r", &auto_poll);
@@ -1235,6 +1291,8 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::queue_rx_packet", "");
+
 	bool success = false;
 	switch(m_poll_mode)
 	{
@@ -1271,6 +1329,8 @@ bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
 
 bool Lawicel_parser::handle_poll_one(std::string* const out_line)
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::handle_poll_one", "");
+
 	if(!m_is_channel_open)
 	{
 		return false;
@@ -1307,6 +1367,8 @@ bool Lawicel_parser::handle_poll_one(std::string* const out_line)
 }
 bool Lawicel_parser::handle_poll_all()
 {
+	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::handle_poll_all", "");
+
 	if(!m_is_channel_open)
 	{
 		return false;
@@ -1346,6 +1408,8 @@ bool Lawicel_parser::handle_poll_all()
 
 bool Lawicel_parser::handle_auto_poll(const bool enable)
 {
+	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::handle_auto_poll", "");
+
 	//TODO: race condition, flush queue while new packets come in
 	//std::lock_guard<Mutex_static> lock(m_rx_packet_buf_mutex);
 

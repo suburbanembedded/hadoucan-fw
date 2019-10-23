@@ -189,6 +189,7 @@ bool Main_task::init_usb()
 		desc.bInterfaceClass    = static_cast<uint8_t>(CDC::COMM_INTERFACE_CLASS_CODE);
 		desc.bInterfaceSubClass = static_cast<uint8_t>(CDC::COMM_INTERFACE_SUBCLASS_CODE::ACM);
 		desc.bInterfaceProtocol = static_cast<uint8_t>(CDC::COMM_CLASS_PROTO_CODE::V250);
+		// desc.bInterfaceProtocol = static_cast<uint8_t>(CDC::COMM_CLASS_PROTO_CODE::NONE);
 		desc.iInterface         = 5;
 		usb_desc_table.set_interface_descriptor(desc, 0);
 	}
