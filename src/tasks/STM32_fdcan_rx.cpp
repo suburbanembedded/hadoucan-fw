@@ -97,28 +97,20 @@ bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, s
 		{
 			if(rxheader.IdType == FDCAN_STANDARD_ID)
 			{
-				s->push_back('f');
+				s->push_back('d');
 				success = true;
 			}
 			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
 			{
-				s->push_back('F');
+				s->push_back('D');
 				success = true;
 			}
 		}
-		else if(rxheader.RxFrameType == FDCAN_REMOTE_FRAME)
-		{
-			if(rxheader.IdType == FDCAN_STANDARD_ID)
-			{
-				s->push_back('u');
-				success = true;
-			}
-			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
-			{
-				s->push_back('U');
-				success = true;
-			}
-		}
+	}
+
+	if(!success)
+	{
+		uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_rx::append_packet_type", "Illegal frame");
 	}
 
 	return success;
