@@ -14,48 +14,90 @@
 
 namespace
 {
-uint32_t get_size_from_stm32_dlc(const uint32_t dlc)
-{
-	switch(dlc)
+	uint32_t get_size_from_stm32_dlc(const uint32_t dlc)
 	{
-		case FDCAN_DLC_BYTES_0:
-			return 0;
-		case FDCAN_DLC_BYTES_1:
-			return 1;
-		case FDCAN_DLC_BYTES_2:
-			return 2;
-		case FDCAN_DLC_BYTES_3:
-			return 3;
-		case FDCAN_DLC_BYTES_4:
-			return 4;
-		case FDCAN_DLC_BYTES_5:
-			return 5;
-		case FDCAN_DLC_BYTES_6:
-			return 6;
-		case FDCAN_DLC_BYTES_7:
-			return 7;
-		case FDCAN_DLC_BYTES_8:
-			return 8;
-		case FDCAN_DLC_BYTES_12:
-			return 12;
-		case FDCAN_DLC_BYTES_16:
-			return 16;
-		case FDCAN_DLC_BYTES_20:
-			return 20;
-		case FDCAN_DLC_BYTES_24:
-			return 24;
-		case FDCAN_DLC_BYTES_32:
-			return 32;
-		case FDCAN_DLC_BYTES_48:
-			return 48;
-		case FDCAN_DLC_BYTES_64:
-			return 64;
-		default:
-			throw std::domain_error("dlc not in bounds");
-	}
+		switch(dlc)
+		{
+			case FDCAN_DLC_BYTES_0:
+				return 0;
+			case FDCAN_DLC_BYTES_1:
+				return 1;
+			case FDCAN_DLC_BYTES_2:
+				return 2;
+			case FDCAN_DLC_BYTES_3:
+				return 3;
+			case FDCAN_DLC_BYTES_4:
+				return 4;
+			case FDCAN_DLC_BYTES_5:
+				return 5;
+			case FDCAN_DLC_BYTES_6:
+				return 6;
+			case FDCAN_DLC_BYTES_7:
+				return 7;
+			case FDCAN_DLC_BYTES_8:
+				return 8;
+			case FDCAN_DLC_BYTES_12:
+				return 12;
+			case FDCAN_DLC_BYTES_16:
+				return 16;
+			case FDCAN_DLC_BYTES_20:
+				return 20;
+			case FDCAN_DLC_BYTES_24:
+				return 24;
+			case FDCAN_DLC_BYTES_32:
+				return 32;
+			case FDCAN_DLC_BYTES_48:
+				return 48;
+			case FDCAN_DLC_BYTES_64:
+				return 64;
+			default:
+				throw std::domain_error("dlc not in bounds");
+		}
 
-	throw std::domain_error("dlc not in bounds");
-}
+		throw std::domain_error("dlc not in bounds");
+	}
+	char get_hex_from_stm32_dlc(const uint32_t dlc)
+	{
+		switch(dlc)
+		{
+			case FDCAN_DLC_BYTES_0:
+				return '0';
+			case FDCAN_DLC_BYTES_1:
+				return '1';
+			case FDCAN_DLC_BYTES_2:
+				return '2';
+			case FDCAN_DLC_BYTES_3:
+				return '3';
+			case FDCAN_DLC_BYTES_4:
+				return '4';
+			case FDCAN_DLC_BYTES_5:
+				return '5';
+			case FDCAN_DLC_BYTES_6:
+				return '6';
+			case FDCAN_DLC_BYTES_7:
+				return '7';
+			case FDCAN_DLC_BYTES_8:
+				return '8';
+			case FDCAN_DLC_BYTES_12:
+				return '9';
+			case FDCAN_DLC_BYTES_16:
+				return 'A';
+			case FDCAN_DLC_BYTES_20:
+				return 'B';
+			case FDCAN_DLC_BYTES_24:
+				return 'C';
+			case FDCAN_DLC_BYTES_32:
+				return 'D';
+			case FDCAN_DLC_BYTES_48:
+				return 'E';
+			case FDCAN_DLC_BYTES_64:
+				return 'F';
+			default:
+				throw std::domain_error("dlc not in bounds");
+		}
+
+		throw std::domain_error("dlc not in bounds");
+	}
 }
 
 bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, std::string* const s)
@@ -141,6 +183,17 @@ bool STM32_fdcan_rx::append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std
 
 		s->append(id.data());
 	}
+
+	return true;
+}
+bool STM32_fdcan_rx::append_packet_dlc(const FDCAN_RxHeaderTypeDef& rxheader, std::string* const s)
+{
+	std::array<char, 1+1> str;
+
+	str[0] = get_hex_from_stm32_dlc(rxheader.DataLength);
+	str.back() = '\0';
+
+	s->append(str.data());
 
 	return true;
 }
@@ -372,6 +425,11 @@ void STM32_fdcan_rx::work()
 		if(!append_packet_id(pk.rxheader, &packet_str))
 		{
 			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_id failed");
+			continue;
+		}
+		if(!append_packet_dlc(pk.rxheader, &packet_str))
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_dlc failed");
 			continue;
 		}
 		if(!append_packet_data(pk, &packet_str))
