@@ -53,6 +53,7 @@ public:
 		bool protocol_ext_id;
 		bool protocol_fd;
 		bool protocol_brs;
+		bool protocol_fd_iso;
 
 		bool filter_accept_enable;
 		unsigned filter_accept_code;
@@ -96,6 +97,7 @@ public:
 		m_config.protocol_ext_id = true;
 		m_config.protocol_fd = true;
 		m_config.protocol_brs = false;
+		m_config.protocol_fd_iso = true;
 
 		m_config.filter_accept_enable = false;
 		m_config.filter_accept_code = 0x00000000;

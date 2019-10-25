@@ -167,6 +167,10 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 		node = config_doc->NewElement("brs");
 		node->SetText(m_config.protocol_brs);
 		protocol->InsertEndChild(node);
+
+		node = config_doc->NewElement("fd_iso");
+		node->SetText(m_config.protocol_fd_iso);
+		protocol->InsertEndChild(node);
 	}
 
 	{
@@ -390,6 +394,12 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		if(!get_bool_text(protocol_element, "brs", &m_config.protocol_brs))
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/brs");
+			return false;
+		}
+
+		if(!get_bool_text(protocol_element, "fd_iso", &m_config.protocol_fd_iso))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/fd_iso");
 			return false;
 		}
 	}
