@@ -1,6 +1,7 @@
 #include "Timesync_task.hpp"
 
 #include "main.h"
+#include "global_app_inst.hpp"
 
 #include "uart1_printf.hpp"
 
@@ -8,10 +9,45 @@
 
 void Timesync_task::work()
 {
-	if(!ic_config())
+	CAN_USB_app_config::TIMESYNC_MODE m_timesync_mode = CAN_USB_app_config::TIMESYNC_MODE::SLAVE;
+
 	{
-		uart1_log<64>(LOG_LEVEL::ERROR, "Timesync_task", "ic_config failed");
+		std::unique_lock<Mutex_static_recursive> config_lock;
+		const CAN_USB_app_config::Config_Set& m_config = can_usb_app.get_config(&config_lock);
+
+		m_timesync_mode = m_config.timesync_mode;
 	}
+
+	__HAL_RCC_TIM3_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+
+	switch(m_timesync_mode)
+	{
+		case CAN_USB_app_config::TIMESYNC_MODE::MASTER:
+		{
+			uart1_log<64>(LOG_LEVEL::INFO, "Timesync_task", "Timesync master mode");
+			if(!oc_config())
+			{
+				uart1_log<64>(LOG_LEVEL::ERROR, "Timesync_task", "oc_config failed");
+			}
+			break;
+		}
+		case CAN_USB_app_config::TIMESYNC_MODE::SLAVE:
+		{
+			uart1_log<64>(LOG_LEVEL::INFO, "Timesync_task", "Timesync slave mode");
+			if(!ic_config())
+			{
+				uart1_log<64>(LOG_LEVEL::ERROR, "Timesync_task", "ic_config failed");
+			}
+			break;
+		}
+		default:
+		{
+			uart1_log<64>(LOG_LEVEL::ERROR, "Timesync_task", "unknown time sync mode, disabling");
+			break;
+		}
+	}
+
 	
 	for(;;)
 	{
@@ -71,6 +107,16 @@ bool Timesync_task::oc_config()
 	HAL_GPIO_WritePin(MASTER_TIMESYNC_nOE_GPIO_Port, MASTER_TIMESYNC_nOE_Pin, GPIO_PIN_RESET);
 
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = GPIO_PIN_7;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	HAL_GPIO_WritePin(MASTER_TIMESYNC_nOE_GPIO_Port, MASTER_TIMESYNC_nOE_Pin, GPIO_PIN_RESET);
 
 	return true;
 }
@@ -137,6 +183,14 @@ bool Timesync_task::ic_config()
 	HAL_TIM_Base_Start(&htim3);
 
 	HAL_TIM_IC_Start(&htim3, TIM_CHANNEL_1);
+
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = GPIO_PIN_6;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 	return true;
 }
