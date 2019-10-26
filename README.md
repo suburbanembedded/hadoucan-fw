@@ -45,7 +45,7 @@ https://www.tindie.com/products/edit/hadou-can-usb-can-fd-adapter/
 
 # Copyright
 
-Copyright (c) 2018-2019 Jacob Schloss
+Copyright (c) 2018-2019 Suburban Embedded
 
 # License
 
