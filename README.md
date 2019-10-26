@@ -27,6 +27,7 @@ The first-in-class PPS timesync feature allows any number of Hadou-CAN to synchr
 # Features coming soon
 * Non-ISO 11898-1 format support
 * HW ID filters & masks
+* Fixes to the USB stack so it can stop polling and be fully event driven
 
 # Documentation
 
