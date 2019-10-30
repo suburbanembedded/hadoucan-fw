@@ -82,14 +82,27 @@ void Main_task::work()
 	mount_fs();
 	load_config();
 
-	led_task.launch("led", 1);
+	//timesync processing
+	//currently config then no-op
+	timesync_task.launch("timesync", 1);
 
-	test_usb_core.launch("usb_core", 1);
+	//led blink/strobe
+	led_task.launch("led", 1);
 
 	if(!init_usb())
 	{
 		uart1_log<64>(LOG_LEVEL::ERROR, "main", "USB init failed");
 	}
+	
+	//USB polling
+	test_usb_core.launch("usb_core", 1);
+
+	//start logging_task
+	logging_task.launch("logging", 2);
+
+	//CPU load & stack info
+	system_mon_task.launch("SysMon", 3);
+
 
 	CAN_USB_app_config::Config_Set config_struct;
 	can_usb_app.get_config(&config_struct);
@@ -99,7 +112,7 @@ void Main_task::work()
 	can_usb_app.get_can_tx().set_can_instance(FDCAN1);
 	can_usb_app.get_can_tx().set_can_handle(&hfdcan1);
 
-	//init
+	//init usb
 	usb_rx_buffer_task.set_usb_driver(&usb_driver);
 	usb_tx_buffer_task.set_usb_driver(&usb_driver);
 
@@ -114,16 +127,14 @@ void Main_task::work()
 	stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
 
 	//can RX
-	stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 2);
+	stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 4);
 
 	//protocol state machine
-	usb_lawicel_task.launch("usb_lawicel", 3);
+	usb_lawicel_task.launch("usb_lawicel", 5);
 
 	//process usb packets
-	usb_rx_buffer_task.launch("usb_rx_buf", 4);
-	usb_tx_buffer_task.launch("usb_tx_buf", 5);
-
-	timesync_task.launch("timesync", 1);
+	usb_rx_buffer_task.launch("usb_rx_buf", 6);
+	usb_tx_buffer_task.launch("usb_tx_buf", 7);
 
 	if(config_struct.auto_startup)
 	{

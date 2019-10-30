@@ -9,7 +9,7 @@
 #include "libusb_dev_cpp/util/Descriptor_table.hpp"
 #include "libusb_dev_cpp/util/EP_buffer_mgr_freertos.hpp"
 
-class Main_task : public Task_static<4096>
+class Main_task : public Task_static<2048>
 {
 public:
 	void work() override;

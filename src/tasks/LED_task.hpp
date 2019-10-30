@@ -4,7 +4,7 @@
 
 #include <atomic>
 
-class LED_task : public Task_static<1024>
+class LED_task : public Task_static<512>
 {
 public:
 

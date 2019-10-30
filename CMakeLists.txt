@@ -97,13 +97,15 @@ add_executable(canusbfdiso.elf
 
 	src/STM32_fdcan_tx.cpp
 
-	src/tasks/STM32_fdcan_rx.cpp
 	src/tasks/LED_task.cpp
+	src/tasks/Logging_task.cpp
+	src/tasks/Main_task.cpp
+	src/tasks/STM32_fdcan_rx.cpp
+	src/tasks/Task_instances.cpp
 	src/tasks/Timesync_task.cpp
 	src/tasks/USB_lawicel_task.cpp
-	src/tasks/Main_task.cpp
-	src/tasks/Logging_task.cpp
-	src/tasks/Task_instances.cpp
+	src/tasks/USB_poll.cpp
+	src/tasks/System_mon_task.cpp
 
 	src/CAN_USB_app.cpp
 	src/CAN_USB_app_config.cpp

@@ -34,4 +34,4 @@ set(CMAKE_CXX_FLAGS_RELEASE 		"-Os" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 	"-Os -g3" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_MINSIZEREL 		"-Os" CACHE STRING "" FORCE)
 
-set(CMAKE_EXE_LINKER_FLAGS "${ARCH_STM32} -T\"${CMAKE_CURRENT_SOURCE_DIR}/STM32H750VB_RAM.ld\" --specs=nosys.specs -static -Wl,-cref,-u,Reset_Handler \"-Wl,-Map=canusbfdiso.map\" -Wl,--gc-sections -Wl,--defsym=malloc_getpagesize_P=0x80" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "${ARCH_STM32} -T\"${CMAKE_CURRENT_SOURCE_DIR}/STM32H750VB_RAM.ld\" -u _printf_float --specs=nosys.specs -static -Wl,-cref,-u,Reset_Handler \"-Wl,-Map=canusbfdiso.map\" -Wl,--gc-sections -Wl,--defsym=malloc_getpagesize_P=0x80" CACHE STRING "" FORCE)
