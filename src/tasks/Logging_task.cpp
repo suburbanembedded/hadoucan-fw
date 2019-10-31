@@ -2,8 +2,6 @@
 
 #include "uart1_printf.hpp"
 
-// freertos_util::logging::Logger global_logs __attribute__(( section(".ram_d2_s1_noload") ));
-
 bool UART1_sink::handle_log(freertos_util::logging::String_type* const log)
 {
 	HAL_StatusTypeDef uartret;
@@ -17,8 +15,11 @@ bool UART1_sink::handle_log(freertos_util::logging::String_type* const log)
 
 void Logging_task::work()
 {
+	// freertos_util::logging::Logger* const log = freertos_util::logging::Global_logger::get_instance().get_log();
+
 	for(;;)
 	{
-		get_logger().process_one();
+		// log->process_one();
+		global_logs.process_one();
 	}
 }
