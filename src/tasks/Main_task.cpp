@@ -6,6 +6,7 @@
 
 #include "libusb_dev_cpp/class/cdc/cdc_desc.hpp"
 
+#include "freertos_cpp_util/logging/Global_logger.hpp"
 #include "freertos_cpp_util/Mutex_static.hpp"
 
 USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
@@ -25,11 +26,21 @@ namespace
 void Main_task::work()
 {
 	{
+		freertos_util::logging::Global_logger::set(&logging_task.get_logger());
+		freertos_util::logging::Global_logger::get()->set_sev_mask_level(freertos_util::logging::LOG_LEVEL::DEBUG);
+	}
+
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	using freertos_util::logging::Global_logger;
+	using freertos_util::logging::LOG_LEVEL;
+
+	{
 		CAN_USB_app::get_unique_id_str(&usb_id_str);
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "Initialing");
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "CAN FD <-> USB Adapter");
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "S/N: %s", usb_id_str.data());
+		logger->log(LOG_LEVEL::INFO, "main", "Initialing");
+		logger->log(LOG_LEVEL::INFO, "main", "CAN FD <-> USB Adapter");
+		logger->log(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
+		logger->log(LOG_LEVEL::INFO, "main", "S/N: %s", usb_id_str.data());
 	}
 	{
 		const uint32_t idcode = DBGMCU->IDCODE;
@@ -38,42 +49,42 @@ void Main_task::work()
 
 		if(dev_id == 0x450)
 		{
-			uart1_log<64>(LOG_LEVEL::INFO, "main", "Dev ID STM32H7xx (42, 43/53, 50)");
+			logger->log(LOG_LEVEL::INFO, "main", "Dev ID STM32H7xx (42, 43/53, 50)");
 		}
 		else
 		{
-			uart1_log<64>(LOG_LEVEL::WARN, "main", "Unk dev ID");
+			logger->log(LOG_LEVEL::WARN, "main", "Unk dev ID");
 		}
 
 		switch(rev_id)
 		{
 			case 0x1001:
 			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev Z");
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
+				logger->log(LOG_LEVEL::INFO, "main", "Silicon rev Z");
+				logger->log(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
 				break;
 			}
 			case 0x1003:
 			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev Y");
+				logger->log(LOG_LEVEL::INFO, "main", "Silicon rev Y");
 				break;
 			}
 			case 0x2001:
 			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev X");
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
+				logger->log(LOG_LEVEL::INFO, "main", "Silicon rev X");
+				logger->log(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
 				break;
 			}
 			case 0x2003:
 			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Silicon rev V");
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported, but will be soon");
+				logger->log(LOG_LEVEL::INFO, "main", "Silicon rev V");
+				logger->log(LOG_LEVEL::WARN, "main", "This silicon revision is not supported, but will be soon");
 				break;
 			}
 			default:
 			{
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "Silicon rev unknown");
-				uart1_log<64>(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
+				logger->log(LOG_LEVEL::WARN, "main", "Silicon rev unknown");
+				logger->log(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
 				break;
 			}
 		}
@@ -91,7 +102,7 @@ void Main_task::work()
 
 	if(!init_usb())
 	{
-		uart1_log<64>(LOG_LEVEL::ERROR, "main", "USB init failed");
+		logger->log(LOG_LEVEL::ERROR, "main", "USB init failed");
 	}
 	
 	//USB polling
@@ -140,12 +151,12 @@ void Main_task::work()
 	{
 		if(!can_usb_app.get_can_tx().open())
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "main", "CAN was requested to auto-start, but it failed");
+			logger->log(LOG_LEVEL::ERROR, "main", "CAN was requested to auto-start, but it failed");
 		}
 	}
 
 	led_task.set_mode_normal();
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
+	logger->log(LOG_LEVEL::INFO, "main", "Ready");
 
 	for(;;)
 	{

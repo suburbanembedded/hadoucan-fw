@@ -89,9 +89,6 @@ const char* System_mon_task::state_to_str(const eTaskState state)
 
 void System_mon_task::work()
 {
-	const char msg1[] = "System_mon_task::work\r\n";
-	HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg1)), strlen(msg1), -1);
-
 	std::vector<TaskStatus_t> tasks_a;
 	std::vector<TaskStatus_t> tasks_b;
 
@@ -99,9 +96,6 @@ void System_mon_task::work()
 
 	for(;;)
 	{	
-		const char msg2[] = "System_mon_task::work loop\r\n";
-		HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg2)), strlen(msg2), -1);
-
 		tasks_a.resize(uxTaskGetNumberOfTasks());
 
 		uint32_t runtime_a = 0;
@@ -159,7 +153,7 @@ void System_mon_task::work()
 
 				// Stack_string<128> msg4;
 
-				if(logging_task.get_logger().log(freertos_util::logging::LOG_SEVERITY::INFO, "SysMon", "%s", task_msg.c_str()))
+				if(logging_task.get_logger().log(freertos_util::logging::LOG_LEVEL::INFO, "SysMon", "%s", task_msg.c_str()))
 				{
 					// msg4.append("System_mon_task::work log PASS\r\n");
 					// HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg4.c_str())), msg4.size(), -1);
@@ -205,7 +199,7 @@ void System_mon_task::work()
 
 		task_msg.clear();
 		task_msg.sprintf("heap used: %" PRIu32 " / %" PRIu32, configTOTAL_HEAP_SIZE - xPortGetFreeHeapSize(), configTOTAL_HEAP_SIZE);
-		if(logging_task.get_logger().log(freertos_util::logging::LOG_SEVERITY::INFO, "SysMon", "%s", task_msg.c_str()))
+		if(logging_task.get_logger().log(freertos_util::logging::LOG_LEVEL::INFO, "SysMon", "%s", task_msg.c_str()))
 		{
 
 		}
