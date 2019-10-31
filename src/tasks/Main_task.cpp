@@ -97,11 +97,11 @@ void Main_task::work()
 	//USB polling
 	test_usb_core.launch("usb_core", 1);
 
-	//start logging_task
-	logging_task.launch("logging", 2);
-
 	//CPU load & stack info
-	system_mon_task.launch("SysMon", 3);
+	system_mon_task.launch("SysMon", 2);
+
+	//start logging_task
+	logging_task.launch("logging", 3);
 
 
 	CAN_USB_app_config::Config_Set config_struct;

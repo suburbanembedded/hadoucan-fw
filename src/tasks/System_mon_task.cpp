@@ -102,8 +102,6 @@ void System_mon_task::work()
 		const char msg2[] = "System_mon_task::work loop\r\n";
 		HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg2)), strlen(msg2), -1);
 
-		logging_task.get_logger().log(freertos_util::logging::LOG_SEVERITY::INFO, "SysMon", "Loop");
-
 		tasks_a.resize(uxTaskGetNumberOfTasks());
 
 		uint32_t runtime_a = 0;
@@ -150,7 +148,7 @@ void System_mon_task::work()
 				const float task_dt_per = float(task_dt) / float(cpu_dt) * 100.0f;
 
 				task_msg.clear();
-				task_msg.sprintf("name: %s, id: %u, state: %s, runtime: %" PRIu32 ", run_per: %.2f, stack_depth: %" PRIu32 ,
+				task_msg.sprintf("name: %s, id: %u, state: %s, runtime: %" PRIu32 ", run_per: %.2f, stack_depth: %" PRIu32,
 					curr_state->pcTaskName,
 					curr_state->xTaskNumber,
 					state_to_str(curr_state->eCurrentState),
@@ -179,7 +177,12 @@ void System_mon_task::work()
 				// HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg4.c_str())), msg4.size(), -1);
 
 				// msg4.clear();
-				// msg4.sprintf("m_record_buffer\r\n\tlen: %" PRIu32 "\r\n", logging_task.get_logger().m_record_buffer.size());
+				// msg4.sprintf("m_record_buffer\r\n\tsize: %" PRIu32 "\r\n\tcap: %" PRIu32 "\r\n\tfull: %s\r\n\tempty: %s\r\n", 
+				// 	logging_task.get_logger().m_record_buffer.size(),
+				// 	logging_task.get_logger().m_record_buffer.capacity(),
+				// 	logging_task.get_logger().m_record_buffer.full()  ? "true" : "false",
+				// 	logging_task.get_logger().m_record_buffer.empty() ? "true" : "false"
+				// 	);
 				// HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg4.c_str())), msg4.size(), -1);
 
 				// TaskHandle_t xHandle;
@@ -198,6 +201,17 @@ void System_mon_task::work()
 			{
 				//log failure
 			}
+		}
+
+		task_msg.clear();
+		task_msg.sprintf("heap used: %" PRIu32 " / %" PRIu32, configTOTAL_HEAP_SIZE - xPortGetFreeHeapSize(), configTOTAL_HEAP_SIZE);
+		if(logging_task.get_logger().log(freertos_util::logging::LOG_SEVERITY::INFO, "SysMon", "%s", task_msg.c_str()))
+		{
+
+		}
+		else
+		{
+
 		}
 	}
 }

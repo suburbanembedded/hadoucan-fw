@@ -164,14 +164,6 @@ protected:
 };
 */
 
-extern "C"
-{
-	void handle_config_assert(const char* file, const int line, const char* msg)
-	{
-		uart1_log<64>(LOG_LEVEL::FATAL, "freertos", "configASSERT in %s at %d, %s", file, line, msg);
-	}
-}
-
 void set_gpio_low_power(GPIO_TypeDef* const gpio)
 {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
