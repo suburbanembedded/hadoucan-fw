@@ -40,15 +40,6 @@
 #include <cstdio>
 #include <cinttypes>
 
-extern "C"
-{
-	void OTG_HS_IRQHandler(void)
-	{
-		//USB1 ISR handler
-		usb_core.poll_driver();
-	}
-}
-
 /*
 class TinyXML_inc_printer : public tinyxml2::XMLVisitor
 {
