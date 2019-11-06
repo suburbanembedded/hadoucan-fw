@@ -10,10 +10,9 @@ void Test_USB_Core_task::work()
 
 	for(;;)
 	{
-		usb_core.poll_driver();
-		usb_core.poll_event_loop();
-
-		// vTaskDelay(0);
+		// usb_core.poll_driver();
+		// usb_core.poll_event_loop();
+		usb_core.wait_event_loop();
 		taskYIELD();
 	}
 }
@@ -22,11 +21,21 @@ extern "C"
 {
 	void OTG_HS_IRQHandler(void)
 	{
-		// {
-		// 	const char msg[] = "OTG_HS_IRQHandler";
-		// 	// HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg)), strlen(msg), -1);
-		// }
+		{
+			const char msg[] = "OTG_HS_IRQHandler";
+			// HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg)), strlen(msg), -1);
+		}
 
-		// usb_core.poll_driver();
+		usb_core.poll_driver();
+	}
+}
+
+void Test_USB_Driver_task::work()
+{
+	for(;;)
+	{
+		usb_core.poll_driver();
+		taskYIELD();
+		// suspend();
 	}
 }

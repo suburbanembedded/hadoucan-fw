@@ -13,3 +13,15 @@ public:
 
 	void work() override;
 };
+
+class Test_USB_Driver_task : public Task_static<2048>
+{
+public:
+
+	~Test_USB_Driver_task() override
+	{
+
+	}
+
+	void work() override;
+};
