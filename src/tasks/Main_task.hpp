@@ -5,6 +5,7 @@
 #include "CAN_USB_app.hpp"
 
 #include "libusb_dev_cpp/usb_core.hpp"
+#include "libusb_dev_cpp/class/cdc/cdc_usb.hpp"
 #include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs.hpp"
 #include "libusb_dev_cpp/util/Descriptor_table.hpp"
 #include "libusb_dev_cpp/util/EP_buffer_mgr_freertos.hpp"
@@ -32,12 +33,13 @@ protected:
 	Descriptor_table usb_desc_table;
 	std::array<char, 25> usb_id_str;//this is read by the usb core, and sent as a descriptor payload
 	std::vector<uint8_t> m_rx_buf;
-	Buffer_adapter m_rx_buf_adapter;
+	Buffer_adapter_rx m_rx_buf_adapter;
 	std::vector<uint8_t> m_tx_buf;
-	Buffer_adapter m_tx_buf_adapter;
+	Buffer_adapter_tx m_tx_buf_adapter;
 };
 
 extern USB_core         usb_core;
+extern CDC_class        usb_cdc;
 extern stm32_h7xx_otghs usb_driver;
 extern EP_buffer_mgr_freertos<1, 8, 64,  32> usb_ep0_buffer;
 extern EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer;

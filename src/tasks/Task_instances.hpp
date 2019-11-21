@@ -3,7 +3,6 @@
 #include "LED_task.hpp"
 #include "Logging_task.hpp"
 #include "Main_task.hpp"
-#include "Status_task.hpp"
 #include "STM32_fdcan_rx.hpp"
 #include "System_mon_task.hpp"
 #include "Timesync_task.hpp"

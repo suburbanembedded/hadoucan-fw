@@ -10,6 +10,7 @@
 #include "freertos_cpp_util/Mutex_static.hpp"
 
 USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
+CDC_class        usb_cdc    __attribute__(( section(".ram_dtcm_noload") ));
 stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
 EP_buffer_mgr_freertos<1, 8, 64,  32> usb_ep0_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
@@ -186,8 +187,10 @@ bool Main_task::init_usb()
 	{
 		Device_descriptor dev_desc;
 		dev_desc.bcdUSB = USB_common::build_bcd(2, 0, 0);
-		dev_desc.bDeviceClass    = static_cast<uint8_t>(USB_common::CLASS_DEF::CLASS_PER_INTERFACE);
-		dev_desc.bDeviceSubClass = static_cast<uint8_t>(USB_common::SUBCLASS_DEF::SUBCLASS_NONE);
+		// dev_desc.bDeviceClass    = static_cast<uint8_t>(USB_common::CLASS_DEF::CLASS_PER_INTERFACE);
+		// dev_desc.bDeviceSubClass = static_cast<uint8_t>(USB_common::SUBCLASS_DEF::SUBCLASS_NONE);
+		dev_desc.bDeviceClass    = 0x02;
+		dev_desc.bDeviceSubClass = 0x02;
 		dev_desc.bDeviceProtocol = static_cast<uint8_t>(USB_common::PROTO_DEF::PROTO_NONE);
 		// dev_desc.bMaxPacketSize0 = m_driver->get_ep0_config().size;
 		dev_desc.bMaxPacketSize0 = 64;
@@ -233,19 +236,19 @@ bool Main_task::init_usb()
 		desc.bEndpointAddress = 0x00 | 0x01;
 		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
 		desc.wMaxPacketSize   = 512;
-		desc.bInterval        = 16;
+		desc.bInterval        = 0;
 
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 
 		desc.bEndpointAddress = 0x80 | 0x01;
 		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
 		desc.wMaxPacketSize   = 512;
-		desc.bInterval        = 16;
+		desc.bInterval        = 0;
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 
 		desc.bEndpointAddress = 0x80 | 0x02;
 		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::INTERRUPT);
-		desc.wMaxPacketSize   = 8;
+		desc.wMaxPacketSize   = 32;
 		desc.bInterval        = 16;
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 	}
@@ -305,12 +308,18 @@ bool Main_task::init_usb()
 	usb_desc_table.add_other_descriptor(cdc_header_desc);
 
 	std::shared_ptr<CDC::CDC_call_management_descriptor> cdc_call_mgmt_desc = std::make_shared<CDC::CDC_call_management_descriptor>();
-	cdc_call_mgmt_desc->bmCapabilities = 0x00;
-	cdc_call_mgmt_desc->bDataInterface = 0;
+	// cdc_call_mgmt_desc->bmCapabilities = 0x00;
+	cdc_call_mgmt_desc->set_call_mgmt(CDC::CDC_call_management_descriptor::CALL_MGMT_CHANNEL::COMM_CLASS_IFACE);
+	cdc_call_mgmt_desc->set_self_call_mgmt_handle(false);
+	cdc_call_mgmt_desc->bDataInterface = 1;
 	usb_desc_table.add_other_descriptor(cdc_call_mgmt_desc);
 
 	std::shared_ptr<CDC::CDC_acm_descriptor> cdc_acm_desc = std::make_shared<CDC::CDC_acm_descriptor>();
-	cdc_acm_desc->bmCapabilities = 0x00;
+	// cdc_acm_desc->bmCapabilities = 0x00;
+	cdc_acm_desc->set_support_network_connection(false);
+	cdc_acm_desc->set_support_send_break(false);
+	cdc_acm_desc->set_support_line(false);
+	cdc_acm_desc->set_support_comm(false);
 	// cdc_acm_desc->bmCapabilities = 0x03;
 	usb_desc_table.add_other_descriptor(cdc_acm_desc);
 
@@ -347,6 +356,7 @@ bool Main_task::init_usb()
 		return false;
 	}
 
+	usb_core.set_usb_class(&usb_cdc);
 	usb_core.set_descriptor_table(&usb_desc_table);
 	usb_core.set_config_callback(&handle_usb_set_config_thunk, this);
 
@@ -608,27 +618,36 @@ bool Main_task::handle_usb_set_config(const uint8_t config)
 		}
 		case 1:
 		{
+			// Config_desc_table::Config_desc_const_ptr config_ptr = usb_desc_table.get_config_descriptor(config);
+			
+			// Iface_desc_table::Iface_desc_const_ptr ctrl_iface_ptr = usb_desc_table.get_interface_descriptor(0);
+			// Iface_desc_table::Iface_desc_const_ptr data_iface_ptr = usb_desc_table.get_interface_descriptor(1);
+
+			Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_out = usb_desc_table.get_endpoint_descriptor(0x01);
+			Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_in = usb_desc_table.get_endpoint_descriptor(0x81);
+			Endpoint_desc_table::Endpoint_desc_const_ptr ep_notify_in = usb_desc_table.get_endpoint_descriptor(0x82);
+
 			//out 1
 			{
 				usb_driver_base::ep_cfg ep1;
-				ep1.num = 0x01;
-				ep1.size = 512;
+				ep1.num  = ep_data_out->bEndpointAddress;
+				ep1.size = ep_data_out->wMaxPacketSize;
 				ep1.type = usb_driver_base::EP_TYPE::BULK;
 				usb_core.get_driver()->ep_config(ep1);
 			}
 			//in 1
 			{
 				usb_driver_base::ep_cfg ep2;
-				ep2.num = 0x80 | 0x01;
-				ep2.size = 512;
+				ep2.num  = ep_data_in->bEndpointAddress;
+				ep2.size = ep_data_in->wMaxPacketSize;
 				ep2.type = usb_driver_base::EP_TYPE::BULK;
 				usb_core.get_driver()->ep_config(ep2);
 			}
 			//in 2
 			{
 				usb_driver_base::ep_cfg ep3;
-				ep3.num = 0x80 | 0x02;
-				ep3.size = 8;
+				ep3.num  = ep_notify_in->bEndpointAddress;
+				ep3.size = ep_notify_in->wMaxPacketSize;
 				ep3.type = usb_driver_base::EP_TYPE::INTERRUPT;
 				usb_core.get_driver()->ep_config(ep3);
 			}
