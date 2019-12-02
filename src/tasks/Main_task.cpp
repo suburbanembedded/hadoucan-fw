@@ -108,6 +108,7 @@ void Main_task::work()
 	
 	//USB polling
 	test_usb_core.launch("usb_core", 1);
+	test_usb_cdc.launch("usb_cdc", 1);
 	test_usb_drvr.launch("usb_drvr", 1);
 
 	//CPU load & stack info
@@ -247,8 +248,8 @@ bool Main_task::init_usb()
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 
 		desc.bEndpointAddress = 0x80 | 0x02;
-		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::INTERRUPT);
-		desc.wMaxPacketSize   = 32;
+		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
+		desc.wMaxPacketSize   = 8;
 		desc.bInterval        = 16;
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 	}
@@ -318,8 +319,8 @@ bool Main_task::init_usb()
 	// cdc_acm_desc->bmCapabilities = 0x00;
 	cdc_acm_desc->set_support_network_connection(false);
 	cdc_acm_desc->set_support_send_break(false);
-	cdc_acm_desc->set_support_line(false);
-	cdc_acm_desc->set_support_comm(false);
+	cdc_acm_desc->set_support_line(true);
+	cdc_acm_desc->set_support_comm(true);
 	// cdc_acm_desc->bmCapabilities = 0x03;
 	usb_desc_table.add_other_descriptor(cdc_acm_desc);
 
@@ -606,6 +607,7 @@ bool Main_task::handle_usb_set_config(const uint8_t config)
 {
 	bool ret = false;
 
+
 	switch(config)
 	{
 		case 0:
@@ -648,9 +650,12 @@ bool Main_task::handle_usb_set_config(const uint8_t config)
 				usb_driver_base::ep_cfg ep3;
 				ep3.num  = ep_notify_in->bEndpointAddress;
 				ep3.size = ep_notify_in->wMaxPacketSize;
-				ep3.type = usb_driver_base::EP_TYPE::INTERRUPT;
+				ep3.type = usb_driver_base::EP_TYPE::BULK;
 				usb_core.get_driver()->ep_config(ep3);
 			}
+
+			test_usb_cdc.notify_new_connection();
+
 			ret = true;
 			break;
 		}
