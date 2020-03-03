@@ -1,5 +1,7 @@
 #pragma once
 
+#include "freertos_cpp_util/logging/Logger_types.hpp"
+
 #include "tinyxml2_util/tinyxml2_helper.hpp"
 #include "../external/tinyxml2/tinyxml2.h"
 
@@ -58,6 +60,9 @@ public:
 		bool filter_accept_enable;
 		unsigned filter_accept_code;
 		unsigned filter_accept_mask;
+
+		freertos_util::logging::LOG_LEVEL log_level;
+		unsigned uart_baud;
 	};
 
 	static Config_Set get_defualt()
@@ -68,41 +73,7 @@ public:
 		return config.m_config;
 	}
 
-	void set_defualt()
-	{	
-		m_config.config_version = 0;
-
-		m_config.autopoll = false;
-		m_config.listen_only = false;
-
-		m_config.auto_startup = false;
-
-		m_config.timesync_mode = TIMESYNC_MODE::SLAVE;
-
-		m_config.slope_ctrl = SLOPE_CONTROL::AUTO;
-
-		m_config.timestamp_enable = false;
-		m_config.timestamp_prescaler =  2000;
-		m_config.timestamp_period = 50000;
-
-		m_config.tx_delay_comp_enable = false;
-		m_config.tx_delay_comp_offset = 5;
-		m_config.tx_delay_comp_filter_window = 0;
-
-		m_config.can_clock = 24000000;
-		// m_config.can_clock = 60000000;
-		m_config.bitrate_nominal = 500000;
-		m_config.bitrate_data = 2000000;
-
-		m_config.protocol_ext_id = true;
-		m_config.protocol_fd = true;
-		m_config.protocol_brs = false;
-		m_config.protocol_fd_iso = true;
-
-		m_config.filter_accept_enable = false;
-		m_config.filter_accept_code = 0x00000000;
-		m_config.filter_accept_mask = 0x00000000;
-	}
+	void set_defualt();
 
 	bool to_xml(tinyxml2::XMLDocument* const config_doc) const;
 	bool from_xml(const tinyxml2::XMLDocument& config_doc);

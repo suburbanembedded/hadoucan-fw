@@ -28,7 +28,7 @@ void Main_task::work()
 {
 	{
 		freertos_util::logging::Global_logger::set(&logging_task.get_logger());
-		freertos_util::logging::Global_logger::get()->set_sev_mask_level(freertos_util::logging::LOG_LEVEL::DEBUG);
+		freertos_util::logging::Global_logger::get()->set_sev_mask_level(freertos_util::logging::LOG_LEVEL::INFO);
 	}
 
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
@@ -94,6 +94,17 @@ void Main_task::work()
 	mount_fs();
 	load_config();
 
+	//load info
+	CAN_USB_app_config::Config_Set config_struct;
+	can_usb_app.get_config(&config_struct);
+	CAN_USB_app_bitrate_table bitrate_table;
+	can_usb_app.get_bitrate_tables(&bitrate_table);
+
+	//update log level to config
+	{
+		freertos_util::logging::Global_logger::get()->set_sev_mask_level(config_struct.log_level);
+	}
+
 	//timesync processing
 	//currently config then no-op
 	timesync_task.launch("timesync", 1);
@@ -116,12 +127,6 @@ void Main_task::work()
 
 	//start logging_task
 	logging_task.launch("logging", 3);
-
-
-	CAN_USB_app_config::Config_Set config_struct;
-	can_usb_app.get_config(&config_struct);
-	CAN_USB_app_bitrate_table bitrate_table;
-	can_usb_app.get_bitrate_tables(&bitrate_table);
 	
 	can_usb_app.get_can_tx().set_can_instance(FDCAN1);
 	can_usb_app.get_can_tx().set_can_handle(&hfdcan1);

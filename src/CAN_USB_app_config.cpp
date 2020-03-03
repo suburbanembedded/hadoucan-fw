@@ -2,6 +2,45 @@
 
 #include "uart1_printf.hpp"
 
+void CAN_USB_app_config::set_defualt()
+{	
+	m_config.config_version = 0;
+
+	m_config.autopoll = false;
+	m_config.listen_only = false;
+
+	m_config.auto_startup = false;
+
+	m_config.timesync_mode = TIMESYNC_MODE::SLAVE;
+
+	m_config.slope_ctrl = SLOPE_CONTROL::AUTO;
+
+	m_config.timestamp_enable = false;
+	m_config.timestamp_prescaler =  2000;
+	m_config.timestamp_period = 50000;
+
+	m_config.tx_delay_comp_enable = false;
+	m_config.tx_delay_comp_offset = 5;
+	m_config.tx_delay_comp_filter_window = 0;
+
+	m_config.can_clock = 24000000;
+	// m_config.can_clock = 60000000;
+	m_config.bitrate_nominal = 500000;
+	m_config.bitrate_data = 2000000;
+
+	m_config.protocol_ext_id = true;
+	m_config.protocol_fd = true;
+	m_config.protocol_brs = false;
+	m_config.protocol_fd_iso = true;
+
+	m_config.filter_accept_enable = false;
+	m_config.filter_accept_code = 0x00000000;
+	m_config.filter_accept_mask = 0x00000000;
+
+	m_config.log_level = freertos_util::logging::LOG_LEVEL::INFO;
+	m_config.uart_baud = 921600U;
+}
+
 bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 {
 	config_doc->Clear();
@@ -194,11 +233,11 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 		debug->InsertEndChild(comment);
 
 		node = config_doc->NewElement("log_level");
-		node->SetText("DEBUG");
+		node->SetText(freertos_util::logging::LOG_LEVEL_to_str(m_config.log_level));
 		debug->InsertEndChild(node);
 
-		node = config_doc->NewElement("baud");
-		node->SetText(115200U);
+		node = config_doc->NewElement("uart_baud");
+		node->SetText(m_config.uart_baud);
 		debug->InsertEndChild(node);
 	}
 
@@ -421,6 +460,60 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		if(!get_hex_text(filter_element, "accept_mask", &m_config.filter_accept_mask))
 		{
 			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_mask");
+			return false;
+		}
+	}
+
+	{
+		const tinyxml2::XMLElement* debug_element = config_root->FirstChildElement("debug");
+		if(debug_element == nullptr)
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug");
+			return false;
+		}
+	
+		{
+			char const * log_level_str = nullptr;
+			if(!get_str_text(debug_element, "log_level", &log_level_str))
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug/log_level");
+				return false;
+			}
+
+			if(strncasecmp(log_level_str, "FATAL", 4) == 0)
+			{
+				m_config.log_level = freertos_util::logging::LOG_LEVEL::FATAL;
+			}	
+			else if(strncasecmp(log_level_str, "ERROR", 5) == 0)
+			{
+				m_config.log_level = freertos_util::logging::LOG_LEVEL::ERROR;
+			}
+			else if(strncasecmp(log_level_str, "WARN", 4) == 0)
+			{
+				m_config.log_level = freertos_util::logging::LOG_LEVEL::WARN;
+			}
+			else if(strncasecmp(log_level_str, "INFO", 4) == 0)
+			{
+				m_config.log_level = freertos_util::logging::LOG_LEVEL::INFO;
+			}
+			else if(strncasecmp(log_level_str, "DEBUG", 5) == 0)
+			{
+				m_config.log_level = freertos_util::logging::LOG_LEVEL::DEBUG;
+			}
+			else if(strncasecmp(log_level_str, "TRACE", 5) == 0)
+			{
+				m_config.log_level = freertos_util::logging::LOG_LEVEL::TRACE;
+			}
+			else
+			{
+				uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not parse element debug/log_level");
+				return false;
+			}
+		}
+
+		if(!get_uint_text(debug_element, "uart_baud", &m_config.uart_baud))
+		{
+			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug/uart_baud");
 			return false;
 		}
 	}
