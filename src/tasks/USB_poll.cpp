@@ -28,7 +28,7 @@ extern "C"
 	void OTG_HS_IRQHandler(void)
 	{
 		{
-			const char msg[] = "OTG_HS_IRQHandler";
+			// const char msg[] = "OTG_HS_IRQHandler";
 			// HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg)), strlen(msg), -1);
 		}
 

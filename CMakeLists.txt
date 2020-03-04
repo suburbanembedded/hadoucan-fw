@@ -81,8 +81,8 @@ add_executable(canusbfdiso.elf
 
 	src/global_app_inst.cpp
 
-	src/USB_tx_buffer_task.cpp
-	src/USB_rx_buffer_task.cpp
+	src/tasks/USB_tx_buffer_task.cpp
+	src/tasks/USB_rx_buffer_task.cpp
 
 	src/freertos_stubs.cpp
 	src/freertos_new.cpp

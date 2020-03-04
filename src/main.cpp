@@ -1,9 +1,6 @@
 #include "main.h"
 #include "cmsis_os.h"
 
-#include "USB_rx_buffer_task.hpp"
-#include "USB_tx_buffer_task.hpp"
-
 #include "lawicel/Lawicel_parser_stm32.hpp"
 
 #include "tasks/USB_lawicel_task.hpp"
@@ -11,6 +8,9 @@
 #include "tasks/Timesync_task.hpp"
 #include "tasks/STM32_fdcan_rx.hpp"
 #include "tasks/Task_instances.hpp"
+
+#include "tasks/USB_rx_buffer_task.hpp"
+#include "tasks/USB_tx_buffer_task.hpp"
 
 #include "libusb_dev_cpp/usb_core.hpp"
 #include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs.hpp"
