@@ -6,8 +6,7 @@
 
 #include "freertos_cpp_util/logging/Global_logger.hpp"
 
-using freertos_util::logging::Global_logger;
-// using freertos_util::logging::LOG_LEVEL;
+using freertos_util::logging::LOG_LEVEL;
 
 void Test_USB_Core_task::work()
 {

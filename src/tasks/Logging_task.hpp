@@ -1,6 +1,7 @@
 #pragma once
 
 #include "freertos_cpp_util/Task_static.hpp"
+#include "freertos_cpp_util/Mutex_static.hpp"
 #include "freertos_cpp_util/logging/Logger.hpp"
 
 class UART1_sink : public freertos_util::logging::Log_sink_base
@@ -9,9 +10,8 @@ public:
 	bool handle_log(freertos_util::logging::String_type* const log) override;
 
 protected:
+	Mutex_static m_uart1_mutex;
 };
-
-// extern freertos_util::logging::Logger global_logs;
 
 class Logging_task : public Task_static<512>
 {

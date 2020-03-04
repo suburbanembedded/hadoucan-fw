@@ -7,7 +7,11 @@
 #include "libusb_dev_cpp/class/cdc/cdc_desc.hpp"
 
 #include "freertos_cpp_util/logging/Global_logger.hpp"
-#include "freertos_cpp_util/Mutex_static.hpp"
+
+#include "hal_inst.h"
+#include "stm32h7xx_hal.h"
+
+#include <cinttypes>
 
 USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
 CDC_class        usb_cdc    __attribute__(( section(".ram_dtcm_noload") ));
@@ -15,6 +19,8 @@ stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
 EP_buffer_mgr_freertos<1, 8, 64,  32> usb_ep0_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_rx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
+
+using freertos_util::logging::LOG_LEVEL;
 
 namespace
 {
@@ -32,9 +38,6 @@ void Main_task::work()
 	}
 
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
-
-	using freertos_util::logging::Global_logger;
-	using freertos_util::logging::LOG_LEVEL;
 
 	{
 		CAN_USB_app::get_unique_id_str(&usb_id_str);
@@ -174,16 +177,19 @@ void Main_task::work()
 
 bool Main_task::init_usb()
 {
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.set_ep0_buffer");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::INFO, "main", "usb_driver.set_ep0_buffer");
 	usb_driver.set_ep0_buffer(&usb_ep0_buffer);
 
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.set_tx_buffer");
+	logger->log(LOG_LEVEL::INFO, "main", "usb_driver.set_tx_buffer");
 	usb_driver.set_tx_buffer(&usb_tx_buffer);
 	
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.set_rx_buffer");
+	logger->log(LOG_LEVEL::INFO, "main", "usb_driver.set_rx_buffer");
 	usb_driver.set_rx_buffer(&usb_rx_buffer);
 
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_driver.initialize");
+	logger->log(LOG_LEVEL::INFO, "main", "usb_driver.initialize");
 	if(!usb_driver.initialize())
 	{
 		return false;	
@@ -356,7 +362,7 @@ bool Main_task::init_usb()
 	m_tx_buf.resize(1024);
 	m_tx_buf_adapter.reset(m_tx_buf.data(), m_tx_buf.size());
 
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.initialize");
+	logger->log(LOG_LEVEL::INFO, "main", "usb_core.initialize");
 	if(!usb_core.initialize(&usb_driver, 8, m_tx_buf_adapter, m_rx_buf_adapter))
 	{
 		return false;
@@ -419,17 +425,17 @@ bool Main_task::init_usb()
 	// usb_core.set_config_callback(std::bind(&Main_task::usb_config_callback, this));
 	// usb_core.set_descriptor_callback(std::bind(&Main_task::usb_get_descriptor_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.enable");
+	logger->log(LOG_LEVEL::INFO, "main", "usb_core.enable");
 	if(!usb_core.enable())
 	{
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.enable failed");
+		logger->log(LOG_LEVEL::INFO, "main", "usb_core.enable failed");
 		return false;
 	}
 
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.connect");
+	logger->log(LOG_LEVEL::INFO, "main", "usb_core.connect");
 	if(!usb_core.connect())
 	{
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "usb_core.connect failed");
+		logger->log(LOG_LEVEL::INFO, "main", "usb_core.connect failed");
 		return false;
 	}
 
@@ -438,7 +444,9 @@ bool Main_task::init_usb()
 
 bool Main_task::mount_fs()
 {
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "Ready");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::INFO, "main", "Ready");
 
 	{
 		std::lock_guard<Mutex_static_recursive> lock(can_usb_app.get_mutex());
@@ -450,7 +458,7 @@ bool Main_task::mount_fs()
 
 		if(!m_qspi.init())
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "main", "m_qspi.init failed");
+			logger->log(LOG_LEVEL::ERROR, "main", "m_qspi.init failed");
 
 			for(;;)
 			{
@@ -465,39 +473,39 @@ bool Main_task::mount_fs()
 		uint16_t flash_pn = 0;
 		if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
 		{
-			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash mfg id %02" PRIX32, uint32_t(mfg_id));
-			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash pn %04" PRIX32, uint32_t(flash_pn));
+			logger->log(LOG_LEVEL::INFO, "main", "flash mfg id %02" PRIX32, uint32_t(mfg_id));
+			logger->log(LOG_LEVEL::INFO, "main", "flash pn %04" PRIX32, uint32_t(flash_pn));
 		}
 		else
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_jdec_id failed");
+			logger->log(LOG_LEVEL::ERROR, "main", "get_jdec_id failed");
 		}
 
 		uint64_t unique_id = 0;
 		if(m_qspi.get_unique_id(&unique_id))
 		{
-			// uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %016" PRIX64, unique_id);
+			// logger->log(LOG_LEVEL::INFO, "main", "flash sn %016" PRIX64, unique_id);
 			//aparently PRIX64 is broken
-			uart1_log<128>(LOG_LEVEL::INFO, "main", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
+			logger->log(LOG_LEVEL::INFO, "main", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
 		}
 		else
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "main", "get_unique_id failed");
+			logger->log(LOG_LEVEL::ERROR, "main", "get_unique_id failed");
 		}
 
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "Mounting flash fs");
+		logger->log(LOG_LEVEL::INFO, "main", "Mounting flash fs");
 		int mount_ret = m_fs.mount();
 		if(mount_ret != SPIFFS_OK)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "main", "Flash mount failed: %d", mount_ret);
-			uart1_log<128>(LOG_LEVEL::ERROR, "main", "You will need to reload the config");
+			logger->log(LOG_LEVEL::ERROR, "main", "Flash mount failed: %d", mount_ret);
+			logger->log(LOG_LEVEL::ERROR, "main", "You will need to reload the config");
 
-			uart1_log<128>(LOG_LEVEL::INFO, "main", "Format flash");
+			logger->log(LOG_LEVEL::INFO, "main", "Format flash");
 			int format_ret = m_fs.format();
 			if(format_ret != SPIFFS_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash format failed: %d", format_ret);
-				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
+				logger->log(LOG_LEVEL::FATAL, "main", "Flash format failed: %d", format_ret);
+				logger->log(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
 
 				for(;;)
 				{
@@ -505,12 +513,12 @@ bool Main_task::mount_fs()
 				}
 			}
 
-			uart1_log<64>(LOG_LEVEL::INFO, "main", "Mounting flash fs");
+			logger->log(LOG_LEVEL::INFO, "main", "Mounting flash fs");
 			mount_ret = m_fs.mount();
 			if(mount_ret != SPIFFS_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Flash mount failed right after we formatted it: %d", mount_ret);
-				uart1_log<128>(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
+				logger->log(LOG_LEVEL::FATAL, "main", "Flash mount failed right after we formatted it: %d", mount_ret);
+				logger->log(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
 
 				for(;;)
 				{
@@ -519,13 +527,13 @@ bool Main_task::mount_fs()
 			}
 			else
 			{
-				uart1_log<64>(LOG_LEVEL::INFO, "main", "Flash mount ok");
+				logger->log(LOG_LEVEL::INFO, "main", "Flash mount ok");
 			}
 
 			//write default config
 			if(!can_usb_app.write_default_config())
 			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default config failed");
+				logger->log(LOG_LEVEL::FATAL, "main", "Writing default config failed");
 
 				for(;;)
 				{
@@ -534,7 +542,7 @@ bool Main_task::mount_fs()
 			}
 			if(!can_usb_app.write_default_bitrate_table())
 			{
-				uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
+				logger->log(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
 
 				for(;;)
 				{
@@ -544,7 +552,7 @@ bool Main_task::mount_fs()
 		}
 		else
 		{
-			uart1_log<64>(LOG_LEVEL::INFO, "main", "Flash mount ok");
+			logger->log(LOG_LEVEL::INFO, "main", "Flash mount ok");
 		}
 	}
 
@@ -553,14 +561,16 @@ bool Main_task::mount_fs()
 
 bool Main_task::load_config()
 {
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "Load config");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::INFO, "main", "Load config");
 	if(!can_usb_app.load_config())
 	{
-		uart1_log<64>(LOG_LEVEL::WARN, "main", "Config load failed, restoring default");
+		logger->log(LOG_LEVEL::WARN, "main", "Config load failed, restoring default");
 
 		if(!can_usb_app.write_default_config())
 		{
-			uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default config load failed");
+			logger->log(LOG_LEVEL::FATAL, "main", "Writing default config load failed");
 
 			for(;;)
 			{
@@ -569,21 +579,21 @@ bool Main_task::load_config()
 		}
 		else
 		{
-			uart1_log<64>(LOG_LEVEL::WARN, "main", "Default config wrote ok");
+			logger->log(LOG_LEVEL::WARN, "main", "Default config wrote ok");
 		}
 	}
 	else
 	{
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "Config ok");
+		logger->log(LOG_LEVEL::INFO, "main", "Config ok");
 	}
 
 	if(!can_usb_app.load_bitrate_table())
 	{
-		uart1_log<64>(LOG_LEVEL::WARN, "main", "Bitrate table load failed, restoring default");
+		logger->log(LOG_LEVEL::WARN, "main", "Bitrate table load failed, restoring default");
 
 		if(!can_usb_app.write_default_bitrate_table())
 		{
-			uart1_log<64>(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
+			logger->log(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
 
 			for(;;)
 			{
@@ -592,12 +602,12 @@ bool Main_task::load_config()
 		}
 		else
 		{
-			uart1_log<64>(LOG_LEVEL::WARN, "main", "Default bitrate table wrote ok");
+			logger->log(LOG_LEVEL::WARN, "main", "Default bitrate table wrote ok");
 		}
 	}
 	else
 	{
-		uart1_log<64>(LOG_LEVEL::INFO, "main", "Bitrate table ok");
+		logger->log(LOG_LEVEL::INFO, "main", "Bitrate table ok");
 	}
 
 	return true;

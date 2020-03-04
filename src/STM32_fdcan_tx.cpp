@@ -6,7 +6,7 @@
 
 #include "main.h"
 
-#include "uart1_printf.hpp"
+#include "freertos_cpp_util/logging/Global_logger.hpp"
 
 #include "stm32h7xx_hal_rcc.h"
 #include "stm32h7xx_hal_rcc_ex.h"
@@ -17,7 +17,10 @@
 
 bool set_can_clk(const uint32_t can_clk)
 {
-	uart1_log<128>(LOG_LEVEL::INFO, "STM32_fdcan_tx::set_can_clk", "set_can_clk %d", can_clk);
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::INFO, "STM32_fdcan_tx::set_can_clk", "set_can_clk %d", can_clk);
 
 	const uint32_t hse_clk = HSE_VALUE;
 	if(hse_clk != 24000000U)
@@ -150,7 +153,10 @@ bool get_can_clk(uint32_t* const can_clk)
 
 bool STM32_fdcan_tx::init()
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::init", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::init", "");
 
 	HAL_StatusTypeDef ret = HAL_OK;
 
@@ -164,7 +170,7 @@ bool STM32_fdcan_tx::init()
 		const CAN_USB_app_config::Config_Set& m_config = can_usb_app.get_config(&config_lock);
 
 		//classic, no brs, brs
-		uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "protocol");
+		logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "protocol");
 		if(m_config.protocol_fd)
 		{
 			if(m_config.protocol_brs)
@@ -195,7 +201,7 @@ bool STM32_fdcan_tx::init()
 		m_fdcan_handle->Init.ProtocolException = ENABLE;
 
 		//handle the slew rate control based on the setting and baud rate
-		uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "slope_ctrl");
+		logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "slope_ctrl");
 		switch(m_config.slope_ctrl)
 		{
 			case CAN_USB_app_config::SLOPE_CONTROL::SLOW:
@@ -210,7 +216,7 @@ bool STM32_fdcan_tx::init()
 			}
 			default:
 			{
-				uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::init", "slope control setting corrupt, setting to auto");
+				logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::init", "slope control setting corrupt, setting to auto");
 				//fall through here
 			}
 			case CAN_USB_app_config::SLOPE_CONTROL::AUTO:
@@ -241,10 +247,10 @@ bool STM32_fdcan_tx::init()
 			}
 		}
 
-		uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "set baud");
+		logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "set baud");
 		if(!set_baud(m_config.bitrate_nominal, m_config.bitrate_data))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "set_baud failed");
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "set_baud failed");
 			return false;
 		}
 	}
@@ -264,25 +270,25 @@ bool STM32_fdcan_tx::init()
 	m_fdcan_handle->Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
 	m_fdcan_handle->Init.TxElmtSize = FDCAN_DATA_BYTES_64;
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_Init");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_Init");
 	ret = HAL_FDCAN_Init(m_fdcan_handle);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_Init failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_Init failed");
 		return false;
 	}
 
 	//bypass clock calibration
 	// fdcan_ker_ck = 60MHz
 	// fdcan_tq_ck  = fdcan_ker_ck / 1
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigClockCalibration");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigClockCalibration");
 	FDCAN_ClkCalUnitTypeDef cal_config = FDCAN_ClkCalUnitTypeDef();
 	cal_config.ClockCalibration = DISABLE;
 	cal_config.ClockDivider = FDCAN_CLOCK_DIV1;
 	ret = HAL_FDCAN_ConfigClockCalibration(m_fdcan_handle, &cal_config);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigClockCalibration failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigClockCalibration failed");
 		return false;
 	}
 
@@ -292,48 +298,48 @@ bool STM32_fdcan_tx::init()
 	//ADM3055E - TXD->RXD Falling 150ns full, 300ns slope ctrl
 	//ADM3055E - TXD->RXD Rising 150ns full, 300ns slope ctrl
 	//150ns is 9 mtq
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTxDelayCompensation");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTxDelayCompensation");
 	ret = HAL_FDCAN_ConfigTxDelayCompensation(m_fdcan_handle, 5, 0);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTxDelayCompensation failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTxDelayCompensation failed");
 		return false;
 	}
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTxDelayCompensation");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTxDelayCompensation");
 	ret = HAL_FDCAN_EnableTxDelayCompensation(m_fdcan_handle);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTxDelayCompensation failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTxDelayCompensation failed");
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_GetErrorCounters");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_GetErrorCounters");
 	FDCAN_ErrorCountersTypeDef error_counters;
 	ret = HAL_FDCAN_GetErrorCounters(m_fdcan_handle, &error_counters);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_GetErrorCounters failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_GetErrorCounters failed");
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTimestampCounter");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTimestampCounter");
 	ret = HAL_FDCAN_ConfigTimestampCounter(m_fdcan_handle, FDCAN_TIMESTAMP_PRESC_1);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTimestampCounter failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigTimestampCounter failed");
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTimestampCounter");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTimestampCounter");
 	HAL_FDCAN_EnableTimestampCounter(m_fdcan_handle, FDCAN_TIMESTAMP_EXTERNAL);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTimestampCounter failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableTimestampCounter failed");
 		return false;
 	}
 
 	// Configure Rx Std filter
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter RX STD");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter RX STD");
 	FDCAN_FilterTypeDef sFilter0;
 	sFilter0.IdType = FDCAN_STANDARD_ID;
 	sFilter0.FilterIndex = 0;
@@ -345,12 +351,12 @@ bool STM32_fdcan_tx::init()
 	ret = HAL_FDCAN_ConfigFilter(m_fdcan_handle, &sFilter0);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter failed");
 		return false;
 	}
 
 	// Configure Rx Ext filter
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter RX EXT");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter RX EXT");
 	FDCAN_FilterTypeDef sFilter1;
 	sFilter1.IdType = FDCAN_EXTENDED_ID;
 	sFilter1.FilterIndex = 0;
@@ -362,45 +368,45 @@ bool STM32_fdcan_tx::init()
 	ret = HAL_FDCAN_ConfigFilter(m_fdcan_handle, &sFilter1);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFilter failed");
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFifoWatermark");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFifoWatermark");
 	ret = HAL_FDCAN_ConfigFifoWatermark(m_fdcan_handle, FDCAN_CFG_RX_FIFO0, 16);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFifoWatermark for FIFO0 failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFifoWatermark for FIFO0 failed");
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigRxFifoOverwrite");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigRxFifoOverwrite");
 	ret = HAL_FDCAN_ConfigRxFifoOverwrite(m_fdcan_handle, FDCAN_CFG_RX_FIFO0, FDCAN_RX_FIFO_OVERWRITE);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigRxFifoOverwrite for FIFO0 failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigRxFifoOverwrite for FIFO0 failed");
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ActivateNotification");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ActivateNotification");
 	ret = HAL_FDCAN_ActivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO0_WATERMARK | FDCAN_IT_RX_FIFO0_FULL | FDCAN_IT_RX_FIFO0_MESSAGE_LOST, 0);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ActivateNotification for FIFO0 failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ActivateNotification for FIFO0 failed");
 		return false;
 	}
 
 	// ret = HAL_FDCAN_ConfigFifoWatermark(m_fdcan_handle, FDCAN_CFG_RX_FIFO1, 2);
 	// if(ret != HAL_OK)
 	// {
-	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFifoWatermark for FIFO1 failed");
+	// 	logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFifoWatermark for FIFO1 failed");
 	// 	return false;
 	// }
 
 	// ret = HAL_FDCAN_ConfigRxFifoOverwrite(m_fdcan_handle, FDCAN_CFG_RX_FIFO1, FDCAN_RX_FIFO_OVERWRITE);
 	// if(ret != HAL_OK)
 	// {
-	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigRxFifoOverwrite for FIFO1 failed");
+	// 	logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigRxFifoOverwrite for FIFO1 failed");
 	// 	return false;
 	// }
 
@@ -408,16 +414,16 @@ bool STM32_fdcan_tx::init()
 	// ret = HAL_FDCAN_ActivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO1_WATERMARK, 0);
 	// if(ret != HAL_OK)
 	// {
-	// 	uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ActivateNotification for FIFO1 failed");
+	// 	logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ActivateNotification for FIFO1 failed");
 	// 	return false;
 	// }
 
 	// ret = HAL_FDCAN_ConfigGlobalFilter(m_fdcan_handle, FDCAN_ACCEPT_IN_RX_FIFO0, FDCAN_ACCEPT_IN_RX_FIFO1, DISABLE, DISABLE);
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigGlobalFilter");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigGlobalFilter");
 	ret = HAL_FDCAN_ConfigGlobalFilter(m_fdcan_handle, FDCAN_REJECT, FDCAN_REJECT, DISABLE, DISABLE);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigGlobalFilter failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigGlobalFilter failed");
 		return false;
 	}
 
@@ -432,21 +438,21 @@ bool STM32_fdcan_tx::init()
 
 		if(fd_iso_mode)
 		{
-			uart1_log<128>(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::init", "ISO FD mode requested");
+			logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::init", "ISO FD mode requested");
 			ret = HAL_FDCAN_EnableISOMode(m_fdcan_handle);
 			if(ret != HAL_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableISOMode failed");
+				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_EnableISOMode failed");
 				return false;
 			}
 		}
 		else
 		{
-			uart1_log<128>(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::init", "Non-ISO FD mode requested");
+			logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::init", "Non-ISO FD mode requested");
 			ret = HAL_FDCAN_DisableISOMode(m_fdcan_handle);
 			if(ret != HAL_OK)
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_DisableISOMode failed");
+				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_DisableISOMode failed");
 				return false;
 			}
 		}
@@ -457,6 +463,9 @@ bool STM32_fdcan_tx::init()
 
 bool STM32_fdcan_tx::set_baud(const int std_baud)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry nominal_entry;
 
 	{
@@ -468,7 +477,7 @@ bool STM32_fdcan_tx::set_baud(const int std_baud)
 
 		if(!m_bitrate_table.get_nominal_entry(m_config.can_clock, std_baud, &nominal_entry))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_baud", "m_bitrate_table.get_nominal_entry failed, clock: %d, baud: %d", m_config.can_clock, std_baud);
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_baud", "m_bitrate_table.get_nominal_entry failed, clock: %d, baud: %d", m_config.can_clock, std_baud);
 			return false;
 		}
 	}
@@ -488,6 +497,9 @@ bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Ent
 
 bool STM32_fdcan_tx::set_baud(const int std_baud, const int fd_baud)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry nominal_entry;
 	CAN_USB_app_bitrate_table::Bitrate_Table_Entry data_entry;
 
@@ -500,13 +512,13 @@ bool STM32_fdcan_tx::set_baud(const int std_baud, const int fd_baud)
 
 		if(!m_bitrate_table.get_nominal_entry(m_config.can_clock, std_baud, &nominal_entry))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_baud", "m_bitrate_table.get_nominal_entry failed, clock: %d, baud: %d", m_config.can_clock, std_baud);
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_baud", "m_bitrate_table.get_nominal_entry failed, clock: %d, baud: %d", m_config.can_clock, std_baud);
 			return false;	
 		}
 
 		if(!m_bitrate_table.get_data_entry(m_config.can_clock, fd_baud, &data_entry))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_baud", "m_bitrate_table.get_data_entry failed, clock: %d, baud: %d", m_config.can_clock, fd_baud);
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_baud", "m_bitrate_table.get_data_entry failed, clock: %d, baud: %d", m_config.can_clock, fd_baud);
 			return false;
 		}
 	}
@@ -531,52 +543,58 @@ bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Ent
 
 bool STM32_fdcan_tx::open()
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::open", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::open", "");
 
 	HAL_StatusTypeDef ret = HAL_OK;
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::open", "init");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::open", "init");
 	if(!init())
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "STM32_fdcan_tx::init failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "STM32_fdcan_tx::init failed");
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::open", "start");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::open", "start");
 	ret = HAL_FDCAN_Start(m_fdcan_handle);
 	if(ret != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_Start failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "HAL_FDCAN_Start failed");
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::open", "mode");
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::open", "mode");
 	if(HAL_FDCAN_IsRestrictedOperationMode(m_fdcan_handle))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "FDCAN is in Restricted Mode");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::open", "FDCAN is in Restricted Mode");
 		return false;	
 	}
 
-	uart1_log<128>(LOG_LEVEL::INFO, "STM32_fdcan_tx::open", "CAN is open");
+	logger->log(LOG_LEVEL::INFO, "STM32_fdcan_tx::open", "CAN is open");
 	m_is_open = true;
 
 	return true;
 }
 bool STM32_fdcan_tx::close()
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::close", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::close", "");
 
 	// if(HAL_FDCAN_DeactivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO0_WATERMARK | FDCAN_IT_RX_FIFO0_FULL | FDCAN_IT_RX_FIFO0_MESSAGE_LOST) != HAL_OK)
 	if(HAL_FDCAN_DeactivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO0_WATERMARK) != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::close", "HAL_FDCAN_DeactivateNotification for FIFO0 failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::close", "HAL_FDCAN_DeactivateNotification for FIFO0 failed");
 		return false;	
 	}
 /*
 	// if(HAL_FDCAN_DeactivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO1_WATERMARK | FDCAN_IT_RX_FIFO1_FULL | FDCAN_IT_RX_FIFO1_MESSAGE_LOST) != HAL_OK)
 	if(HAL_FDCAN_DeactivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO1_WATERMARK) != HAL_OK)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::close", "HAL_FDCAN_DeactivateNotification for FIFO1 failed");
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::close", "HAL_FDCAN_DeactivateNotification for FIFO1 failed");
 		return false;	
 	}
 */
@@ -585,7 +603,7 @@ bool STM32_fdcan_tx::close()
 		return false;
 	}
 
-	uart1_log<128>(LOG_LEVEL::INFO, "STM32_fdcan_tx::open", "CAN is closed");
+	logger->log(LOG_LEVEL::INFO, "STM32_fdcan_tx::open", "CAN is closed");
 	m_is_open = false;
 
 	return true;
@@ -593,11 +611,14 @@ bool STM32_fdcan_tx::close()
 
 bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_std", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_std", "");
 
 	if(!m_is_open)
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_std", "Tried to send with closed interface");
+		logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_std", "Tried to send with closed interface");
 		return false;
 	}
 
@@ -627,11 +648,14 @@ bool STM32_fdcan_tx::tx_std(const uint32_t id, const uint8_t data_len, const uin
 
 bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t data_len, const uint8_t* data)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_ext", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_ext", "");
 
 	if(!m_is_open)
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_ext", "Tried to send with closed interface");
+		logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_ext", "Tried to send with closed interface");
 		return false;
 	}
 
@@ -661,11 +685,14 @@ bool STM32_fdcan_tx::tx_ext(const uint32_t id, const uint8_t data_len, const uin
 
 bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t data_len)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_std_rtr", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_std_rtr", "");
 
 	if(!m_is_open)
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_std_rtr", "Tried to send with closed interface");
+		logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_std_rtr", "Tried to send with closed interface");
 		return false;
 	}
 
@@ -691,11 +718,14 @@ bool STM32_fdcan_tx::tx_std_rtr(const uint32_t id, const uint8_t data_len)
 }
 bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t data_len)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_ext_rtr", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_ext_rtr", "");
 
 	if(!m_is_open)
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_ext_rtr", "Tried to send with closed interface");
+		logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_ext_rtr", "Tried to send with closed interface");
 		return false;
 	}
 
@@ -722,18 +752,21 @@ bool STM32_fdcan_tx::tx_ext_rtr(const uint32_t id, const uint8_t data_len)
 
 bool STM32_fdcan_tx::tx_fd_std(const uint32_t id, const BRS brs, const ESI esi, const uint8_t data_len, const uint8_t* data)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_fd_std", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_fd_std", "");
 
 	if(!m_is_open)
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_std", "Tried to send with closed interface");
+		logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_std", "Tried to send with closed interface");
 		return false;
 	}
 
 	STM32_FDCAN_DLC dlc;
 	if(!dlc.from_len(data_len))
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_std", "STM32_FDCAN_DLC::from_len failed");
+		logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_std", "STM32_FDCAN_DLC::from_len failed");
 		return false;
 	}
 
@@ -758,7 +791,7 @@ bool STM32_fdcan_tx::tx_fd_std(const uint32_t id, const BRS brs, const ESI esi, 
 		}
 		default:
 		{
-			uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_std", "ESI conv failed");
+			logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_std", "ESI conv failed");
 			return false;
 		}
 	}
@@ -777,7 +810,7 @@ bool STM32_fdcan_tx::tx_fd_std(const uint32_t id, const BRS brs, const ESI esi, 
 		}
 		default:
 		{
-			uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_std", "BRS conv failed");
+			logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_std", "BRS conv failed");
 			return false;
 		}
 	}
@@ -793,18 +826,21 @@ bool STM32_fdcan_tx::tx_fd_std(const uint32_t id, const BRS brs, const ESI esi, 
 }
 bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const BRS brs, const ESI esi, const uint8_t data_len, const uint8_t* data)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_fd_ext", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::tx_fd_ext", "");
 
 	if(!m_is_open)
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_ext", "Tried to send with closed interface");
+		logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_ext", "Tried to send with closed interface");
 		return false;
 	}
 
 	STM32_FDCAN_DLC dlc;
 	if(!dlc.from_len(data_len))
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_ext", "STM32_FDCAN_DLC::from_len failed");
+		logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_ext", "STM32_FDCAN_DLC::from_len failed");
 		return false;
 	}
 
@@ -829,7 +865,7 @@ bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const BRS brs, const ESI esi, 
 		}
 		default:
 		{
-			uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_ext", "ESI conv failed");
+			logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_ext", "ESI conv failed");
 			return false;
 		}
 	}
@@ -848,7 +884,7 @@ bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const BRS brs, const ESI esi, 
 		}
 		default:
 		{
-			uart1_log<128>(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_ext", "BRS conv failed");
+			logger->log(LOG_LEVEL::WARN, "STM32_fdcan_tx::tx_fd_ext", "BRS conv failed");
 			return false;
 		}
 	}
@@ -865,7 +901,10 @@ bool STM32_fdcan_tx::tx_fd_ext(const uint32_t id, const BRS brs, const ESI esi, 
 
 bool STM32_fdcan_tx::send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "STM32_fdcan_tx::send_packet", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::send_packet", "");
 
 	size_t retry_counter = 0;
 	HAL_StatusTypeDef ret = HAL_OK;
@@ -875,11 +914,11 @@ bool STM32_fdcan_tx::send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data)
 
 		if(ret != HAL_OK)
 		{
-			uart1_log<128>(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::send_packet", "HAL_FDCAN_AddMessageToTxFifoQ failed, overflow?");
+			logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::send_packet", "HAL_FDCAN_AddMessageToTxFifoQ failed, overflow?");
 
 			if(retry_counter > 2)
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "STM32_fdcan_tx::send_packet", "HAL_FDCAN_AddMessageToTxFifoQ failed, timeout");
+				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::send_packet", "HAL_FDCAN_AddMessageToTxFifoQ failed, timeout");
 				return false;
 			}
 
@@ -893,7 +932,10 @@ bool STM32_fdcan_tx::send_packet(FDCAN_TxHeaderTypeDef& tx_head, uint8_t* data)
 
 void STM32_fdcan_tx::set_can_slew_slow()
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_can_slew_slow", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+	
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_can_slew_slow", "");
 
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
@@ -906,7 +948,10 @@ void STM32_fdcan_tx::set_can_slew_slow()
 }
 void STM32_fdcan_tx::set_can_slew_high()
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_can_slew_high", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_can_slew_high", "");
 
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	GPIO_InitStruct.Pin = CAN_SLOPE_Pin;

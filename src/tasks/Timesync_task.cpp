@@ -3,12 +3,17 @@
 #include "main.h"
 #include "global_app_inst.hpp"
 
-#include "uart1_printf.hpp"
+#include "freertos_cpp_util/logging/Global_logger.hpp"
 
+#include "hal_inst.h"
 #include "stm32h7xx_hal.h"
+
+using freertos_util::logging::LOG_LEVEL;
 
 void Timesync_task::work()
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
 	CAN_USB_app_config::TIMESYNC_MODE m_timesync_mode = CAN_USB_app_config::TIMESYNC_MODE::SLAVE;
 
 	{
@@ -25,25 +30,25 @@ void Timesync_task::work()
 	{
 		case CAN_USB_app_config::TIMESYNC_MODE::MASTER:
 		{
-			uart1_log<64>(LOG_LEVEL::INFO, "Timesync_task", "Timesync master mode");
+			logger->log(LOG_LEVEL::INFO, "Timesync_task", "Timesync master mode");
 			if(!oc_config())
 			{
-				uart1_log<64>(LOG_LEVEL::ERROR, "Timesync_task", "oc_config failed");
+				logger->log(LOG_LEVEL::ERROR, "Timesync_task", "oc_config failed");
 			}
 			break;
 		}
 		case CAN_USB_app_config::TIMESYNC_MODE::SLAVE:
 		{
-			uart1_log<64>(LOG_LEVEL::INFO, "Timesync_task", "Timesync slave mode");
+			logger->log(LOG_LEVEL::INFO, "Timesync_task", "Timesync slave mode");
 			if(!ic_config())
 			{
-				uart1_log<64>(LOG_LEVEL::ERROR, "Timesync_task", "ic_config failed");
+				logger->log(LOG_LEVEL::ERROR, "Timesync_task", "ic_config failed");
 			}
 			break;
 		}
 		default:
 		{
-			uart1_log<64>(LOG_LEVEL::ERROR, "Timesync_task", "unknown time sync mode, disabling");
+			logger->log(LOG_LEVEL::ERROR, "Timesync_task", "unknown time sync mode, disabling");
 			break;
 		}
 	}

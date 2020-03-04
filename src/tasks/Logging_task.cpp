@@ -1,6 +1,11 @@
 #include "Logging_task.hpp"
 
-#include "uart1_printf.hpp"
+#include "freertos_cpp_util/Mutex_static.hpp"
+
+#include "hal_inst.h"
+#include "stm32h7xx_hal.h"
+
+#include <mutex>
 
 bool UART1_sink::handle_log(freertos_util::logging::String_type* const log)
 {

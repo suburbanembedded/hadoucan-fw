@@ -1,6 +1,6 @@
 #include "USB_tx_buffer_task.hpp"
 
-#include "uart1_printf.hpp"
+#include "freertos_cpp_util/logging/Global_logger.hpp"
 
 constexpr size_t USB_tx_buffer_task::BUFFER_HIGH_WATERMARK;
 
@@ -8,6 +8,9 @@ constexpr uint32_t USB_tx_buffer_task::USB_HS_PACKET_WAIT_MS;
 
 void USB_tx_buffer_task::work()
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
 	std::vector<uint8_t> m_packet_buf;
 	m_packet_buf.reserve(512);
 
@@ -38,12 +41,12 @@ void USB_tx_buffer_task::work()
 			//notify we drained some from the buffer
 			m_tx_buf_drain_condvar.notify_one();
 
-			uart1_log<64>(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Waiting for buffer");
+			logger->log(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Waiting for buffer");
 			
 			//wait for a free tx buffer from driver
 			Buffer_adapter_base* tx_buf = m_usb_driver->wait_tx_buffer(0x81);
 
-			uart1_log<64>(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Got buffer");
+			logger->log(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Got buffer");
 
 			tx_buf->reset();
 			tx_buf->insert(m_packet_buf.data(), m_packet_buf.size());
@@ -51,10 +54,10 @@ void USB_tx_buffer_task::work()
 			//give full tx buffer to the driver
 			if(!m_usb_driver->enqueue_tx_buffer(0x81, tx_buf))
 			{
-				uart1_log<64>(LOG_LEVEL::ERROR, "USB_tx_buffer_task", "failed to enqueue tx buffer");
+				logger->log(LOG_LEVEL::ERROR, "USB_tx_buffer_task", "failed to enqueue tx buffer");
 			}
 
-			uart1_log<64>(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Sent buffer: %.*s", tx_buf->size(), tx_buf->data());
+			logger->log(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Sent buffer: %.*s", tx_buf->size(), tx_buf->data());
 		}
 	}
 }

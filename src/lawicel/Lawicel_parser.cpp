@@ -4,13 +4,15 @@
 
 #include "common_util/Byte_util.hpp"
 
-#include "uart1_printf.hpp"
+#include "freertos_cpp_util/logging/Global_logger.hpp"
 
 #include <array>
 #include <algorithm>
 
 #include <cstring>
 #include <cstdio>
+
+using freertos_util::logging::LOG_LEVEL;
 
 bool Lawicel_parser::write_bell()
 {
@@ -23,7 +25,9 @@ bool Lawicel_parser::write_cr()
 
 bool Lawicel_parser::parse_std_id(const char* in_str, uint32_t* const id)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_id", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_id", "");
 
 	//tiiildd
 	std::array<char, 4> id_str;
@@ -48,7 +52,9 @@ bool Lawicel_parser::parse_std_id(const char* in_str, uint32_t* const id)
 }
 bool Lawicel_parser::parse_ext_id(const char* in_str, uint32_t* const id)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_id", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_id", "");
 
 	//Tiiiiiiiildd
 	std::array<char, 9> id_str;
@@ -74,7 +80,9 @@ bool Lawicel_parser::parse_ext_id(const char* in_str, uint32_t* const id)
 
 bool Lawicel_parser::parse_std_dlc(const char dlc_char, uint8_t* const data_len)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_dlc", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_dlc", "");
 
 	CAN_DLC can_dlc;
 	if(!can_dlc.from_ascii(dlc_char))
@@ -94,7 +102,9 @@ bool Lawicel_parser::parse_std_dlc(const char dlc_char, uint8_t* const data_len)
 }
 bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 8>* const data)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_data", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_data", "");
 
 	if(data_len > 8)
 	{
@@ -123,7 +133,9 @@ bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t data_len
 
 bool Lawicel_parser::parse_fd_dlc(const char dlc_char, uint8_t* const data_len)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_fd_dlc", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_fd_dlc", "");
 
 	CAN_DLC can_dlc;
 	if(!can_dlc.from_ascii(dlc_char))
@@ -143,7 +155,9 @@ bool Lawicel_parser::parse_fd_dlc(const char dlc_char, uint8_t* const data_len)
 }
 bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 64>* const data)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_fd_data", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_fd_data", "");
 
 	if(data_len > 64)
 	{
@@ -172,7 +186,9 @@ bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t data_len,
 
 bool Lawicel_parser::parse_string(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_string", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_string", "");
 
 	if(in_str == nullptr)
 	{
@@ -294,7 +310,7 @@ bool Lawicel_parser::parse_string(const char* in_str)
 		}
 		default:
 		{
-			uart1_log<128>(LOG_LEVEL::WARN, "Lawicel_parser::parse_string", "no handler for %c", in_str[0]);
+			logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_string", "no handler for %c", in_str[0]);
 
 			write_bell();
 
@@ -308,7 +324,9 @@ bool Lawicel_parser::parse_string(const char* in_str)
 
 bool Lawicel_parser::parse_std_baud(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_baud", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_std_baud", "");
 
 	const size_t in_str_len = strnlen(in_str, 3);
 
@@ -342,14 +360,14 @@ bool Lawicel_parser::parse_std_baud(const char* in_str)
 
 	if(baud > 8)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_std_baud", "invalid baud %u", baud);
+		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_std_baud", "invalid baud %u", baud);
 		write_bell();
 		return false;
 	}
 
 	if(!handle_std_baud(CAN_NOM_BPS(baud)))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_std_baud", "handle_std_baud failed");
+		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_std_baud", "handle_std_baud failed");
 		write_bell();
 		return false;
 	}
@@ -359,7 +377,9 @@ bool Lawicel_parser::parse_std_baud(const char* in_str)
 }
 bool Lawicel_parser::parse_cust_baud(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_cust_baud", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_cust_baud", "");
 
 	const size_t in_str_len = strnlen(in_str, 6);
 
@@ -422,7 +442,9 @@ bool Lawicel_parser::parse_cust_baud(const char* in_str)
 
 bool Lawicel_parser::parse_open(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_open", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_open", "");
 
 	const int ret = strncmp("O\r", in_str, 2);
 	if(ret != 0)
@@ -444,7 +466,9 @@ bool Lawicel_parser::parse_open(const char* in_str)
 }
 bool Lawicel_parser::parse_open_listen(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_open_listen", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_open_listen", "");
 
 	const int ret = strncmp("L\r", in_str, 2);
 	if(ret != 0)
@@ -464,7 +488,9 @@ bool Lawicel_parser::parse_open_listen(const char* in_str)
 }
 bool Lawicel_parser::parse_close(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_close", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_close", "");
 
 	int ret = strncmp("C\r", in_str, 2);
 	if(ret != 0)
@@ -487,7 +513,9 @@ bool Lawicel_parser::parse_close(const char* in_str)
 
 bool Lawicel_parser::parse_tx_std(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_std", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_std", "");
 
 	const size_t in_str_len = strlen(in_str);
 
@@ -565,7 +593,9 @@ bool Lawicel_parser::parse_tx_std(const char* in_str)
 }
 bool Lawicel_parser::parse_tx_ext(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_ext", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_ext", "");
 
 	const size_t in_str_len = strlen(in_str);
 
@@ -643,7 +673,9 @@ bool Lawicel_parser::parse_tx_ext(const char* in_str)
 
 bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_rtr_std", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_rtr_std", "");
 
 	const size_t in_str_len = strlen(in_str);
 
@@ -707,7 +739,9 @@ bool Lawicel_parser::parse_tx_rtr_std(const char* in_str)
 }
 bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_rtr_ext", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_rtr_ext", "");
 
 	const size_t in_str_len = strlen(in_str);
 
@@ -771,14 +805,16 @@ bool Lawicel_parser::parse_tx_rtr_ext(const char* in_str)
 
 bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_fd_std", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_fd_std", "");
 
 	//diiil\r
 	const size_t in_str_len = strlen(in_str);
 
 	if(in_str_len < 6)
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "in_str_len < 6");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "in_str_len < 6");
 
 		write_bell();
 		return false;
@@ -786,7 +822,7 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 	
 	if(in_str[0] != 'd')
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "in_str[0] != 'd'");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "in_str[0] != 'd'");
 
 		write_bell();
 		return false;
@@ -795,7 +831,7 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 	uint32_t id = 0;
 	if(!parse_std_id(in_str, &id))
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "parse_std_id failed");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "parse_std_id failed");
 
 		write_bell();
 		return false;
@@ -805,7 +841,7 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 	uint8_t data_len = 0;
 	if(!parse_fd_dlc(in_str[4], &data_len))
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "parse_fd_dlc failed");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "parse_fd_dlc failed");
 
 		write_bell();
 		return false;
@@ -815,7 +851,7 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 	const size_t expected_len = 1U+3U+1U+2U*data_len+1U;
 	if(in_str_len != expected_len)
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "len verify failed, expected %u, got %u", expected_len, in_str_len);
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "len verify failed, expected %u, got %u", expected_len, in_str_len);
 
 		write_bell();
 		return false;
@@ -824,7 +860,7 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 	std::array<uint8_t, 64> data;
 	if(!parse_fd_data(in_str+5, data_len, &data))
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "parse_fd_data failed");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "parse_fd_data failed");
 
 		write_bell();
 		return false;
@@ -832,7 +868,7 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 
 	if(!handle_tx_fd_std(id, data_len, data.data()))
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "handle_tx_fd_std failed");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std", "handle_tx_fd_std failed");
 
 		write_bell();
 		return false;
@@ -855,7 +891,7 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 		}
 		default:
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_tx_fd_std", "m_poll_mode invalid");
+			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_tx_fd_std", "m_poll_mode invalid");
 
 			write_bell();
 			success = false;
@@ -867,14 +903,16 @@ bool Lawicel_parser::parse_tx_fd_std(const char* in_str)
 }
 bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_fd_ext", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_fd_ext", "");
 
 	//diiiiiiiil\r
 	const size_t in_str_len = strlen(in_str);
 
 	if(in_str_len < 11)
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "in_str_len < 11");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "in_str_len < 11");
 
 		write_bell();
 		return false;
@@ -882,7 +920,7 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 	
 	if(in_str[0] != 'D')
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "in_str[0] != 'd'");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "in_str[0] != 'd'");
 
 		write_bell();
 		return false;
@@ -891,7 +929,7 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 	uint32_t id = 0;
 	if(!parse_ext_id(in_str, &id))
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "parse_std_id failed");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "parse_std_id failed");
 
 		write_bell();
 		return false;
@@ -901,7 +939,7 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 	uint8_t data_len = 0;
 	if(!parse_fd_dlc(in_str[9], &data_len))
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "parse_fd_dlc failed");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "parse_fd_dlc failed");
 
 		write_bell();
 		return false;
@@ -911,7 +949,7 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 	const size_t expected_len = 1U+8U+1U+2U*data_len+1U;
 	if(in_str_len != expected_len)
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "len verify failed, expected %u, got %u", expected_len, in_str_len);
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "len verify failed, expected %u, got %u", expected_len, in_str_len);
 
 		write_bell();
 		return false;
@@ -920,7 +958,7 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 	std::array<uint8_t, 64> data;
 	if(!parse_fd_data(in_str+10, data_len, &data))
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "parse_fd_data failed");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "parse_fd_data failed");
 
 		write_bell();
 		return false;
@@ -928,7 +966,7 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 
 	if(!handle_tx_fd_ext(id, data_len, data.data()))
 	{
-		uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "handle_tx_fd_ext failed");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "handle_tx_fd_ext failed");
 
 		write_bell();
 		return false;
@@ -951,7 +989,7 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 		}
 		default:
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_tx_fd_ext", "m_poll_mode invalid");
+			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_tx_fd_ext", "m_poll_mode invalid");
 
 			write_bell();
 			success = false;
@@ -964,7 +1002,9 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 
 bool Lawicel_parser::parse_get_flags(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_get_flags", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_get_flags", "");
 
 	int ret = strncmp("F\r", in_str, 2);
 	if(ret != 0)
@@ -985,14 +1025,18 @@ bool Lawicel_parser::parse_get_flags(const char* in_str)
 
 bool Lawicel_parser::parse_set_accept_code(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "");
 
 	write_bell();
 	return false;
 }
 bool Lawicel_parser::parse_set_accept_mask(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_mask", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_mask", "");
 
 	write_bell();
 	return false;
@@ -1000,7 +1044,9 @@ bool Lawicel_parser::parse_set_accept_mask(const char* in_str)
 
 bool Lawicel_parser::parse_get_version(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_get_version", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_get_version", "");
 
 	const int ret = strncmp("V\r", in_str, 2);
 	if(ret != 0)
@@ -1028,7 +1074,9 @@ bool Lawicel_parser::parse_get_version(const char* in_str)
 }
 bool Lawicel_parser::parse_get_serial(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_get_serial", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_get_serial", "");
 
 	const int ret = strncmp("N\r", in_str, 2);
 	if(ret != 0)
@@ -1057,7 +1105,9 @@ bool Lawicel_parser::parse_get_serial(const char* in_str)
 
 bool Lawicel_parser::parse_set_timestamp(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_timestamp", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_timestamp", "");
 
 	unsigned int timestamp = 0;
 	{
@@ -1081,7 +1131,9 @@ bool Lawicel_parser::parse_set_timestamp(const char* in_str)
 
 bool Lawicel_parser::parse_set_autostartup(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_autostartup", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_autostartup", "");
 
 	unsigned int autostartup = 0;
 	{
@@ -1105,7 +1157,9 @@ bool Lawicel_parser::parse_set_autostartup(const char* in_str)
 
 bool Lawicel_parser::parse_poll_one(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_poll_one", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_poll_one", "");
 
 	const int ret = strncmp("P\r", in_str, 2);
 	if(ret != 0)
@@ -1135,7 +1189,9 @@ bool Lawicel_parser::parse_poll_one(const char* in_str)
 
 bool Lawicel_parser::parse_poll_all(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_poll_all", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_poll_all", "");
 
 	const int ret = strncmp("A\r", in_str, 2);
 	if(ret != 0)
@@ -1156,7 +1212,9 @@ bool Lawicel_parser::parse_poll_all(const char* in_str)
 
 bool Lawicel_parser::parse_auto_poll(const char* in_str)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_auto_poll", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_auto_poll", "");
 
 	unsigned int auto_poll = 0;
 	{
@@ -1186,6 +1244,8 @@ bool Lawicel_parser::parse_auto_poll(const char* in_str)
 
 bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
 	const size_t in_str_len = strlen(in_str);
 
 	const char config_str[] = "!config";
@@ -1221,7 +1281,7 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 		if(it == (in_str+in_str_len))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_extended_cmd", "Parsing config failed");
+			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_extended_cmd", "Parsing config failed");
 		}
 		else
 		{
@@ -1240,7 +1300,7 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 		if(it == (in_str+in_str_len))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "Lawicel_parser::parse_extended_cmd", "Parsing table failed");
+			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_extended_cmd", "Parsing table failed");
 		}
 
 		std::vector<char> table_str(it, in_str+in_str_len);
@@ -1256,25 +1316,25 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	}
 	else if(strncmp(in_str, bootloader_str, bootloader_str_len) == 0)
 	{
-		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Rebooting to bootloader");
+		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Rebooting to bootloader");
 
 		ret = handle_ext_bootloader();
 	}
 	else if(strncmp(in_str, serial_str, serial_str_len) == 0)
 	{
-		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended serial number");
+		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended serial number");
 
 		ret = handle_ext_serial();
 	}
 	else if(strncmp(in_str, version_str, version_str_len) == 0)
 	{
-		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended version number");
+		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended version number");
 
 		ret = handle_ext_version();
 	}
 	else
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "Lawicel_parser::parse_extended_cmd", "no handler for %s", in_str);
+		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_extended_cmd", "no handler for %s", in_str);
 
 		write_bell();
 		return false;
@@ -1282,7 +1342,7 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 	if(!ret)
 	{
-		uart1_log<128>(LOG_LEVEL::WARN, "Lawicel_parser::parse_extended_cmd", "Extended command failed");
+		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_extended_cmd", "Extended command failed");
 	}
 
 	write_cr();
@@ -1291,7 +1351,9 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::queue_rx_packet", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::queue_rx_packet", "");
 
 	bool success = false;
 	switch(m_poll_mode)
@@ -1329,7 +1391,9 @@ bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
 
 bool Lawicel_parser::handle_poll_one(std::string* const out_line)
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::handle_poll_one", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::handle_poll_one", "");
 
 	if(!m_is_channel_open)
 	{
@@ -1367,7 +1431,9 @@ bool Lawicel_parser::handle_poll_one(std::string* const out_line)
 }
 bool Lawicel_parser::handle_poll_all()
 {
-	uart1_log<128>(LOG_LEVEL::TRACE, "Lawicel_parser::handle_poll_all", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::handle_poll_all", "");
 
 	if(!m_is_channel_open)
 	{
@@ -1408,20 +1474,22 @@ bool Lawicel_parser::handle_poll_all()
 
 bool Lawicel_parser::handle_auto_poll(const bool enable)
 {
-	uart1_log<128>(LOG_LEVEL::DEBUG, "Lawicel_parser::handle_auto_poll", "");
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::handle_auto_poll", "");
 
 	//TODO: race condition, flush queue while new packets come in
 	//std::lock_guard<Mutex_static> lock(m_rx_packet_buf_mutex);
 
 	if(enable)
 	{
-		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::handle_auto_poll", "POLL_MODE::AUTO");
+		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::handle_auto_poll", "POLL_MODE::AUTO");
 
 		m_poll_mode = POLL_MODE::AUTO;
 	}
 	else
 	{
-		uart1_log<128>(LOG_LEVEL::INFO, "Lawicel_parser::handle_auto_poll", "POLL_MODE::MANUAL");
+		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::handle_auto_poll", "POLL_MODE::MANUAL");
 
 		m_poll_mode = POLL_MODE::MANUAL;
 	}

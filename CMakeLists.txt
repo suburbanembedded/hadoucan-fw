@@ -84,8 +84,6 @@ add_executable(canusbfdiso.elf
 	src/USB_tx_buffer_task.cpp
 	src/USB_rx_buffer_task.cpp
 
-	src/uart1_printf.cpp
-
 	src/freertos_stubs.cpp
 	src/freertos_new.cpp
 	src/newlib_stubs.c

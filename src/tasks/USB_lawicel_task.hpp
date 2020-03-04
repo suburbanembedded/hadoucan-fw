@@ -1,7 +1,5 @@
 #pragma once
 
-#include "uart1_printf.hpp"
-
 #include "USB_rx_buffer_task.hpp"
 #include "USB_tx_buffer_task.hpp"
 
@@ -12,6 +10,7 @@
 #include "lawicel/Lawicel_parser_stm32.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
+#include "freertos_cpp_util/logging/Global_logger.hpp"
 
 #include "stm32h7xx_hal.h"
 
@@ -75,6 +74,9 @@ public:
 
 	void work() override
 	{
+		freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+		using freertos_util::logging::LOG_LEVEL;
+
 		m_parser.set_can(m_can);
 		m_parser.set_write_string_func(
 			std::bind(&USB_lawicel_task::write_string_usb, this, std::placeholders::_1)
@@ -88,10 +90,10 @@ public:
 		for(;;)
 		{
 			{
-				uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "wait(lock, has_line_pred)");
+				logger->log(LOG_LEVEL::TRACE, "USB_lawicel_task", "wait(lock, has_line_pred)");
 				std::unique_lock<Mutex_static> lock(m_usb_rx_buffer->get_mutex());
 				m_usb_rx_buffer->get_cv().wait(lock, std::cref(m_has_line_pred));
-				uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "woke");
+				logger->log(LOG_LEVEL::TRACE, "USB_lawicel_task", "woke");
 
 				if(!m_usb_rx_buffer->get_line(&usb_line))
 				{
@@ -107,27 +109,27 @@ public:
 			//drop lines that are now empty
 			if(strnlen((char*)usb_line.data(), usb_line.size()) == 0)
 			{
-				uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Empty line");
+				logger->log(LOG_LEVEL::WARN, "USB_lawicel_task", "Empty line");
 				continue;
 			}
 
 			//drop lines that are only '\r'
 			if(usb_line.front() == '\r')
 			{
-				uart1_log<64>(LOG_LEVEL::WARN, "USB_lawicel_task", "Line only contains \\r");
+				logger->log(LOG_LEVEL::WARN, "USB_lawicel_task", "Line only contains \\r");
 				continue;
 			}
 
-			uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "got line: [%s]", usb_line.data());
+			logger->log(LOG_LEVEL::TRACE, "USB_lawicel_task", "got line: [%s]", usb_line.data());
 
 			//process line
 			if(!m_parser.parse_string((char*)usb_line.data()))
 			{
-				uart1_log<64>(LOG_LEVEL::ERROR, "USB_lawicel_task", "parse error");
+				logger->log(LOG_LEVEL::ERROR, "USB_lawicel_task", "parse error");
 			}
 			else
 			{
-				uart1_log<64>(LOG_LEVEL::TRACE, "USB_lawicel_task", "ok");
+				logger->log(LOG_LEVEL::TRACE, "USB_lawicel_task", "ok");
 			}
 		}
 	}

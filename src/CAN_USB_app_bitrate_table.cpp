@@ -1,6 +1,8 @@
 #include "CAN_USB_app_bitrate_table.hpp"
 
-#include "uart1_printf.hpp"
+#include "freertos_cpp_util/logging/Global_logger.hpp"
+
+using freertos_util::logging::LOG_LEVEL;
 
 void CAN_USB_app_bitrate_table::set_defualt()
 {
@@ -216,6 +218,8 @@ void CAN_USB_app_bitrate_table::set_defualt()
 
 bool CAN_USB_app_bitrate_table::to_xml(tinyxml2::XMLDocument* const table_doc) const
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
 	table_doc->Clear();
 
 	{
@@ -261,19 +265,21 @@ bool CAN_USB_app_bitrate_table::to_xml(tinyxml2::XMLDocument* const table_doc) c
 }
 bool CAN_USB_app_bitrate_table::from_xml(const tinyxml2::XMLDocument& table_doc)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
 	m_bitrate_tables.clear();
 
 	const tinyxml2::XMLElement* const bitrate_tables_root = table_doc.FirstChildElement("bitrate_tables");
 	if(bitrate_tables_root == nullptr)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "table.xml: could not find element bitrate_tables");
+		logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "table.xml: could not find element bitrate_tables");
 		return false;
 	}
 
 	tinyxml2::XMLElement const * table_element = bitrate_tables_root->FirstChildElement("table");
 	if(table_element == nullptr)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "No bitrate table found");
+		logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "No bitrate table found");
 		return false;
 	}
 
@@ -282,14 +288,14 @@ bool CAN_USB_app_bitrate_table::from_xml(const tinyxml2::XMLDocument& table_doc)
 		int clock = 0;
 		if(table_element->QueryIntAttribute("clock", &clock) != tinyxml2::XML_SUCCESS)
 		{
-			uart1_log<128>(LOG_LEVEL::WARN, "CAN_USB_app", "Could not get attribute named clock for table, skipping table");
+			logger->log(LOG_LEVEL::WARN, "CAN_USB_app", "Could not get attribute named clock for table, skipping table");
 			continue;
 		}
 
 		tinyxml2::XMLElement const * entry_element = table_element->FirstChildElement("entry");
 		if(entry_element == nullptr)
 		{
-			uart1_log<128>(LOG_LEVEL::WARN, "CAN_USB_app", "Empty bitrate_table for clock %d, skipping table", clock);
+			logger->log(LOG_LEVEL::WARN, "CAN_USB_app", "Empty bitrate_table for clock %d, skipping table", clock);
 			continue;
 		}
 
@@ -349,7 +355,7 @@ bool CAN_USB_app_bitrate_table::from_xml(const tinyxml2::XMLDocument& table_doc)
 			}
 			else
 			{
-				uart1_log<128>(LOG_LEVEL::WARN, "CAN_USB_app", "Dropping bitrate_table entry of unknown type %s", type);
+				logger->log(LOG_LEVEL::WARN, "CAN_USB_app", "Dropping bitrate_table entry of unknown type %s", type);
 				continue;
 			}
 

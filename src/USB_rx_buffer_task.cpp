@@ -1,9 +1,12 @@
 #include "USB_rx_buffer_task.hpp"
 
-#include "uart1_printf.hpp"
+#include "freertos_cpp_util/logging/Global_logger.hpp"
 
 void USB_rx_buffer_task::work()
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
 	for(;;)
 	{
 		{
@@ -12,7 +15,7 @@ void USB_rx_buffer_task::work()
 			// in_buf->clean_invalidate_cache();
 			// in_buf->invalidate_cache();
 
-			uart1_log<64>(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "got buf");
+			logger->log(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "got buf");
 
 			volatile uint8_t* in_ptr = in_buf->data();
 			{
@@ -31,11 +34,11 @@ void USB_rx_buffer_task::work()
 			}
 
 			//return buffer to the driver
-			uart1_log<64>(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "release buf");
+			logger->log(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "release buf");
 			m_usb_driver->release_rx_buffer(0x01, in_buf);
 		}
 
-		uart1_log<64>(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "added buf to stream");
+		logger->log(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "added buf to stream");
 
 		m_rx_buf_write_condvar.notify_one();
 	}

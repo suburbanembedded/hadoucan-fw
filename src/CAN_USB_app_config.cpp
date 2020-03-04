@@ -1,6 +1,6 @@
 #include "CAN_USB_app_config.hpp"
 
-#include "uart1_printf.hpp"
+#include "freertos_cpp_util/logging/Global_logger.hpp"
 
 void CAN_USB_app_config::set_defualt()
 {	
@@ -43,6 +43,9 @@ void CAN_USB_app_config::set_defualt()
 
 bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 {
+	// freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	// using freertos_util::logging::LOG_LEVEL;
+
 	config_doc->Clear();
 
 	{
@@ -246,34 +249,37 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 
 bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
 	const tinyxml2::XMLElement* const config_root = config_doc.FirstChildElement("config");
 	if(config_root == nullptr)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element config");
+		logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element config");
 		return false;
 	}
 
 	if(config_root->QueryUnsignedAttribute("version", &m_config.config_version) != tinyxml2::XML_SUCCESS)
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find attr version");
+		logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find attr version");
 		return false;
 	}
 
 	if(!get_bool_text(config_root, "autopoll", &m_config.autopoll))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element autopoll");
+		logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element autopoll");
 		return false;
 	}
 
 	if(!get_bool_text(config_root, "listen_only", &m_config.listen_only))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element listen_only");
+		logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element listen_only");
 		return false;
 	}
 
 	if(!get_bool_text(config_root, "auto_startup", &m_config.auto_startup))
 	{
-		uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element auto_startup");
+		logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element auto_startup");
 		return false;
 	}
 	
@@ -281,7 +287,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		char const * timesync_mode_str = nullptr;
 		if(!get_str_text(config_root, "timesync_mode", &timesync_mode_str))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timesync_mode");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timesync_mode");
 			return false;
 		}
 
@@ -295,7 +301,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		}
 		else
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not parse element timesync_mode");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not parse element timesync_mode");
 			return false;
 		}
 	}
@@ -304,7 +310,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		char const * slope_ctrl_str = nullptr;
 		if(!get_str_text(config_root, "slope_ctrl", &slope_ctrl_str))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element slope_ctrl");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element slope_ctrl");
 			return false;
 		}
 
@@ -322,7 +328,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		}
 		else
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not parse element fast_slope");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not parse element fast_slope");
 			return false;
 		}
 	}
@@ -331,25 +337,25 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		const tinyxml2::XMLElement* timestamp_element = config_root->FirstChildElement("timestamp");
 		if(timestamp_element == nullptr)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp");
 			return false;
 		}
 
 		if(!get_bool_text(timestamp_element, "enable", &m_config.timestamp_enable))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp/enable");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp/enable");
 			return false;
 		}
 		
 		if(!get_uint_text(timestamp_element, "prescaler", &m_config.timestamp_prescaler))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp/prescaler");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp/prescaler");
 			return false;
 		}
 
 		if(!get_uint_text(timestamp_element, "period", &m_config.timestamp_period))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp/period");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timestamp/period");
 			return false;
 		}
 	}
@@ -358,25 +364,25 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		const tinyxml2::XMLElement* tx_delay_comp_element = config_root->FirstChildElement("tx_delay_comp");
 		if(tx_delay_comp_element == nullptr)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp");
 			return false;
 		}
 
 		if(!get_bool_text(tx_delay_comp_element, "enable", &m_config.tx_delay_comp_enable))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp/enable");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp/enable");
 			return false;
 		}
 
 		if(!get_uint_text(tx_delay_comp_element, "offset", &m_config.tx_delay_comp_offset))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp/offset");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp/offset");
 			return false;
 		}
 
 		if(!get_uint_text(tx_delay_comp_element, "filter_window", &m_config.tx_delay_comp_filter_window))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp/filter_window");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element tx_delay_comp/filter_window");
 			return false;
 		}
 	}
@@ -384,7 +390,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 	{
 		if(!get_uint_text(config_root, "clock", &m_config.can_clock))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element clock");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element clock");
 			return false;
 		}
 	}
@@ -393,19 +399,19 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		const tinyxml2::XMLElement* bitrate_element = config_root->FirstChildElement("bitrate");
 		if(bitrate_element == nullptr)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element bitrate");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element bitrate");
 			return false;
 		}
 
 		if(!get_uint_text(bitrate_element, "nominal", &m_config.bitrate_nominal))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element bitrate/nominal");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element bitrate/nominal");
 			return false;
 		}
 		
 		if(!get_uint_text(bitrate_element, "data", &m_config.bitrate_data))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element bitrate/data");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element bitrate/data");
 			return false;
 		}
 	}
@@ -414,31 +420,31 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		const tinyxml2::XMLElement* protocol_element = config_root->FirstChildElement("protocol");
 		if(protocol_element == nullptr)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol");
 			return false;
 		}
 
 		if(!get_bool_text(protocol_element, "ext_id", &m_config.protocol_ext_id))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/ext_id");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/ext_id");
 			return false;
 		}
 		
 		if(!get_bool_text(protocol_element, "fd", &m_config.protocol_fd))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/fd");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/fd");
 			return false;
 		}
 		
 		if(!get_bool_text(protocol_element, "brs", &m_config.protocol_brs))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/brs");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/brs");
 			return false;
 		}
 
 		if(!get_bool_text(protocol_element, "fd_iso", &m_config.protocol_fd_iso))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/fd_iso");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element protocol/fd_iso");
 			return false;
 		}
 	}
@@ -447,19 +453,19 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		const tinyxml2::XMLElement* filter_element = config_root->FirstChildElement("filter");
 		if(filter_element == nullptr)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter");
 			return false;
 		}
 		
 		if(!get_hex_text(filter_element, "accept_code", &m_config.filter_accept_code))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_code");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_code");
 			return false;
 		}
 		
 		if(!get_hex_text(filter_element, "accept_mask", &m_config.filter_accept_mask))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_mask");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_mask");
 			return false;
 		}
 	}
@@ -468,7 +474,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		const tinyxml2::XMLElement* debug_element = config_root->FirstChildElement("debug");
 		if(debug_element == nullptr)
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug");
 			return false;
 		}
 	
@@ -476,7 +482,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 			char const * log_level_str = nullptr;
 			if(!get_str_text(debug_element, "log_level", &log_level_str))
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug/log_level");
+				logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug/log_level");
 				return false;
 			}
 
@@ -506,14 +512,14 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 			}
 			else
 			{
-				uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not parse element debug/log_level");
+				logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not parse element debug/log_level");
 				return false;
 			}
 		}
 
 		if(!get_uint_text(debug_element, "uart_baud", &m_config.uart_baud))
 		{
-			uart1_log<128>(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug/uart_baud");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug/uart_baud");
 			return false;
 		}
 	}

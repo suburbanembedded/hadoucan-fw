@@ -1,8 +1,6 @@
 #include "main.h"
 #include "cmsis_os.h"
 
-#include "uart1_printf.hpp"
-
 #include "USB_rx_buffer_task.hpp"
 #include "USB_tx_buffer_task.hpp"
 
@@ -511,8 +509,6 @@ int main(void)
 	}
 
 	main_task.launch("main_task", 15);
-
-	uart1_log<64>(LOG_LEVEL::INFO, "main", "Starting kernel");
 
 	HAL_NVIC_SetPriorityGrouping( NVIC_PRIORITYGROUP_4 );
 	vTaskStartScheduler();
