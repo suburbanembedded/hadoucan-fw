@@ -42,7 +42,7 @@ https://drive.google.com/open?id=1zZpIIZvTiL2FCnMaklSey-5uLwT95EifO-A8F-x2TWk
 
 # Store
 
-https://www.tindie.com/products/edit/hadou-can-usb-can-fd-adapter/
+https://www.tindie.com/products/suburbanembedded/hadou-can-usb-can-fd-adapter/
 
 # Copyright
 
