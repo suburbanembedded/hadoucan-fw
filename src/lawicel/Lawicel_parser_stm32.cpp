@@ -374,7 +374,7 @@ bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_get_version", "");
 
 	const std::array<char, 2> hw_ver = {'0', '1'};
-	const std::array<char, 2> sw_ver = {'0', '6'};
+	const std::array<char, 2> sw_ver = {'0', '7'};
 	
 	ver->data()[0] = static_cast<uint8_t>(hw_ver[0]);
 	ver->data()[1] = static_cast<uint8_t>(hw_ver[1]);
