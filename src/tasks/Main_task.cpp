@@ -260,6 +260,7 @@ bool Main_task::init_usb()
 
 		desc.bEndpointAddress = 0x80 | 0x02;
 		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
+		// desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::INTERRUPT);
 		desc.wMaxPacketSize   = 8;
 		desc.bInterval        = 16;
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
@@ -640,8 +641,8 @@ bool Main_task::handle_usb_set_config(const uint8_t config)
 			// Iface_desc_table::Iface_desc_const_ptr ctrl_iface_ptr = usb_desc_table.get_interface_descriptor(0);
 			// Iface_desc_table::Iface_desc_const_ptr data_iface_ptr = usb_desc_table.get_interface_descriptor(1);
 
-			Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_out = usb_desc_table.get_endpoint_descriptor(0x01);
-			Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_in = usb_desc_table.get_endpoint_descriptor(0x81);
+			Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_out  = usb_desc_table.get_endpoint_descriptor(0x01);
+			Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_in   = usb_desc_table.get_endpoint_descriptor(0x81);
 			Endpoint_desc_table::Endpoint_desc_const_ptr ep_notify_in = usb_desc_table.get_endpoint_descriptor(0x82);
 
 			//out 1

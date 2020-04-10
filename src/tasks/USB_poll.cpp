@@ -40,7 +40,10 @@ void Test_USB_Driver_task::work()
 {
 	for(;;)
 	{
+		// vTaskPrioritySet(NULL, 5);
 		usb_core.poll_driver();
+		// vTaskPrioritySet(NULL, 1);
+
 		taskYIELD();
 		// suspend();
 	}
