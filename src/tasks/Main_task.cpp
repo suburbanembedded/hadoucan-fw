@@ -259,10 +259,10 @@ bool Main_task::init_usb()
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 
 		desc.bEndpointAddress = 0x80 | 0x02;
-		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
-		// desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::INTERRUPT);
+		// desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
+		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::INTERRUPT);
 		desc.wMaxPacketSize   = 8;
-		desc.bInterval        = 16;
+		desc.bInterval        = 8;//for HS, period is 2^(bInterval-1) * 125 us, so 8 -> 16ms
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 	}
 
@@ -329,7 +329,7 @@ bool Main_task::init_usb()
 
 	std::shared_ptr<CDC::CDC_acm_descriptor> cdc_acm_desc = std::make_shared<CDC::CDC_acm_descriptor>();
 	// cdc_acm_desc->bmCapabilities = 0x00;
-	cdc_acm_desc->set_support_network_connection(false);
+	cdc_acm_desc->set_support_network_connection(true);
 	cdc_acm_desc->set_support_send_break(false);
 	cdc_acm_desc->set_support_line(true);
 	cdc_acm_desc->set_support_comm(true);
@@ -641,12 +641,10 @@ bool Main_task::handle_usb_set_config(const uint8_t config)
 			// Iface_desc_table::Iface_desc_const_ptr ctrl_iface_ptr = usb_desc_table.get_interface_descriptor(0);
 			// Iface_desc_table::Iface_desc_const_ptr data_iface_ptr = usb_desc_table.get_interface_descriptor(1);
 
-			Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_out  = usb_desc_table.get_endpoint_descriptor(0x01);
-			Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_in   = usb_desc_table.get_endpoint_descriptor(0x81);
-			Endpoint_desc_table::Endpoint_desc_const_ptr ep_notify_in = usb_desc_table.get_endpoint_descriptor(0x82);
-
 			//out 1
 			{
+				Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_out  = usb_desc_table.get_endpoint_descriptor(0x01);
+
 				usb_driver_base::ep_cfg ep1;
 				ep1.num  = ep_data_out->bEndpointAddress;
 				ep1.size = ep_data_out->wMaxPacketSize;
@@ -655,6 +653,8 @@ bool Main_task::handle_usb_set_config(const uint8_t config)
 			}
 			//in 1
 			{
+				Endpoint_desc_table::Endpoint_desc_const_ptr ep_data_in   = usb_desc_table.get_endpoint_descriptor(0x81);
+				
 				usb_driver_base::ep_cfg ep2;
 				ep2.num  = ep_data_in->bEndpointAddress;
 				ep2.size = ep_data_in->wMaxPacketSize;
@@ -663,10 +663,12 @@ bool Main_task::handle_usb_set_config(const uint8_t config)
 			}
 			//in 2
 			{
+				Endpoint_desc_table::Endpoint_desc_const_ptr ep_notify_in = usb_desc_table.get_endpoint_descriptor(0x82);
+
 				usb_driver_base::ep_cfg ep3;
 				ep3.num  = ep_notify_in->bEndpointAddress;
 				ep3.size = ep_notify_in->wMaxPacketSize;
-				ep3.type = usb_driver_base::EP_TYPE::BULK;
+				ep3.type = usb_driver_base::EP_TYPE::INTERRUPT;
 				usb_core.get_driver()->ep_config(ep3);
 			}
 
