@@ -8,16 +8,22 @@
 
 using freertos_util::logging::LOG_LEVEL;
 
+namespace
+{
+	static const bool isr_mode = true;
+}
+
 void Test_USB_Core_task::work()
 {
 	// TODO: switch to isr mode
-	HAL_NVIC_SetPriority(OTG_HS_IRQn, 5, 0);
-	HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
+	if(isr_mode)
+	{
+		HAL_NVIC_SetPriority(OTG_HS_IRQn, 5, 0);
+		HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
+	}
 
 	for(;;)
 	{
-		// usb_core.poll_driver();
-		// usb_core.poll_event_loop();
 		usb_core.wait_event_loop();
 		taskYIELD();
 	}
@@ -38,14 +44,18 @@ extern "C"
 
 void Test_USB_Driver_task::work()
 {
+
 	for(;;)
 	{
-		// vTaskPrioritySet(NULL, 5);
-		// usb_core.poll_driver();
-		// vTaskPrioritySet(NULL, 1);
-
-		// taskYIELD();
-		suspend();
+		if(!isr_mode)
+		{
+			usb_core.poll_driver();
+			taskYIELD();
+		}
+		else
+		{
+			suspend();
+		}
 	}
 }
 
