@@ -6,7 +6,7 @@
 
 #include "libusb_dev_cpp/usb_core.hpp"
 #include "libusb_dev_cpp/class/cdc/cdc_usb.hpp"
-#include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs.hpp"
+#include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs2.hpp"
 #include "libusb_dev_cpp/util/Descriptor_table.hpp"
 #include "libusb_dev_cpp/util/EP_buffer_mgr_freertos.hpp"
 
@@ -40,7 +40,7 @@ protected:
 
 extern USB_core         usb_core;
 extern CDC_class        usb_cdc;
-extern stm32_h7xx_otghs usb_driver;
+extern stm32_h7xx_otghs2 usb_driver;
 extern EP_buffer_mgr_freertos<1, 8, 64,  32> usb_ep0_buffer;
 extern EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer;
 extern EP_buffer_mgr_freertos<3, 4, 512, 32> usb_rx_buffer;

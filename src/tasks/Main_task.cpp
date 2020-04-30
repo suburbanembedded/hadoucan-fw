@@ -15,7 +15,7 @@
 
 USB_core         usb_core   __attribute__(( section(".ram_dtcm_noload") ));
 CDC_class        usb_cdc    __attribute__(( section(".ram_dtcm_noload") ));
-stm32_h7xx_otghs usb_driver __attribute__(( section(".ram_dtcm_noload") ));
+stm32_h7xx_otghs2 usb_driver __attribute__(( section(".ram_dtcm_noload") ));
 EP_buffer_mgr_freertos<1, 8, 64,  32> usb_ep0_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_tx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
 EP_buffer_mgr_freertos<3, 4, 512, 32> usb_rx_buffer __attribute__(( section(".ram_d2_s2_noload") ));
