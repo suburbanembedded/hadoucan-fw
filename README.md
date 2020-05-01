@@ -29,16 +29,19 @@ The first-in-class PPS timesync feature allows any number of Hadou-CAN to synchr
 * HW ID filters & masks
 * Enhancements to the USB stack
 
+# Build Status
+![Hadou-CAN CI](https://github.com/suburbanembedded/hadoucan-fw/workflows/Hadou-CAN%20CI/badge.svg)
+
 # Documentation
 
 User Guide
-https://drive.google.com/open?id=1MtYEAVDF2ImoV_6nmfjP3o9sGMMwxck2wRqLRCWhaTU
+https://suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_User_Guide.pdf
 
 Datasheet
-https://drive.google.com/open?id=1wTyMhcp9QPFBzmYxsuicrPzenbGGubfI90Ha8eGbijM
+https://suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_Datasheet.pdf
 
 Quickstart Guide
-https://drive.google.com/open?id=1zZpIIZvTiL2FCnMaklSey-5uLwT95EifO-A8F-x2TWk
+https://suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_Quickstart_Guide.pdf
 
 # Store
 
