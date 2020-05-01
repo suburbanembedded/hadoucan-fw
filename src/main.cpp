@@ -12,13 +12,6 @@
 #include "tasks/USB_rx_buffer_task.hpp"
 #include "tasks/USB_tx_buffer_task.hpp"
 
-#include "libusb_dev_cpp/usb_core.hpp"
-#include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs.hpp"
-#include "libusb_dev_cpp/util/Descriptor_table.hpp"
-
-#include "libusb_dev_cpp/descriptor/Device_descriptor.hpp"
-#include "libusb_dev_cpp/class/cdc/cdc_desc.hpp"
-
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
 #include "freertos_cpp_util/Mutex_static.hpp"

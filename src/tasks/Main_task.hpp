@@ -4,7 +4,7 @@
 
 #include "CAN_USB_app.hpp"
 
-#include "libusb_dev_cpp/usb_core.hpp"
+#include "libusb_dev_cpp/core/usb_core.hpp"
 #include "libusb_dev_cpp/class/cdc/cdc_usb.hpp"
 #include "libusb_dev_cpp/driver/stm32/stm32_h7xx_otghs2.hpp"
 #include "libusb_dev_cpp/util/Descriptor_table.hpp"
