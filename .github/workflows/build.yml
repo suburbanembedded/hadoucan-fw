@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu:18.04
 
     steps:
-    - uses: actions/checkout@master
     - name: configure
       run: ./generate_cmake.sh
     - name: make
