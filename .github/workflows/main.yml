@@ -8,8 +8,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: clone
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+        
     - name: configure
       run: cd $GITHUB_WORKSPACE && ./generate_cmake.sh
+
     - name: make
       run: make -C $GITHUB_WORKSPACE/build/ram/release
+
