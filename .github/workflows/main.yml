@@ -12,9 +12,24 @@ jobs:
       uses: actions/checkout@v2
       with:
         submodules: true
-        
+
+    - name: build container
+      run: docker build continuous_integration/build --file continuous_integration/build/Dockerfile --tag hadoucan-fw-tools
+    
+    - name: login
+      run: cat ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u jacobschloss --password-stdin
+
+    - name: push container
+      run: docker tag hadoucan-fw-tools docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest
+
+    - name: push container
+      run: docker push docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest
+
     - name: configure
       run: cd $GITHUB_WORKSPACE && ./generate_cmake.sh
+      runs:
+        using: 'docker'
+        image: '../../continuous_integration/build/Dockerfile'
 
     - name: make
       run: make -C $GITHUB_WORKSPACE/build/ram/release
