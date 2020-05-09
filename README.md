@@ -56,7 +56,3 @@ Copyright (c) 2018-2020 Suburban Embedded
 ## License
 
 Licensed under the terms of the 3-Clause BSD license. See LICENSE for details.
-
-## Build Status
-
-
