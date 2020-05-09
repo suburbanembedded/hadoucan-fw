@@ -1,20 +1,23 @@
 name: Hadou-CAN CI
 
 on: 
+  create:
+    tags:
+      - '**'
   push:
     branches:
       - '**'
   pull_request:
     branches:
       - '**'
+env:
+  DOCKER_REPO: docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools
 
 jobs:
   build:
 
     runs-on: ubuntu-18.04
-
-    env:
-      DOCKER_REPO: docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools
+    timeout-minutes: 30
 
     steps:
     - name: clone
@@ -54,3 +57,18 @@ jobs:
       with:
         name: hadoucan-fw-release
         path: ${{ github.workspace }}/canusbfdiso-release.tar.gz
+
+  release:
+    
+    if: github.event_name == 'create' && github.event.ref_type == 'tag'
+    
+    steps:
+    - name: Get artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: hadoucan-fw-release
+        path: ${{ github.workspace }}/canusbfdiso-release.tar.gz
+
+    steps:
+    - name: Sign release
+      run: echo "sign release"
