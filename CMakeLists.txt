@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(canusbfdiso C CXX ASM)
+project(hadoucan-fw C CXX ASM)
 
 set(INSTALL_GTEST OFF)
 
@@ -66,7 +66,7 @@ add_subdirectory(external/libusb_dev_cpp)
 add_subdirectory(external/mbedtls_util)
 add_subdirectory(external/tinyxml2_util)
 
-add_executable(canusbfdiso.elf
+add_executable(hadoucan-fw.elf
 	src/system_stm32h7xx.c
 
 	src/stm32h7xx_it.c
@@ -110,7 +110,7 @@ add_executable(canusbfdiso.elf
 	src/CAN_USB_app_bitrate_table.cpp
 )
 
-target_link_libraries(canusbfdiso.elf
+target_link_libraries(hadoucan-fw.elf
 
 	stm32h7xx_hal
 	stm32h7xx_ll
@@ -143,46 +143,46 @@ target_link_libraries(canusbfdiso.elf
 
 # Generate intel hex image
 add_custom_command(
-	OUTPUT canusbfdiso.hex
-	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -S -Oihex canusbfdiso.elf canusbfdiso.hex
-	DEPENDS canusbfdiso.elf
+	OUTPUT hadoucan-fw.hex
+	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -S -Oihex hadoucan-fw.elf hadoucan-fw.hex
+	DEPENDS hadoucan-fw.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM	
 )
 
-add_custom_target(canusbfdiso_hex
+add_custom_target(hadoucan-fw_hex
 	ALL
-	DEPENDS canusbfdiso.hex
+	DEPENDS hadoucan-fw.hex
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Generate raw image
 add_custom_command(
-	OUTPUT canusbfdiso.bin
-	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -S -Obinary canusbfdiso.elf canusbfdiso.bin
-	DEPENDS canusbfdiso.elf
+	OUTPUT hadoucan-fw.bin
+	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -S -Obinary hadoucan-fw.elf hadoucan-fw.bin
+	DEPENDS hadoucan-fw.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM	
 )
 
-add_custom_target(canusbfdiso_bin
+add_custom_target(hadoucan-fw_bin
 	ALL
-	DEPENDS canusbfdiso.bin
+	DEPENDS hadoucan-fw.bin
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Print the image size
-add_custom_target(canusbfdiso_size
+add_custom_target(hadoucan-fw_size
 	ALL
-	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-size --format=sysv canusbfdiso.elf
-	DEPENDS canusbfdiso.elf
+	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-size --format=sysv hadoucan-fw.elf
+	DEPENDS hadoucan-fw.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM
 )
 
-add_custom_target(upload_canusbfdiso
-	COMMAND openocd -f /usr/local/share/openocd/scripts/interface/stlink.cfg -f /usr/local/share/openocd/scripts/target/stm32h7x.cfg -c "init;reset halt;load_image canusbfdiso.elf;verify_image canusbfdiso.elf;mem2array estack_reset_handler 32 0x24000000 2;reg msp $estack_reset_handler(0); resume $estack_reset_handler(1);exit"
-	DEPENDS canusbfdiso.elf
+add_custom_target(upload_hadoucan-fw
+	COMMAND openocd -f /usr/local/share/openocd/scripts/interface/stlink.cfg -f /usr/local/share/openocd/scripts/target/stm32h7x.cfg -c "init;reset halt;load_image hadoucan-fw.elf;verify_image hadoucan-fw.elf;mem2array estack_reset_handler 32 0x24000000 2;reg msp $estack_reset_handler(0); resume $estack_reset_handler(1);exit"
+	DEPENDS hadoucan-fw.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM
 )

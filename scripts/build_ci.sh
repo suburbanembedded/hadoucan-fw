@@ -14,11 +14,11 @@ docker stop $CONTAINER_ID
 pushd $GITHUB_WORKSPACE/build/ram/debug
 ls -la
 id
-sha256sum -b canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin | tee sha256.txt
-tar -czf $GITHUB_WORKSPACE/canusbfdiso-debug-$GITHUB_SHA.tar.gz    canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin sha256.txt
+sha256sum -b hadoucan-fw.elf hadoucan-fw.hex hadoucan-fw.bin | tee sha256.txt
+tar -czf $GITHUB_WORKSPACE/hadoucan-fw-debug-$GITHUB_SHA.tar.gz    hadoucan-fw.elf hadoucan-fw.hex hadoucan-fw.bin sha256.txt
 popd
 
 pushd $GITHUB_WORKSPACE/build/ram/release
-sha256sum -b canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin | tee sha256.txt
-tar -czf $GITHUB_WORKSPACE/canusbfdiso-release-$GITHUB_SHA.tar.gz  canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin sha256.txt
+sha256sum -b hadoucan-fw.elf hadoucan-fw.hex hadoucan-fw.bin | tee sha256.txt
+tar -czf $GITHUB_WORKSPACE/hadoucan-fw-release-$GITHUB_SHA.tar.gz  hadoucan-fw.elf hadoucan-fw.hex hadoucan-fw.bin sha256.txt
 popd
