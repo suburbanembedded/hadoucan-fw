@@ -1,0 +1,84 @@
+name: Hadou-CAN CI
+
+on: 
+  create:
+    tags:
+      - '**'
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+env:
+  DOCKER_REPO: docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+    timeout-minutes: 30
+
+    steps:
+    - name: clone
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: login to docker.pkg.github.com
+      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+    - name: fetch container master
+      run: docker pull $DOCKER_REPO:master || true
+
+    - name: fetch container for branch
+      run: docker pull $DOCKER_REPO:${GITHUB_REF##*/} || true
+
+    - name: build container
+      run: docker build --cache-from $DOCKER_REPO:master --cache-from $DOCKER_REPO:${GITHUB_REF##*/} continuous_integration/build --file continuous_integration/build/Dockerfile --tag hadoucan-fw-tools
+
+    - name: tag container
+      run: docker tag hadoucan-fw-tools $DOCKER_REPO:${GITHUB_REF##*/}
+
+    - name: push container
+      run: docker push $DOCKER_REPO:${GITHUB_REF##*/}
+
+    - name: build
+      run: ./scripts/build_ci.sh
+
+    - name: Upload debug artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: hadoucan-fw-debug
+        path: ${{ github.workspace }}/canusbfdiso-debug-${{ github.sha }}.tar.gz
+
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: hadoucan-fw-release
+        path: ${{ github.workspace }}/canusbfdiso-release-${{ github.sha }}.tar.gz
+
+  release:
+
+    runs-on: ubuntu-18.04
+    timeout-minutes: 30
+    
+    needs: build
+
+    if: github.event_name == 'create' && github.event.ref_type == 'tag'
+    
+    steps:
+    - name: Get artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: hadoucan-fw-release
+        path: ${{ github.workspace }}/canusbfdiso-release-${{ github.sha }}.tar.gz
+
+    - name: Mangle name
+      run: mv canusbfdiso-release-${{ github.sha }}.tar.gz canusbfdiso-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
+
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: hadoucan-fw-release
+        path: ${{ github.workspace }}/canusbfdiso-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz

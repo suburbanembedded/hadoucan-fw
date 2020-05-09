@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+trap 'exit -1' err
+
 if [ -d build ]; then rm -rf build; fi
 
 BASE_PATH=$PWD
