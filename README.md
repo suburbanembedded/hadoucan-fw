@@ -31,7 +31,8 @@ The first-in-class PPS timesync feature allows any number of Hadou-CAN to synchr
 * Enhancements to the USB stack
 
 ## Build Status
-![Hadou-CAN CI](https://github.com/suburbanembedded/hadoucan-fw/workflows/Hadou-CAN%20CI/badge.svg)
+### Master Branch
+![Hadou-CAN CI](https://github.com/suburbanembedded/hadoucan-fw/workflows/Hadou-CAN%20CI/badge.svg?branch=master)
 
 ## Documentation
 
@@ -58,4 +59,4 @@ Licensed under the terms of the 3-Clause BSD license. See LICENSE for details.
 
 ## Build Status
 
-![Hadou-CAN CI](https://github.com/suburbanembedded/hadoucan-fw/workflows/Hadou-CAN%20CI/badge.svg?branch=master)
+

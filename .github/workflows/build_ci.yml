@@ -72,13 +72,13 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: hadoucan-fw-release
-        path: ${{ github.workspace }}/canusbfdiso-release.tar.gz
+        path: ${{ github.workspace }}/canusbfdiso-release-${{ github.sha }}.tar.gz
 
     - name: Mangle name
-      run: mv canusbfdiso-debug-${{ github.sha }}.tar.gz canusbfdiso-debug-${{ github.sha }}-${{ github.event.ref }}.tar.gz
+      run: mv canusbfdiso-release-${{ github.sha }}.tar.gz canusbfdiso-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
 
     - name: Upload release artifacts
       uses: actions/upload-artifact@v2
       with:
         name: hadoucan-fw-release
-        path: ${{ github.workspace }}/canusbfdiso-debug-${{ github.sha }}-${{ github.event.ref }}.tar.gz
+        path: ${{ github.workspace }}/canusbfdiso-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
