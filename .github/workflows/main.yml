@@ -14,7 +14,7 @@ jobs:
         submodules: true
 
     - name: login to docker.pkg.github.com
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u jacobschloss --password-stdin
+      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
     - name: fetch container
       run: docker pull docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest || true
