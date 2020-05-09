@@ -13,11 +13,15 @@ jobs:
       with:
         submodules: true
 
+    
+    - name: login to docker.pkg.github.com
+      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u jacobschloss --password-stdin
+
+    - name: build container
+      run: docker pull docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest || true
+
     - name: build container
       run: docker build continuous_integration/build --file continuous_integration/build/Dockerfile --tag hadoucan-fw-tools
-    
-    - name: login
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u jacobschloss --password-stdin
 
     - name: tag container
       run: docker tag hadoucan-fw-tools docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest

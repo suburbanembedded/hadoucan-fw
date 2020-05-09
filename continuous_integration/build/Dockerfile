@@ -1,7 +1,5 @@
 FROM ubuntu:18.04
 
-RUN echo "Acquire::http::Proxy \"http://10.0.0.1:3142\";" > /etc/apt/apt.conf.d/02proxy
-
 RUN apt-get update && apt-get install -y wget rsync libc6-i386 libusb-0.1-4 libwebkitgtk-3.0-0 libncurses5
 
 RUN apt-get update && apt-get install -y build-essential git cmake python python-serial
