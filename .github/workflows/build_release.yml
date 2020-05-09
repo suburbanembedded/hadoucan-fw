@@ -1,4 +1,4 @@
-name: Hadou-CAN CI Release
+name: Hadou-CAN Release
 
 on: 
   create:
