@@ -29,11 +29,11 @@ jobs:
     - name: push container
       run: docker push docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest
 
-    # - name: configure
-    #   run: cd $GITHUB_WORKSPACE && ./generate_cmake.sh
-    #   runs:
-    #     using: 'docker'
-    #     image: '../../continuous_integration/build/Dockerfile'
+    - name: configure
+      run: docker run -v $GITHUB_WORKSPACE:/tmp/workspace -it docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest /tmp/workspace/generate_cmake.sh
+      runs:
+        using: 'docker'
+        image: '../../continuous_integration/build/Dockerfile'
 
     # - name: make
     #   run: make -C $GITHUB_WORKSPACE/build/ram/release
