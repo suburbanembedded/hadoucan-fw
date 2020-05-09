@@ -12,11 +12,11 @@ docker exec -u root -w /tmp/workspace/ $CONTAINER_ID make -j`nproc` -C build/ram
 docker stop $CONTAINER_ID
 
 pushd $GITHUB_WORKSPACE/build/ram/debug
-sha256sum canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin > sha256.txt
+sha256sum -b canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin | tee sha256.txt
 tar -czf $GITHUB_WORKSPACE/canusbfdiso-debug.tar.gz    canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin sha256.txt
 popd
 
 pushd $GITHUB_WORKSPACE/build/ram/release
-sha256sum canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin > sha256.txt
+sha256sum -b canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin | tee sha256.txt
 tar -czf $GITHUB_WORKSPACE/canusbfdiso-release.tar.gz  canusbfdiso.elf canusbfdiso.hex canusbfdiso.bin sha256.txt
 popd

@@ -1,6 +1,9 @@
 name: Hadou-CAN CI Release
 
-on: [tag]
+on: 
+  create:
+    tags:
+      - '*'
 
 jobs:
   build:
