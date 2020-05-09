@@ -13,6 +13,9 @@ jobs:
 
     runs-on: ubuntu-18.04
 
+    env:
+      DOCKER_REPO: docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools
+
     steps:
     - name: clone
       uses: actions/checkout@v2
@@ -23,19 +26,19 @@ jobs:
       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
     - name: fetch container master
-      run: docker pull docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:master || true
+      run: docker pull $DOCKER_REPO:master || true
 
     - name: fetch container for branch
-      run: docker pull docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:${GITHUB_REF##*/} || true
+      run: docker pull $DOCKER_REPO:${GITHUB_REF##*/} || true
 
     - name: build container
-      run: docker build --cache-from docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:${GITHUB_REF##*/} continuous_integration/build --file continuous_integration/build/Dockerfile --tag hadoucan-fw-tools
+      run: docker build --cache-from $DOCKER_REPO:master --cache-from $DOCKER_REPO:${GITHUB_REF##*/} continuous_integration/build --file continuous_integration/build/Dockerfile --tag hadoucan-fw-tools
 
     - name: tag container
-      run: docker tag hadoucan-fw-tools docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:${GITHUB_REF##*/}
+      run: docker tag hadoucan-fw-tools $DOCKER_REPO:${GITHUB_REF##*/}
 
     - name: push container
-      run: docker push docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:${GITHUB_REF##*/}
+      run: docker push $DOCKER_REPO:${GITHUB_REF##*/}
 
     - name: build
       run: ./scripts/build_ci.sh
