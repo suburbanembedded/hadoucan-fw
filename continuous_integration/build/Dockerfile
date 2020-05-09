@@ -6,15 +6,11 @@ RUN apt-get update && apt-get install -y build-essential git cmake python python
 
 RUN groupadd buildbot && useradd --no-log-init --create-home --home-dir /home/buildbot -g buildbot buildbot
 
-USER buildbot
-WORKDIR /home/buildbot
-
-RUN wget http://download.atollic.com/TrueSTUDIO/installers/Atollic_TrueSTUDIO_for_STM32_linux_x86_64_v9.3.0_20190212-0734.tar.gz
-RUN tar -xzf Atollic_TrueSTUDIO_for_STM32_linux_x86_64_v9.3.0_20190212-0734.tar.gz
-WORKDIR /home/buildbot/Atollic_TrueSTUDIO_for_STM32_9.3.0_installer
-
 USER root
-RUN mkdir -p /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/ && tar -xzf install.data -C /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/
+RUN mkdir -p /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/
+RUN  wget -qO- http://download.atollic.com/TrueSTUDIO/installers/Atollic_TrueSTUDIO_for_STM32_linux_x86_64_v9.3.0_20190212-0734.tar.gz | \
+     tar -xz --to-stdout Atollic_TrueSTUDIO_for_STM32_9.3.0_installer/install.data | \
+     tar -xz -C /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/
 
 USER buildbot
 WORKDIR /home/buildbot
