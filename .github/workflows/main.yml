@@ -29,12 +29,5 @@ jobs:
     - name: push container
       run: docker push docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest
 
-    - name: configure
-      run: CONTAINER_ID=$(docker create -it docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest /bin/bash)
-      run: docker start $CONTAINER_ID
-      run: docker run -v $GITHUB_WORKSPACE:/tmp/workspace -it docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest /tmp/workspace/generate_cmake.sh
-
-
-    # - name: make
-    #   run: make -C $GITHUB_WORKSPACE/build/ram/release
-
+    - name: build
+      run: ./scripts/build_ci.sh
