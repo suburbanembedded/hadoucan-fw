@@ -30,3 +30,15 @@ jobs:
 
     - name: build
       run: ./scripts/build_ci.sh
+
+    - name: Upload debug artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: hadoucan-fw-debug
+        path: ${{ github.workspace }}/canusbfdiso-debug.tar.gz
+
+    - name: Upload release artifact elf
+      uses: actions/upload-artifact@v2
+      with:
+        name: hadoucan-fw-release
+        path: ${{ github.workspace }}/canusbfdiso-release.tar.gz
