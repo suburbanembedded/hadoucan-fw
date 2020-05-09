@@ -17,7 +17,7 @@ jobs:
     - name: login to docker.pkg.github.com
       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u jacobschloss --password-stdin
 
-    - name: build container
+    - name: fetch container
       run: docker pull docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest || true
 
     - name: build container
@@ -30,10 +30,10 @@ jobs:
       run: docker push docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest
 
     - name: configure
+      run: CONTAINER_ID=$(docker create -it docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest /bin/bash)
+      run: docker start $CONTAINER_ID
       run: docker run -v $GITHUB_WORKSPACE:/tmp/workspace -it docker.pkg.github.com/suburbanembedded/hadoucan-fw/hadoucan-fw-tools:latest /tmp/workspace/generate_cmake.sh
-      runs:
-        using: 'docker'
-        image: '../../continuous_integration/build/Dockerfile'
+
 
     # - name: make
     #   run: make -C $GITHUB_WORKSPACE/build/ram/release
