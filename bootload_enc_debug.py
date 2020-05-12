@@ -4,7 +4,25 @@ import os
 import sys
 import shutil
 import serial
-import argparse
+#import argparse
+
+def fastboot_sync(tty_port):
+
+	print 'Starting Sync'
+
+	tty_port.write('\r')
+	tty_port.flush()
+
+	tty_port.timeout = 1
+
+	temp = tty_port.read_until(size=128)
+	while not temp:
+		temp = tty_port.read_until(size=128)
+
+	tty_port.timeout = 10
+
+	print 'Sync Complete'
+
 
 def fastboot_send_file(tty_port, infile, outname):
 	img_info = os.stat(infile)
@@ -72,13 +90,15 @@ def main():
 
 	# args = parser.parse_args()
 
-	img_path = '/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/build/ram/debug/app.bin.enc'
-	aux_img_path = '/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/build/ram/debug/app.bin.enc.xml'
+	img_path     = 'build/ram/debug/hadoucan-fw/app.bin.enc'
+	aux_img_path = 'build/ram/debug/hadoucan-fw/app.bin.enc.xml'
 	tty_path = '/dev/ttyACM0'
 
 	tty_port = serial.Serial(tty_path, 115200, timeout=10)
 
 	print 'Device open'
+
+	fastboot_sync(tty_port)
 
 	fastboot_send_file(tty_port, img_path, 'app.bin.enc')
 	fastboot_send_file(tty_port, aux_img_path, 'app.bin.enc.xml')
