@@ -4,57 +4,104 @@ import os
 import sys
 import shutil
 import serial
+#import argparse
 
-img_path = '/mnt/helios_nfs/home/rounin/suburbanmarine/projects/can_usb_fw/build/ram/release/canusbfdiso.bin'
-tty_path = '/dev/ttyACM0'
+def fastboot_sync(tty_port):
 
-img_info = os.stat(img_path)
+	print 'Starting Sync'
 
-download_cmd = 'download:{0:08x}\r'.format(img_info.st_size)
-download_resp = 'DATA{0:08x}'.format(img_info.st_size)
-flash_cmd    = 'flash:app.bin\r'
-ok_resp      = 'OKAY'
+	tty_port.write('\r')
+	tty_port.flush()
 
-tty_port = serial.Serial(tty_path, 115200, timeout=10)
+	tty_port.timeout = 1
 
-print 'Device open'
+	temp = tty_port.read_until(size=128)
+	while not temp:
+		temp = tty_port.read_until(size=128)
 
-print 'Starting Download'
-tty_port.write(download_cmd)
-tty_port.flush()
-tty_line = tty_port.read_until(size=12)
+	tty_port.timeout = 10
 
-if tty_line != download_resp:
-	print 'lost dl start ok, expected {0} got {1}'.format(download_resp, tty_line)
-	sys.exit(-1)
+	print 'Sync Complete'
 
-img_file = open(img_path, 'rb')
-img_line = img_file.readline()
 
-while img_line:
-	tty_port.write(img_line)
+def fastboot_send_file(tty_port, infile, outname):
+	img_info = os.stat(infile)
+
+	download_cmd = 'download:{0:08x}\r'.format(img_info.st_size)
+	download_resp = 'DATA{0:08x}'.format(img_info.st_size)
+	flash_cmd    = 'flash:{0}\r'.format(outname)
+	ok_resp      = 'OKAY'
+
+	print 'Starting Download'
+	tty_port.write(download_cmd)
+	tty_port.flush()
+	tty_line = tty_port.read_until(size=12)
+
+	if tty_line != download_resp:
+		print 'lost dl start ok, expected {0} got {1}'.format(download_resp, tty_line)
+		sys.exit(-1)
+
+	img_file = open(infile, 'rb')
 	img_line = img_file.readline()
 
-img_file.close()
+	while img_line:
+		tty_port.write(img_line)
+		img_line = img_file.readline()
 
-tty_port.flush()
+	img_file.close()
 
-tty_line = tty_port.read_until(size=4)
-if tty_line != ok_resp:
-	print 'lost dl finish ok, got {0}'.format(tty_line)
-	sys.exit(-1)
+	tty_port.flush()
 
-print 'Download Complete'
+	tty_line = tty_port.read_until(size=4)
+	if tty_line != ok_resp:
+		print 'lost dl finish ok, got {0}'.format(tty_line)
+		sys.exit(-1)
 
-print 'Starting Flash'
+	print 'Download Complete'
 
-tty_port.write(flash_cmd)
-tty_port.flush()
+	print 'Starting Flash'
 
-tty_line = tty_port.read_until(size=4)
-if tty_line != ok_resp:
-	print 'lost flash ok, got {0}'.format(tty_line)
-	sys.exit(-1)
+	tty_port.write(flash_cmd)
+	tty_port.flush()
 
-print 'Flash complete'
-sys.exit(0)
+	tty_line = tty_port.read_until(size=4)
+	if tty_line != ok_resp:
+		print 'lost flash ok, got {0}'.format(tty_line)
+		sys.exit(-1)
+
+	print 'Flash complete'
+
+
+def main():
+	
+	# parser = argparse.ArgumentParser(description='Send new firmware to a SM-1301')
+
+	# parser.add_argument('--img', dest='img_path', action='store',
+	# 	default='app.bin.enc',
+	# 	help='Path to the encrypted firmwware image')
+
+	# parser.add_argument('--aux', dest='aux_img_path', action='store',
+	# 	default='app.bin.enc.xml',
+	# 	help='Path to the aux file')
+
+	# parser.add_argument('--tty', dest='tty_path', action='store',
+	# 	default='/dev/ttyACM0',
+	# 	help='A path to a serial port')
+
+	# args = parser.parse_args()
+
+	img_path = 'build/ram/release/app.bin'
+	tty_path = '/dev/ttyACM0'
+
+	tty_port = serial.Serial(tty_path, 115200, timeout=2)
+
+	print 'Device open'
+
+	fastboot_sync()
+
+	fastboot_send_file(tty_port, img_path, 'app.bin')
+
+	sys.exit(0)
+
+
+main()

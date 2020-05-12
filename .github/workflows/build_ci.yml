@@ -16,6 +16,8 @@ env:
 jobs:
   build:
 
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
     runs-on: ubuntu-18.04
     timeout-minutes: 30
 
@@ -50,13 +52,13 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: hadoucan-fw-debug
-        path: ${{ github.workspace }}/canusbfdiso-debug-${{ github.sha }}.tar.gz
+        path: ${{ github.workspace }}/hadoucan-fw-debug-${{ github.sha }}.tar.gz
 
     - name: Upload release artifacts
       uses: actions/upload-artifact@v2
       with:
         name: hadoucan-fw-release
-        path: ${{ github.workspace }}/canusbfdiso-release-${{ github.sha }}.tar.gz
+        path: ${{ github.workspace }}/hadoucan-fw-release-${{ github.sha }}.tar.gz
 
   release:
 
@@ -72,13 +74,13 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: hadoucan-fw-release
-        path: ${{ github.workspace }}/canusbfdiso-release-${{ github.sha }}.tar.gz
+        path: ${{ github.workspace }}/hadoucan-fw-release-${{ github.sha }}.tar.gz
 
     - name: Mangle name
-      run: mv canusbfdiso-release-${{ github.sha }}.tar.gz canusbfdiso-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
+      run: mv hadoucan-fw-release-${{ github.sha }}.tar.gz hadoucan-fw-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
 
     - name: Upload release artifacts
       uses: actions/upload-artifact@v2
       with:
         name: hadoucan-fw-release
-        path: ${{ github.workspace }}/canusbfdiso-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
+        path: ${{ github.workspace }}/hadoucan-fw-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
