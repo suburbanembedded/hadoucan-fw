@@ -44,7 +44,6 @@ extern "C"
 
 void Test_USB_Driver_task::work()
 {
-
 	for(;;)
 	{
 		if(!isr_mode)
