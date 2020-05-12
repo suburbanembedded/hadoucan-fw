@@ -38,11 +38,13 @@ bool Lawicel_parser::parse_std_id(const char* in_str, uint32_t* const id)
 	const int ret = sscanf(id_str.data(), "%x", &temp_id);
 	if(ret != 1)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_id", "sscanf failed");
 		return false;
 	}
 
 	if(temp_id > 0x7FF)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_id", "id invalid");
 		return false;
 	}
 
@@ -65,11 +67,13 @@ bool Lawicel_parser::parse_ext_id(const char* in_str, uint32_t* const id)
 	const int ret = sscanf(id_str.data(), "%x", &temp_id);
 	if(ret != 1)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_ext_id", "sscanf failed");
 		return false;
 	}
 
 	if(temp_id > 0x1FFFFFFF)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_ext_id", "id invalid");
 		return false;
 	}
 
@@ -87,12 +91,14 @@ bool Lawicel_parser::parse_std_dlc(const char dlc_char, uint8_t* const data_len)
 	CAN_DLC can_dlc;
 	if(!can_dlc.from_ascii(dlc_char))
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_dlc", "dlc invalid");
 		return false;	
 	}
 
 	const uint8_t len = can_dlc.to_len();
 	if(len > 8)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_dlc", "dlc > 8");
 		return false;
 	}
 
@@ -108,12 +114,14 @@ bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t data_len
 
 	if(data_len > 8)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_data", "data_len > 8");
 		return false;
 	}
 
 	const size_t data_str_len = strnlen(data_str, 16);
 	if(data_str_len < (data_len*2))
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_data", "data_str_len invalid for data_len");
 		return false;
 	}
 
@@ -122,6 +130,7 @@ bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t data_len
 		uint8_t d = 0;
 		if(!Byte_util::hex_to_byte(data_str+2*i, &d))
 		{
+			logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_data", "hex_to_byte failed");
 			return false;
 		}
 
@@ -140,12 +149,14 @@ bool Lawicel_parser::parse_fd_dlc(const char dlc_char, uint8_t* const data_len)
 	CAN_DLC can_dlc;
 	if(!can_dlc.from_ascii(dlc_char))
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_dlc", "dlc invalid");
 		return false;
 	}
 
 	const uint8_t len = can_dlc.to_len();
 	if(len > 64)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_dlc", "len > 64");
 		return false;
 	}
 
@@ -161,12 +172,14 @@ bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t data_len,
 
 	if(data_len > 64)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_data", "len > 64");
 		return false;
 	}
 
 	const size_t data_str_len = strnlen(data_str, 128);
 	if(data_str_len < (data_len*2))
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_data", "data_str_len invalid for data_len");
 		return false;
 	}
 
@@ -175,6 +188,7 @@ bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t data_len,
 		uint8_t d = 0;
 		if(!Byte_util::hex_to_byte(data_str+2*i, &d))
 		{
+			logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_data", "hex_to_byte failed");
 			return false;
 		}
 
