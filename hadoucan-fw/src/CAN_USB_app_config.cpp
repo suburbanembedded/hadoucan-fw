@@ -30,7 +30,7 @@ void CAN_USB_app_config::set_defualt()
 
 	m_config.protocol_ext_id = true;
 	m_config.protocol_fd = true;
-	m_config.protocol_brs = false;
+	m_config.protocol_brs = true;
 	m_config.protocol_fd_iso = true;
 
 	m_config.filter_accept_enable = false;
