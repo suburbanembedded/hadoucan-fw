@@ -38,11 +38,13 @@ bool Lawicel_parser::parse_std_id(const char* in_str, uint32_t* const id)
 	const int ret = sscanf(id_str.data(), "%x", &temp_id);
 	if(ret != 1)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_id", "sscanf failed");
 		return false;
 	}
 
 	if(temp_id > 0x7FF)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_id", "id invalid");
 		return false;
 	}
 
@@ -65,11 +67,13 @@ bool Lawicel_parser::parse_ext_id(const char* in_str, uint32_t* const id)
 	const int ret = sscanf(id_str.data(), "%x", &temp_id);
 	if(ret != 1)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_ext_id", "sscanf failed");
 		return false;
 	}
 
 	if(temp_id > 0x1FFFFFFF)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_ext_id", "id invalid");
 		return false;
 	}
 
@@ -87,12 +91,14 @@ bool Lawicel_parser::parse_std_dlc(const char dlc_char, uint8_t* const data_len)
 	CAN_DLC can_dlc;
 	if(!can_dlc.from_ascii(dlc_char))
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_dlc", "dlc invalid");
 		return false;	
 	}
 
 	const uint8_t len = can_dlc.to_len();
 	if(len > 8)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_dlc", "dlc > 8");
 		return false;
 	}
 
@@ -108,12 +114,14 @@ bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t data_len
 
 	if(data_len > 8)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_data", "data_len > 8");
 		return false;
 	}
 
 	const size_t data_str_len = strnlen(data_str, 16);
 	if(data_str_len < (data_len*2))
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_data", "data_str_len invalid for data_len");
 		return false;
 	}
 
@@ -122,6 +130,7 @@ bool Lawicel_parser::parse_std_data(const char* data_str, const uint8_t data_len
 		uint8_t d = 0;
 		if(!Byte_util::hex_to_byte(data_str+2*i, &d))
 		{
+			logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_std_data", "hex_to_byte failed");
 			return false;
 		}
 
@@ -140,12 +149,14 @@ bool Lawicel_parser::parse_fd_dlc(const char dlc_char, uint8_t* const data_len)
 	CAN_DLC can_dlc;
 	if(!can_dlc.from_ascii(dlc_char))
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_dlc", "dlc invalid");
 		return false;
 	}
 
 	const uint8_t len = can_dlc.to_len();
 	if(len > 64)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_dlc", "len > 64");
 		return false;
 	}
 
@@ -161,12 +172,14 @@ bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t data_len,
 
 	if(data_len > 64)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_data", "len > 64");
 		return false;
 	}
 
 	const size_t data_str_len = strnlen(data_str, 128);
 	if(data_str_len < (data_len*2))
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_data", "data_str_len invalid for data_len");
 		return false;
 	}
 
@@ -175,6 +188,7 @@ bool Lawicel_parser::parse_fd_data(const char* data_str, const uint8_t data_len,
 		uint8_t d = 0;
 		if(!Byte_util::hex_to_byte(data_str+2*i, &d))
 		{
+			logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_fd_data", "hex_to_byte failed");
 			return false;
 		}
 
@@ -261,6 +275,16 @@ bool Lawicel_parser::parse_string(const char* in_str)
 		case 'D':
 		{
 			ret = parse_tx_fd_ext(in_str);
+			break;
+		}
+		case 'b':
+		{
+			ret = parse_tx_fd_std_brs(in_str);
+			break;
+		}
+		case 'B':
+		{
+			ret = parse_tx_fd_ext_brs(in_str);
 			break;
 		}
 		case 'F':
@@ -920,7 +944,7 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 	
 	if(in_str[0] != 'D')
 	{
-		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "in_str[0] != 'd'");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext", "in_str[0] != 'D'");
 
 		write_bell();
 		return false;
@@ -990,6 +1014,203 @@ bool Lawicel_parser::parse_tx_fd_ext(const char* in_str)
 		default:
 		{
 			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_tx_fd_ext", "m_poll_mode invalid");
+
+			write_bell();
+			success = false;
+			break;
+		}
+	}
+
+	return success;
+}
+
+bool Lawicel_parser::parse_tx_fd_std_brs(const char* in_str)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_fd_std_brs", "");
+
+	//diiil\r
+	const size_t in_str_len = strlen(in_str);
+
+	if(in_str_len < 6)
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std_brs", "in_str_len < 6");
+
+		write_bell();
+		return false;
+	}
+	
+	if(in_str[0] != 'b')
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std_brs", "in_str[0] != 'b'");
+
+		write_bell();
+		return false;
+	}
+
+	uint32_t id = 0;
+	if(!parse_std_id(in_str, &id))
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std_brs", "parse_std_id failed");
+
+		write_bell();
+		return false;
+	}
+
+	//diiil
+	uint8_t data_len = 0;
+	if(!parse_fd_dlc(in_str[4], &data_len))
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std_brs", "parse_fd_dlc failed");
+
+		write_bell();
+		return false;
+	}
+
+	//verify len
+	const size_t expected_len = 1U+3U+1U+2U*data_len+1U;
+	if(in_str_len != expected_len)
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std_brs", "len verify failed, expected %u, got %u", expected_len, in_str_len);
+
+		write_bell();
+		return false;
+	}
+
+	std::array<uint8_t, 64> data;
+	if(!parse_fd_data(in_str+5, data_len, &data))
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std_brs", "parse_fd_data failed");
+
+		write_bell();
+		return false;
+	}
+
+	if(!handle_tx_fd_std_brs(id, data_len, data.data()))
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_std_brs", "handle_tx_fd_std_brs failed");
+
+		write_bell();
+		return false;
+	}
+
+	bool success = false;
+	switch(m_poll_mode)
+	{
+		case POLL_MODE::MANUAL:
+		{
+			write_cr();
+			success = true;
+			break;
+		}
+		case POLL_MODE::AUTO:
+		{
+			write_string("z\r");
+			success = true;
+			break;
+		}
+		default:
+		{
+			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_tx_fd_std_brs", "m_poll_mode invalid");
+
+			write_bell();
+			success = false;
+			break;
+		}
+	}
+
+	return success;
+}
+bool Lawicel_parser::parse_tx_fd_ext_brs(const char* in_str)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_tx_fd_ext_brs", "");
+
+	//diiiiiiiil\r
+	const size_t in_str_len = strlen(in_str);
+
+	if(in_str_len < 11)
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext_brs", "in_str_len < 11");
+
+		write_bell();
+		return false;
+	}
+	
+	if(in_str[0] != 'B')
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext_brs", "in_str[0] != 'B'");
+
+		write_bell();
+		return false;
+	}
+
+	uint32_t id = 0;
+	if(!parse_ext_id(in_str, &id))
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext_brs", "parse_std_id failed");
+
+		write_bell();
+		return false;
+	}
+
+	//diiil
+	uint8_t data_len = 0;
+	if(!parse_fd_dlc(in_str[9], &data_len))
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext_brs", "parse_fd_dlc failed");
+
+		write_bell();
+		return false;
+	}
+
+	//verify len
+	const size_t expected_len = 1U+8U+1U+2U*data_len+1U;
+	if(in_str_len != expected_len)
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext_brs", "len verify failed, expected %u, got %u", expected_len, in_str_len);
+
+		write_bell();
+		return false;
+	}
+
+	std::array<uint8_t, 64> data;
+	if(!parse_fd_data(in_str+10, data_len, &data))
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext_brs", "parse_fd_data failed");
+
+		write_bell();
+		return false;
+	}
+
+	if(!handle_tx_fd_ext_brs(id, data_len, data.data()))
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_tx_fd_ext_brs", "handle_tx_fd_ext_brs failed");
+
+		write_bell();
+		return false;
+	}
+
+	bool success = false;
+	switch(m_poll_mode)
+	{
+		case POLL_MODE::MANUAL:
+		{
+			write_cr();
+			success = true;
+			break;
+		}
+		case POLL_MODE::AUTO:
+		{
+			write_string("z\r");
+			success = true;
+			break;
+		}
+		default:
+		{
+			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_tx_fd_ext_brs", "m_poll_mode invalid");
 
 			write_bell();
 			success = false;

@@ -319,7 +319,7 @@ bool Lawicel_parser_stm32::handle_tx_fd_std(const uint32_t id, const uint8_t dat
 
 	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_std", "");
 
-	if(m_fdcan->tx_fd_std(id, STM32_fdcan_tx::BRS::ON, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
+	if(m_fdcan->tx_fd_std(id, STM32_fdcan_tx::BRS::OFF, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
 	{
 		return false;
 	}
@@ -333,6 +333,36 @@ bool Lawicel_parser_stm32::handle_tx_fd_ext(const uint32_t id, const uint8_t dat
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
 	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_ext", "");
+
+	if(m_fdcan->tx_fd_ext(id, STM32_fdcan_tx::BRS::OFF, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
+	{
+		return false;
+	}
+
+	//update led status
+	led_task.notify_can_tx();
+	return true;
+}
+bool Lawicel_parser_stm32::handle_tx_fd_std_brs(const uint32_t id, const uint8_t data_len, const uint8_t* data)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_std_brs", "");
+
+	if(m_fdcan->tx_fd_std(id, STM32_fdcan_tx::BRS::ON, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
+	{
+		return false;
+	}
+
+	//update led status
+	led_task.notify_can_tx();
+	return true;
+}
+bool Lawicel_parser_stm32::handle_tx_fd_ext_brs(const uint32_t id, const uint8_t data_len, const uint8_t* data)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_ext_brs", "");
 
 	if(m_fdcan->tx_fd_ext(id, STM32_fdcan_tx::BRS::ON, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
 	{
