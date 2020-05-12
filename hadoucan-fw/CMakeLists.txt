@@ -1,3 +1,4 @@
+
 add_executable(hadoucan-fw.elf
 	src/system_stm32h7xx.c
 
@@ -122,4 +123,9 @@ add_custom_target(upload_hadoucan-fw
 	DEPENDS hadoucan-fw.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM
+)
+
+doxygen_add_docs(hadoucan-fw_docs
+	include/
+	src/
 )

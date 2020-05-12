@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 RUN apt-get update && apt-get install -y wget rsync libc6-i386 libusb-0.1-4 libwebkitgtk-3.0-0 libncurses5
 
-RUN apt-get update && apt-get install -y build-essential git cmake python python-serial
+RUN apt-get update && apt-get install -y build-essential git cmake python python-serial doxygen graphviz mscgen
 
 RUN groupadd buildbot && useradd --no-log-init --create-home --home-dir /home/buildbot -g buildbot buildbot
 
