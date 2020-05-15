@@ -106,76 +106,43 @@ bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, s
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 		
-	bool success = false;
 	char cmd = '\0';
 
 	if(rxheader.FDFormat == FDCAN_CLASSIC_CAN)
 	{
 		if(rxheader.RxFrameType == FDCAN_DATA_FRAME)
 		{
-			if(rxheader.IdType == FDCAN_STANDARD_ID)
-			{
-				cmd = 't';
-				success = true;
-			}
-			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
-			{
-				cmd = 'T';
-				success = true;
-			}
+			cmd = 't';
 		}
 		else if(rxheader.RxFrameType == FDCAN_REMOTE_FRAME)
 		{
-			if(rxheader.IdType == FDCAN_STANDARD_ID)
-			{
-				cmd = 'r';
-				success = true;
-			}
-			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
-			{
-				cmd = 'R';
-				success = true;
-			}
+			cmd = 'r';
 		}
 	}
 	else if(rxheader.FDFormat == FDCAN_FD_CAN)
 	{
-		if(rxheader.BitRateSwitch == FDCAN_BRS_ON)
+		if(rxheader.RxFrameType == FDCAN_DATA_FRAME)
 		{
-			if(rxheader.RxFrameType == FDCAN_DATA_FRAME)
+			if(rxheader.BitRateSwitch == FDCAN_BRS_ON)
 			{
-				if(rxheader.IdType == FDCAN_STANDARD_ID)
-				{
-					cmd = 'b';
-					success = true;
-				}
-				else if(rxheader.IdType == FDCAN_EXTENDED_ID)
-				{
-					cmd = 'B';
-					success = true;
-				}
-			}			
-		}
-		else
-		{
-			if(rxheader.RxFrameType == FDCAN_DATA_FRAME)
+				cmd = 'b';
+			}
+			else
 			{
-				if(rxheader.IdType == FDCAN_STANDARD_ID)
-				{
-					cmd = 'd';
-					success = true;
-				}
-				else if(rxheader.IdType == FDCAN_EXTENDED_ID)
-				{
-					cmd = 'D';
-					success = true;
-				}
+				cmd = 'd';
 			}
 		}
 	}
 
+	const bool success = cmd != '\0';
 	if(success)
 	{
+		if(rxheader.IdType == FDCAN_EXTENDED_ID)
+		{
+			//convert to uppercase for EXT ID
+			cmd = cmd | 0x20;
+		}
+		
 		s->push_back(cmd);
 	}
 	else
