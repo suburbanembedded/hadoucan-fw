@@ -125,7 +125,9 @@ add_custom_target(upload_hadoucan-fw
 	VERBATIM
 )
 
-doxygen_add_docs(hadoucan-fw_docs
-	include/
-	src/
-)
+if(DEFINED Doxygen::doxygen)
+	doxygen_add_docs(hadoucan-fw_docs
+		include/
+		src/
+	)
+endif()
