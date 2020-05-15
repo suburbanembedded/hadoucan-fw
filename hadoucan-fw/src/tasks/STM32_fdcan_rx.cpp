@@ -107,6 +107,7 @@ bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, s
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 		
 	bool success = false;
+	char cmd = '\0';
 
 	if(rxheader.FDFormat == FDCAN_CLASSIC_CAN)
 	{
@@ -114,12 +115,12 @@ bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, s
 		{
 			if(rxheader.IdType == FDCAN_STANDARD_ID)
 			{
-				s->push_back('t');
+				cmd = 't';
 				success = true;
 			}
 			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
 			{
-				s->push_back('T');
+				cmd = 'T';
 				success = true;
 			}
 		}
@@ -127,34 +128,57 @@ bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, s
 		{
 			if(rxheader.IdType == FDCAN_STANDARD_ID)
 			{
-				s->push_back('r');
+				cmd = 'r';
 				success = true;
 			}
 			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
 			{
-				s->push_back('R');
+				cmd = 'R';
 				success = true;
 			}
 		}
 	}
 	else if(rxheader.FDFormat == FDCAN_FD_CAN)
 	{
-		if(rxheader.RxFrameType == FDCAN_DATA_FRAME)
+		if(rxheader.BitRateSwitch == FDCAN_BRS_ON)
 		{
-			if(rxheader.IdType == FDCAN_STANDARD_ID)
+			if(rxheader.RxFrameType == FDCAN_DATA_FRAME)
 			{
-				s->push_back('d');
-				success = true;
-			}
-			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
+				if(rxheader.IdType == FDCAN_STANDARD_ID)
+				{
+					cmd = 'b';
+					success = true;
+				}
+				else if(rxheader.IdType == FDCAN_EXTENDED_ID)
+				{
+					cmd = 'B';
+					success = true;
+				}
+			}			
+		}
+		else
+		{
+			if(rxheader.RxFrameType == FDCAN_DATA_FRAME)
 			{
-				s->push_back('D');
-				success = true;
+				if(rxheader.IdType == FDCAN_STANDARD_ID)
+				{
+					cmd = 'd';
+					success = true;
+				}
+				else if(rxheader.IdType == FDCAN_EXTENDED_ID)
+				{
+					cmd = 'D';
+					success = true;
+				}
 			}
 		}
 	}
 
-	if(!success)
+	if(success)
+	{
+		s->push_back(cmd);
+	}
+	else
 	{
 		logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_rx::append_packet_type", "Illegal frame");
 	}
