@@ -49,6 +49,8 @@ https://suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_Quickstart_Guide.pdf
 
 https://www.tindie.com/products/suburbanembedded/hadou-can-usb-can-fd-adapter/
 
+https://www.digikey.com/product-detail/en/suburban-embedded/SM-1301-C01-ENC/2587-SM-1301-C01-ENC-ND/12149330
+
 ## Copyright
 
 Copyright (c) 2018-2020 Suburban Embedded
