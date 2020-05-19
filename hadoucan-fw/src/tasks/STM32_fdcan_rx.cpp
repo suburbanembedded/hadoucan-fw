@@ -472,6 +472,8 @@ void STM32_fdcan_rx::work()
 
 void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_WATERMARK) != 0U)
 	{
 		//update led status
@@ -489,6 +491,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 				if(!m_can_fd_queue.push_back_isr(pk))
 				{
 					//TODO: assert? WD reset?
+					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "can_fifo0_callback m_can_fd_queue push failed");
 				}
 			}
 			else
@@ -501,7 +504,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 		//turn isr back on
 		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK, 0) != HAL_OK)
 		{
-
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "HAL_FDCAN_ActivateNotification FDCAN_IT_RX_FIFO0_WATERMARK failed");
 		}
 	}
 
@@ -516,7 +519,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 		m_can_fifo0_msg_lost++;
 		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_MESSAGE_LOST, 0) != HAL_OK)
 		{
-
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "HAL_FDCAN_ActivateNotification FDCAN_IT_RX_FIFO0_MESSAGE_LOST failed");
 		}
 	}
 }
