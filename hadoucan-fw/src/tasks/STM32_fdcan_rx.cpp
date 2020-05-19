@@ -140,7 +140,7 @@ bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, s
 		if(rxheader.IdType == FDCAN_EXTENDED_ID)
 		{
 			//convert to uppercase for EXT ID
-			cmd = cmd | 0x20;
+			cmd = Byte_util::ascii_to_upper(cmd);
 		}
 		
 		s->push_back(cmd);
