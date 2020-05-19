@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.5)
 
 project(hadoucan-fw C CXX ASM)
 
+find_package(Doxygen
+             REQUIRED dot
+             OPTIONAL_COMPONENTS mscgen)
+
 set(INSTALL_GTEST OFF)
 
 add_definitions(
