@@ -105,7 +105,7 @@ void System_mon_task::work()
 			continue;
 		}
 
-		vTaskDelay(pdMS_TO_TICKS(1000));
+		vTaskDelay(pdMS_TO_TICKS(5000));
 
 		tasks_b.resize(uxTaskGetNumberOfTasks());
 		uint32_t runtime_b = 0;
