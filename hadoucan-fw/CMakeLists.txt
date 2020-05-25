@@ -11,6 +11,7 @@ add_executable(hadoucan-fw.elf
 	src/main.cpp
 	src/main_cube.c
 	src/hal_inst.c
+	src/sw_ver.cpp
 
 	src/global_app_inst.cpp
 
@@ -41,6 +42,11 @@ add_executable(hadoucan-fw.elf
 	src/CAN_USB_app.cpp
 	src/CAN_USB_app_config.cpp
 	src/CAN_USB_app_bitrate_table.cpp
+)
+
+target_compile_definitions(hadoucan-fw.elf
+	PRIVATE
+		-DGIT_SHA1="${GIT_SHA1}"
 )
 
 target_include_directories(hadoucan-fw.elf PUBLIC
