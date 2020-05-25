@@ -1,6 +1,7 @@
 #include "Main_task.hpp"
 
 #include "global_app_inst.hpp"
+#include "sw_ver.hpp"
 
 #include "Task_instances.hpp"
 
@@ -45,6 +46,8 @@ void Main_task::work()
 		logger->log(LOG_LEVEL::INFO, "main", "CAN FD <-> USB Adapter");
 		logger->log(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
 		logger->log(LOG_LEVEL::INFO, "main", "S/N: %s", usb_id_str.data());
+		logger->log(LOG_LEVEL::INFO, "main", "Version: %d.%d.%d", SW_VER_MAJOR, SW_VER_MINOR, SW_VER_PATCH);
+		logger->log(LOG_LEVEL::INFO, "main", "Commit: %s", GIT_COMMIT);
 	}
 	{
 		const uint32_t idcode = DBGMCU->IDCODE;
