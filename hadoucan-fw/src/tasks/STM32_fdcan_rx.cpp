@@ -106,55 +106,46 @@ bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, s
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 		
-	bool success = false;
+	char cmd = '\0';
 
 	if(rxheader.FDFormat == FDCAN_CLASSIC_CAN)
 	{
 		if(rxheader.RxFrameType == FDCAN_DATA_FRAME)
 		{
-			if(rxheader.IdType == FDCAN_STANDARD_ID)
-			{
-				s->push_back('t');
-				success = true;
-			}
-			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
-			{
-				s->push_back('T');
-				success = true;
-			}
+			cmd = 't';
 		}
 		else if(rxheader.RxFrameType == FDCAN_REMOTE_FRAME)
 		{
-			if(rxheader.IdType == FDCAN_STANDARD_ID)
-			{
-				s->push_back('r');
-				success = true;
-			}
-			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
-			{
-				s->push_back('R');
-				success = true;
-			}
+			cmd = 'r';
 		}
 	}
 	else if(rxheader.FDFormat == FDCAN_FD_CAN)
 	{
 		if(rxheader.RxFrameType == FDCAN_DATA_FRAME)
 		{
-			if(rxheader.IdType == FDCAN_STANDARD_ID)
+			if(rxheader.BitRateSwitch == FDCAN_BRS_ON)
 			{
-				s->push_back('d');
-				success = true;
+				cmd = 'b';
 			}
-			else if(rxheader.IdType == FDCAN_EXTENDED_ID)
+			else
 			{
-				s->push_back('D');
-				success = true;
+				cmd = 'd';
 			}
 		}
 	}
 
-	if(!success)
+	const bool success = cmd != '\0';
+	if(success)
+	{
+		if(rxheader.IdType == FDCAN_EXTENDED_ID)
+		{
+			//convert to uppercase for EXT ID
+			cmd = Byte_util::ascii_to_upper(cmd);
+		}
+		
+		s->push_back(cmd);
+	}
+	else
 	{
 		logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_rx::append_packet_type", "Illegal frame");
 	}
@@ -481,6 +472,8 @@ void STM32_fdcan_rx::work()
 
 void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_WATERMARK) != 0U)
 	{
 		//update led status
@@ -498,6 +491,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 				if(!m_can_fd_queue.push_back_isr(pk))
 				{
 					//TODO: assert? WD reset?
+					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "can_fifo0_callback m_can_fd_queue push failed");
 				}
 			}
 			else
@@ -510,7 +504,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 		//turn isr back on
 		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK, 0) != HAL_OK)
 		{
-
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "HAL_FDCAN_ActivateNotification FDCAN_IT_RX_FIFO0_WATERMARK failed");
 		}
 	}
 
@@ -525,7 +519,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 		m_can_fifo0_msg_lost++;
 		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_MESSAGE_LOST, 0) != HAL_OK)
 		{
-
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "HAL_FDCAN_ActivateNotification FDCAN_IT_RX_FIFO0_MESSAGE_LOST failed");
 		}
 	}
 }
