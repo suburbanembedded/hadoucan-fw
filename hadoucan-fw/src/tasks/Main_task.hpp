@@ -13,6 +13,8 @@
 class Main_task : public Task_static<2048>
 {
 public:
+	Main_task();
+
 	void work() override;
 
 	bool init_usb();
@@ -22,13 +24,18 @@ public:
 	bool load_config();
 
 	static bool handle_usb_set_config_thunk(void* ctx, const uint16_t config);
+	static void handle_usb_reset_thunk(void* ctx);
 
 protected:
 	
 	bool handle_usb_set_config(const uint8_t config);
+	void handle_usb_reset();
 
 	void get_unique_id(std::array<uint32_t, 3>* id);
 	void get_unique_id_str(std::array<char, 25>* id_str);
+
+	static void sw_reset();
+	static void jump_to_addr(uint32_t estack, uint32_t jump_addr);
 
 	Descriptor_table usb_desc_table;
 	std::array<char, 25> usb_id_str;//this is read by the usb core, and sent as a descriptor payload
@@ -36,6 +43,9 @@ protected:
 	Buffer_adapter_rx m_rx_buf_adapter;
 	std::vector<uint8_t> m_tx_buf;
 	Buffer_adapter_tx m_tx_buf_adapter;
+
+	//only enumerate once, if told to reset again cause an actual sw reset
+	bool has_enumerated;
 };
 
 extern USB_core         usb_core;

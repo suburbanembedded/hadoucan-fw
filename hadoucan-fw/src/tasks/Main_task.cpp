@@ -31,6 +31,11 @@ namespace
 	}
 }
 
+Main_task::Main_task()
+{
+	has_enumerated = false;
+}
+
 void Main_task::work()
 {
 	{
@@ -374,7 +379,8 @@ bool Main_task::init_usb()
 
 	usb_core.set_usb_class(&usb_cdc);
 	usb_core.set_descriptor_table(&usb_desc_table);
-	usb_core.set_config_callback(&handle_usb_set_config_thunk, this);
+	usb_core.set_config_callback(&Main_task::handle_usb_set_config_thunk, this);
+	usb_core.set_reset_callback(&Main_task::handle_usb_reset_thunk, this);
 
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -626,7 +632,6 @@ bool Main_task::handle_usb_set_config(const uint8_t config)
 {
 	bool ret = false;
 
-
 	switch(config)
 	{
 		case 0:
@@ -688,4 +693,199 @@ bool Main_task::handle_usb_set_config(const uint8_t config)
 	}
 
 	return ret;
+}
+
+void Main_task::handle_usb_reset_thunk(void* ctx)
+{
+	static_cast<Main_task*>(ctx)->handle_usb_reset();	
+}
+void Main_task::handle_usb_reset()
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	logger->log(LOG_LEVEL::DEBUG, "main", "Reset callback");
+
+	//stall all user ep
+	// logger->log(LOG_LEVEL::DEBUG, "main", "set_config(0)");
+	// handle_usb_set_config(0);
+
+	//the race condition might be that 
+	// - no check is made for active rx or tx buffer on ep config
+	// - driver assumes no pending tx activity on ep config / enumeration. first tx transaction is not started automatically
+	// ++ probably remove buffer management from the driver, have app thread call write and read?
+	// ++ just have a semaphore per ep for if it is idle?
+
+	//could disable usb core, lock usb io threads, force reset all the buffers, enable usb core, unlock usb io threads
+
+	//stop application
+
+	//reset buffers
+}
+
+void Main_task::sw_reset()
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	volatile uint8_t* const axi_base = reinterpret_cast<volatile uint8_t*>(0x24000000);
+
+	uint32_t app_estack = 0;
+	uint32_t app_reset_handler = 0;
+	std::copy_n(axi_base, sizeof(app_estack), reinterpret_cast<uint8_t*>(&app_estack));
+	std::copy_n(axi_base + sizeof(app_estack), sizeof(app_reset_handler), reinterpret_cast<uint8_t*>(&app_reset_handler));
+
+	jump_to_addr(app_estack, app_reset_handler);
+
+	logger->log(LOG_LEVEL::FATAL, "main", "SW reset failed");
+	for(;;)
+	{
+
+	}
+}
+
+void Main_task::jump_to_addr(uint32_t estack, uint32_t jump_addr)
+{
+	//Disable ISR, sync
+	asm volatile(
+		"cpsid i\n"
+		"dsb 0xF\n"
+		"isb 0xF\n"
+		: /* no out */
+		: /* no in */
+		: "memory"
+		);
+
+	//Disable Cache
+	SCB_DisableDCache();
+	SCB_DisableICache();
+
+	//Invalidate Cache
+	// SCB_InvalidateDCache();
+	// SCB_InvalidateICache();
+
+	//Sync
+	asm volatile(
+		"dsb 0xF\n"
+		"isb 0xF\n"
+		: /* no out */
+		: /* no in */
+		: "memory"
+		);
+
+	//http://www.keil.com/support/docs/3913.htm
+
+	NVIC->ICER[ 0 ] = 0xFFFFFFFF;
+	NVIC->ICER[ 1 ] = 0xFFFFFFFF;
+	NVIC->ICER[ 2 ] = 0xFFFFFFFF;
+	NVIC->ICER[ 3 ] = 0xFFFFFFFF;
+	NVIC->ICER[ 4 ] = 0xFFFFFFFF;
+	NVIC->ICER[ 5 ] = 0xFFFFFFFF;
+	NVIC->ICER[ 6 ] = 0xFFFFFFFF;
+	NVIC->ICER[ 7 ] = 0xFFFFFFFF;
+
+	//disable and reset peripherals
+	__HAL_RCC_AHB1_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_AHB1_RELEASE_RESET();
+	__HAL_RCC_AHB2_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_AHB2_RELEASE_RESET();
+
+	//we can't bulk reset AHB3 because that resets the cpu and fmc
+	// __HAL_RCC_AHB3_FORCE_RESET();
+	// __HAL_RCC_AHB3_RELEASE_RESET();
+	__HAL_RCC_MDMA_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_MDMA_RELEASE_RESET();
+	__HAL_RCC_DMA2D_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_DMA2D_RELEASE_RESET();
+	__HAL_RCC_JPGDECRST_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_JPGDECRST_RELEASE_RESET();
+	// __HAL_RCC_FMC_FORCE_RESET();
+	// __HAL_RCC_FMC_RELEASE_RESET();
+	__HAL_RCC_QSPI_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_QSPI_RELEASE_RESET();
+	__HAL_RCC_SDMMC1_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_SDMMC1_RELEASE_RESET();
+	// __HAL_RCC_CPU_FORCE_RESET();
+	// __HAL_RCC_CPU_RELEASE_RESET();
+
+	__HAL_RCC_AHB4_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_AHB4_RELEASE_RESET();
+
+	__HAL_RCC_APB1L_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_APB1L_RELEASE_RESET();
+	__HAL_RCC_APB1H_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_APB1H_RELEASE_RESET();
+	__HAL_RCC_APB2_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_APB2_RELEASE_RESET();
+	__HAL_RCC_APB3_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_APB3_RELEASE_RESET();
+	__HAL_RCC_APB4_FORCE_RESET();
+	asm volatile("dsb 0xF\n" : /* no out */	: /* no in */ : "memory");
+	__HAL_RCC_APB4_RELEASE_RESET();
+
+	//Sync
+	asm volatile(
+		"dsb 0xF\n"
+		"isb 0xF\n"
+		: /* no out */
+		: /* no in */
+		: "memory"
+		);
+
+	NVIC->ICPR[ 0 ] = 0xFFFFFFFF;
+	NVIC->ICPR[ 1 ] = 0xFFFFFFFF;
+	NVIC->ICPR[ 2 ] = 0xFFFFFFFF;
+	NVIC->ICPR[ 3 ] = 0xFFFFFFFF;
+	NVIC->ICPR[ 4 ] = 0xFFFFFFFF;
+	NVIC->ICPR[ 5 ] = 0xFFFFFFFF;
+	NVIC->ICPR[ 6 ] = 0xFFFFFFFF;
+	NVIC->ICPR[ 7 ] = 0xFFFFFFFF;
+
+	HAL_RCC_DeInit();
+
+	SysTick->CTRL = 0;
+	SCB->ICSR |= SCB_ICSR_PENDSTCLR_Msk;
+	SysTick->LOAD = 0;
+	SysTick->VAL = 0;
+
+	//TODO - scrub ram?
+
+	//Disable MPU
+	HAL_MPU_Disable();
+
+	//Sync
+	asm volatile(
+		"dsb 0xF\n"
+		"isb 0xF\n"
+		: /* no out */
+		: /* no in */
+		: "memory"
+		);
+
+	__set_CONTROL(0);
+	__set_MSP(estack);
+
+	asm volatile(
+		"dsb 0xF\n"
+		"isb 0xF\n"
+		"bx %[jump]\n"
+	: /* no out */
+	: [jump] "r" (jump_addr)
+	: "memory"
+	);
+
+	//should never reach here
+	for(;;)
+	{
+
+	}
 }
