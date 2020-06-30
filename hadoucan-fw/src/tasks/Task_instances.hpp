@@ -8,6 +8,7 @@
 #include "Timesync_task.hpp"
 #include "USB_lawicel_task.hpp"
 #include "USB_poll.hpp"
+#include "Packet_pulse_task.hpp"
 
 extern USB_rx_buffer_task usb_rx_buffer_task;
 extern USB_tx_buffer_task usb_tx_buffer_task;
@@ -25,3 +26,5 @@ extern System_mon_task system_mon_task;
 extern STM32_fdcan_rx stm32_fdcan_rx_task;
 
 extern Main_task main_task;
+
+extern Packet_pulse_task packet_pulse_task;

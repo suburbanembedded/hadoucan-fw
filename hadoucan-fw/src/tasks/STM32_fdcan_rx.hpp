@@ -25,6 +25,8 @@ public:
 
 		std::atomic_init(&m_can_fifo1_full, false);
 		std::atomic_init(&m_can_fifo1_msg_lost, 0U);
+
+		std::atomic_init(&m_local_rx_packet_counter, 0U);
 	}
 
 	typedef std::function<bool (const std::string str)> PacketRXCallback;
@@ -55,9 +57,14 @@ public:
 	void can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs);
 	void can_fifo1_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs);
 
+	unsigned int get_reset_packet_count()
+	{
+		return m_local_rx_packet_counter.exchange(0U);
+	}
+
 protected:
 
-
+	std::atomic_uint m_local_rx_packet_counter;
 
 	static bool append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, std::string* const s);
 	static bool append_packet_id(const FDCAN_RxHeaderTypeDef& rxheader, std::string* const s);

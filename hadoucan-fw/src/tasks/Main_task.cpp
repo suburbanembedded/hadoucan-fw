@@ -113,7 +113,7 @@ void Main_task::work()
 
 	//timesync processing
 	//currently config then no-op
-	timesync_task.launch("timesync", 1);
+	//timesync_task.launch("timesync", 1);
 
 	//led blink/strobe
 	led_task.launch("led", 1);
@@ -127,6 +127,9 @@ void Main_task::work()
 	test_usb_core.launch("usb_core", 1);
 	test_usb_cdc.launch("usb_cdc", 1);
 	test_usb_drvr.launch("usb_drvr", 1);
+
+	//packet clocking
+	packet_pulse_task.launch("packets", 0);
 
 	//CPU load & stack info
 	system_mon_task.launch("SysMon", 2);

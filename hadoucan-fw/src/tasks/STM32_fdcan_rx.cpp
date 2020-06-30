@@ -364,18 +364,19 @@ void STM32_fdcan_rx::work()
 		//if we didn't sleep because we should poll, or we woke up due to timeout, check the fifo
 		if(!queue_set_pk)
 		{
-			if(HAL_FDCAN_GetRxMessage(m_fdcan_handle, FDCAN_RX_FIFO0, &pk.rxheader, pk.data.data()) != HAL_OK)
-			{
-				//no data in hw fifo either, go back to sleep
-				continue;
-			}
-			else
+			if(HAL_FDCAN_GetRxMessage(m_fdcan_handle, FDCAN_RX_FIFO0, &pk.rxheader, pk.data.data()) == HAL_OK)
 			{
 				//there was a packet
 				//update led status
 				led_task.notify_can_rx();
 			}		
+			else
+			{
+				//no data in hw fifo either, go back to sleep
+				continue;
+			}
 		}
+
 
 		//check more flags
 		//re-enable fifo full after we deque to try and avoid isr race
@@ -411,6 +412,11 @@ void STM32_fdcan_rx::work()
 					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "Could not reenable FDCAN_IT_RX_FIFO0_FULL");
 				}
 			}
+		}
+
+		//increment packet counter
+		{
+			m_local_rx_packet_counter++;
 		}
 
 		//stringify the packet

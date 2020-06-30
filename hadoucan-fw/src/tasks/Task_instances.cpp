@@ -16,3 +16,5 @@ USB_tx_buffer_task usb_tx_buffer_task __attribute__(( section(".ram_dtcm_noload"
 Test_USB_Core_task test_usb_core   __attribute__(( section(".ram_dtcm_noload") ));
 Test_USB_CDC_task  test_usb_cdc    __attribute__(( section(".ram_dtcm_noload") ));
 Test_USB_Driver_task test_usb_drvr __attribute__(( section(".ram_dtcm_noload") ));
+
+Packet_pulse_task packet_pulse_task __attribute__(( section(".ram_dtcm_noload") ));

@@ -38,6 +38,7 @@ add_executable(hadoucan-fw.elf
 	src/tasks/USB_lawicel_task.cpp
 	src/tasks/USB_poll.cpp
 	src/tasks/System_mon_task.cpp
+	src/tasks/Packet_pulse_task.cpp
 
 	src/CAN_USB_app.cpp
 	src/CAN_USB_app_config.cpp
