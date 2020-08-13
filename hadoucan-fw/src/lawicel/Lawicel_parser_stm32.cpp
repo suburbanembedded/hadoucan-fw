@@ -186,7 +186,7 @@ bool Lawicel_parser_stm32::handle_open()
 
 		if(config.get_config().listen_only)
 		{
-			config.get_config().timestamp_enable = false;
+			config.get_config().listen_only = false;
 		
 			if(!can_usb_app.write_config(config))
 			{
@@ -219,7 +219,7 @@ bool Lawicel_parser_stm32::handle_open_listen()
 
 		if(!config.get_config().listen_only)
 		{
-			config.get_config().timestamp_enable = true;
+			config.get_config().listen_only = true;
 			
 			if(!can_usb_app.write_config(config))
 			{
@@ -235,7 +235,7 @@ bool Lawicel_parser_stm32::handle_open_listen()
 		return false;
 	}
 
-	return false;
+	return true;
 }
 bool Lawicel_parser_stm32::handle_close()
 {
