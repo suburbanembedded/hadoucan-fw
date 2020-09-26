@@ -60,7 +60,7 @@ public:
 		unsigned accept_mask;
 
 		//In single frame mode
-		//For Std, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[11..0, RTR, X, X, X, X, data7..data0, data15..data8]
+		//For Std, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[10..0, RTR, X, X, X, X, data7..data0, data15..data8]
 		//For Ext, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[29..0, RTR, X, X]
 	}
 
