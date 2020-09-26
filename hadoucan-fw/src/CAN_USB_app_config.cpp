@@ -220,11 +220,15 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 		config_doc_root->InsertEndChild(filter);
 
 		node = config_doc->NewElement("accept_code");
-		node->SetText("00000000");
+		node->SetText(m_config.filter_accept_enable);
+		filter->InsertEndChild(node);
+
+		node = config_doc->NewElement("accept_code");
+		node->SetText(m_config.filter_accept_code);
 		filter->InsertEndChild(node);
 
 		node = config_doc->NewElement("accept_mask");
-		node->SetText("FFFFFFFF");
+		node->SetText(m_config.filter_accept_mask);
 		filter->InsertEndChild(node);
 	}
 
@@ -454,6 +458,12 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		if(filter_element == nullptr)
 		{
 			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter");
+			return false;
+		}
+
+		if(!get_bool_text(filter_element, "accept_enable", &m_config.filter_accept_enable))
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_enable");
 			return false;
 		}
 		
