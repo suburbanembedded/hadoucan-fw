@@ -26,6 +26,44 @@ public:
 		SLAVE
 	};
 
+	struct Simple_filter
+	{
+		enum class FRAME_TYPE
+		{
+			STD,
+			EXT
+		};
+
+		FRAME_TYPE mode;
+		bool filter_accept_enable;
+		unsigned filter_accept_code;
+		unsigned filter_accept_mask;
+	}
+
+	// Lawicel AB CAN232 compat mode
+	// Emulate SJA1000 filter
+	struct SJA1000_filter
+	{
+		enum class FILTER_MODE
+		{
+			SINGLE,
+			DUAL
+		};
+
+		FILTER_MODE mode;
+		bool enable;
+
+		// ACR0[7..0] | ACR1[7..0] | ACR2[7..0] | ACR3[7..0]
+		unsigned accept_code;
+
+		// AMR0[7..0] | AMR1[7..0] | AMR2[7..0] | AMR3[7..0]
+		unsigned accept_mask;
+
+		//In single frame mode
+		//For Std, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[11..0, RTR, X, X, X, X, data7..data0, data15..data8]
+		//For Ext, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[29..0, RTR, X, X]
+	}
+
 	struct Config_Set
 	{
 		unsigned config_version;
@@ -57,9 +95,8 @@ public:
 		bool protocol_brs;
 		bool protocol_fd_iso;
 
-		bool filter_accept_enable;
-		unsigned filter_accept_code;
-		unsigned filter_accept_mask;
+		Simple_filter std_filter;
+		Simple_filter ext_filter;
 
 		freertos_util::logging::LOG_LEVEL log_level;
 		unsigned uart_baud;

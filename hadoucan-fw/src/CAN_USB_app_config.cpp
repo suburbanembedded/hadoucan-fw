@@ -2,6 +2,8 @@
 
 #include "freertos_cpp_util/logging/Global_logger.hpp"
 
+#include "common_util/Byte_util.hpp"
+
 void CAN_USB_app_config::set_defualt()
 {	
 	m_config.config_version = 0;
@@ -223,12 +225,15 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 		node->SetText(m_config.filter_accept_enable);
 		filter->InsertEndChild(node);
 
+		std::array<char, 9> str;
+		Byte_util::u32_to_hex_str(m_config.filter_accept_code, &str);
 		node = config_doc->NewElement("accept_code");
-		node->SetText(m_config.filter_accept_code);
+		node->SetText(str.data());
 		filter->InsertEndChild(node);
 
+		Byte_util::u32_to_hex_str(m_config.filter_accept_mask, &str);
 		node = config_doc->NewElement("accept_mask");
-		node->SetText(m_config.filter_accept_mask);
+		node->SetText(str.data());
 		filter->InsertEndChild(node);
 	}
 
