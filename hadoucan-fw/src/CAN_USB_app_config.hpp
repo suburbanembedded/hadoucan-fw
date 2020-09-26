@@ -34,11 +34,11 @@ public:
 			EXT
 		};
 
+		bool enable;
 		FRAME_TYPE mode;
-		bool filter_accept_enable;
-		unsigned filter_accept_code;
-		unsigned filter_accept_mask;
-	}
+		unsigned accept_code;
+		unsigned accept_mask;
+	};
 
 	// Lawicel AB CAN232 compat mode
 	// Emulate SJA1000 filter
@@ -46,12 +46,13 @@ public:
 	{
 		enum class FILTER_MODE
 		{
-			SINGLE,
-			DUAL
+			DUAL   = 0,
+			SINGLE = 1
 		};
 
-		FILTER_MODE mode;
 		bool enable;
+		
+		FILTER_MODE mode;
 
 		// ACR0[7..0] | ACR1[7..0] | ACR2[7..0] | ACR3[7..0]
 		unsigned accept_code;
@@ -71,7 +72,7 @@ public:
 		//For Ext,
 		//        ACR0[7..0], ACR1[7..0] maps to can[28..13] <-- either filter can accept
 		//        ACR2[3..0], ACR3[7..0] maps to can[28..13] <-- either filter can accept
-	}
+	};
 
 	struct Config_Set
 	{
@@ -104,8 +105,7 @@ public:
 		bool protocol_brs;
 		bool protocol_fd_iso;
 
-		Simple_filter std_filter;
-		Simple_filter ext_filter;
+		SJA1000_filter sja1000_filter;
 
 		freertos_util::logging::LOG_LEVEL log_level;
 		unsigned uart_baud;

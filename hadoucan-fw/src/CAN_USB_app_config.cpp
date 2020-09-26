@@ -17,27 +17,27 @@ void CAN_USB_app_config::set_defualt()
 
 	m_config.slope_ctrl = SLOPE_CONTROL::AUTO;
 
-	m_config.timestamp_enable = false;
-	m_config.timestamp_prescaler =  2000;
-	m_config.timestamp_period = 50000;
+	m_config.timestamp_enable     = false;
+	m_config.timestamp_prescaler = 2000;
+	m_config.timestamp_period    = 50000;
 
 	m_config.tx_delay_comp_enable = false;
 	m_config.tx_delay_comp_offset = 5;
 	m_config.tx_delay_comp_filter_window = 0;
 
-	m_config.can_clock = 24000000;
-	// m_config.can_clock = 60000000;
+	m_config.can_clock       = 24000000;
 	m_config.bitrate_nominal = 500000;
-	m_config.bitrate_data = 2000000;
+	m_config.bitrate_data    = 2000000;
 
 	m_config.protocol_ext_id = true;
-	m_config.protocol_fd = true;
-	m_config.protocol_brs = true;
+	m_config.protocol_fd     = true;
+	m_config.protocol_brs    = true;
 	m_config.protocol_fd_iso = true;
 
-	m_config.filter_accept_enable = false;
-	m_config.filter_accept_code = 0x00000000;
-	m_config.filter_accept_mask = 0x00000000;
+	m_config.sja1000_filter.enable      = false;
+	m_config.sja1000_filter.mode        = SJA1000_filter::FILTER_MODE::DUAL;
+	m_config.sja1000_filter.accept_code = 0x00000000;
+	m_config.sja1000_filter.accept_mask = 0xFFFFFFFF;
 
 	m_config.log_level = freertos_util::logging::LOG_LEVEL::INFO;
 	m_config.uart_baud = 921600U;
@@ -219,19 +219,41 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 
 	{
 		tinyxml2::XMLElement* filter = config_doc->NewElement("filter");
+		filter->SetAttribute("type", "sja1000");
 		config_doc_root->InsertEndChild(filter);
 
-		node = config_doc->NewElement("accept_code");
-		node->SetText(m_config.filter_accept_enable);
+		node = config_doc->NewElement("enable");
+		node->SetText(m_config.sja1000_filter.enable);
+		filter->InsertEndChild(node);
+
+		node = config_doc->NewElement("mode");
+		switch(m_config.sja1000_filter.mode)
+		{
+			case SJA1000_filter::FILTER_MODE::DUAL:
+			{
+				node->SetText("DUAL");
+				break;
+			}
+			case SJA1000_filter::FILTER_MODE::SINGLE:
+			{
+				node->SetText("SINGLE");
+				break;
+			}
+			default:
+			{
+				node->SetText("DUAL");
+				break;
+			}
+		}
 		filter->InsertEndChild(node);
 
 		std::array<char, 9> str;
-		Byte_util::u32_to_hex_str(m_config.filter_accept_code, &str);
+		Byte_util::u32_to_hex_str(m_config.sja1000_filter.accept_code, &str);
 		node = config_doc->NewElement("accept_code");
 		node->SetText(str.data());
 		filter->InsertEndChild(node);
 
-		Byte_util::u32_to_hex_str(m_config.filter_accept_mask, &str);
+		Byte_util::u32_to_hex_str(m_config.sja1000_filter.accept_mask, &str);
 		node = config_doc->NewElement("accept_mask");
 		node->SetText(str.data());
 		filter->InsertEndChild(node);
@@ -466,19 +488,53 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 			return false;
 		}
 
-		if(!get_bool_text(filter_element, "accept_enable", &m_config.filter_accept_enable))
+		char const* filter_type_str = nullptr;
+		if(filter_element->QueryStringAttribute("type", &filter_type_str) != tinyxml2::XML_SUCCESS)
 		{
-			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_enable");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find attr filter::type");
+			return false;
+		}
+
+		if(strncasecmp(filter_type_str, "sja1000", 6) == 0)
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: attr filter::type is not sja1000");
+			return false;
+		}
+
+		if(!get_bool_text(filter_element, "enable", &m_config.sja1000_filter.enable))
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/enable");
 			return false;
 		}
 		
-		if(!get_hex_text(filter_element, "accept_code", &m_config.filter_accept_code))
+		char const * mode_str = nullptr;
+		if(!get_str_text(filter_element, "mode", &mode_str))
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/mode");
+			return false;
+		}
+
+		if(strncasecmp(mode_str, "DUAL", 4) == 0)
+		{
+			m_config.sja1000_filter.mode = SJA1000_filter::FILTER_MODE::DUAL;
+		}
+		else if(strncasecmp(mode_str, "SINGLE", 6) == 0)
+		{
+			m_config.sja1000_filter.mode = SJA1000_filter::FILTER_MODE::SINGLE;
+		}
+		else
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not parse element filter/mode");
+			return false;
+		}
+
+		if(!get_hex_text(filter_element, "accept_code", &m_config.sja1000_filter.accept_code))
 		{
 			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_code");
 			return false;
 		}
 		
-		if(!get_hex_text(filter_element, "accept_mask", &m_config.filter_accept_mask))
+		if(!get_hex_text(filter_element, "accept_mask", &m_config.sja1000_filter.accept_mask))
 		{
 			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_mask");
 			return false;
