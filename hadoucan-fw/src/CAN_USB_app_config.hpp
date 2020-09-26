@@ -26,6 +26,11 @@ public:
 		SLAVE
 	};
 
+	enum class HOST_PROTOCOL
+	{
+		LAWICEL_CAN232 = 0
+	};
+
 	struct Simple_filter
 	{
 		enum class FRAME_TYPE
@@ -44,14 +49,27 @@ public:
 	// Emulate SJA1000 filter
 	struct SJA1000_filter
 	{
+		SJA1000_filter()
+		{
+			set_default();
+		}
+
 		enum class FILTER_MODE
 		{
 			DUAL   = 0,
 			SINGLE = 1
 		};
 
+		void set_default()
+		{
+			enable      = false;
+			mode        = FILTER_MODE::DUAL;
+			accept_code = 0x00000000;
+			accept_mask = 0xFFFFFFFF;
+		}
+
 		bool enable;
-		
+
 		FILTER_MODE mode;
 
 		// ACR0[7..0] | ACR1[7..0] | ACR2[7..0] | ACR3[7..0]
@@ -77,6 +95,8 @@ public:
 	struct Config_Set
 	{
 		unsigned config_version;
+
+		HOST_PROTOCOL host_protocol;
 
 		bool autopoll;
 		bool listen_only;
