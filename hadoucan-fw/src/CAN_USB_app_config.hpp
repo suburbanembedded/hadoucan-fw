@@ -60,8 +60,17 @@ public:
 		unsigned accept_mask;
 
 		//In single frame mode
-		//For Std, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[10..0, RTR, X, X, X, X, data7..data0, data15..data8]
+		//For Std, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[10..0, RTR, X, X, X, X, data[7..0], data[15..8]
 		//For Ext, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[29..0, RTR, X, X]
+
+		//In dual frame mode
+		//For Std,
+		//        ACR0[7..0], ACR1[7..4] maps to can[10..0, RTR] <-- either filter can accept
+		//        ACR1[3..0], ACR3[3..0] maps to data[7..0]
+		//        ACR2[3..0], ACR3[7..4] maps to can[10..0, RTR] <-- either filter can accept
+		//For Ext,
+		//        ACR0[7..0], ACR1[7..0] maps to can[28..13] <-- either filter can accept
+		//        ACR2[3..0], ACR3[7..0] maps to can[28..13] <-- either filter can accept
 	}
 
 	struct Config_Set
