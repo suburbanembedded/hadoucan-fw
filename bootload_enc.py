@@ -103,6 +103,13 @@ def main():
 	fastboot_send_file(tty_port, img_path, 'app.bin.enc')
 	fastboot_send_file(tty_port, aux_img_path, 'app.bin.enc.xml')
 
+	print 'Starting Reboot'
+
+	tty_port.write('reboot\r')
+	tty_port.flush()
+
+	print 'Reboot complete'
+
 	sys.exit(0)
 
 

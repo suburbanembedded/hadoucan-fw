@@ -201,14 +201,12 @@ bool Main_task::init_usb()
 	//lifetime mgmt of some of these is broken
 	{
 		Device_descriptor dev_desc;
-		dev_desc.bcdUSB = USB_common::build_bcd(2, 0, 0);
-		// dev_desc.bDeviceClass    = static_cast<uint8_t>(USB_common::CLASS_DEF::CLASS_PER_INTERFACE);
-		// dev_desc.bDeviceSubClass = static_cast<uint8_t>(USB_common::SUBCLASS_DEF::SUBCLASS_NONE);
-		dev_desc.bDeviceClass    = 0x02;
-		dev_desc.bDeviceSubClass = 0x02;
-		dev_desc.bDeviceProtocol = static_cast<uint8_t>(USB_common::PROTO_DEF::PROTO_NONE);
+		dev_desc.bcdUSB = USB_common::bcdUSB_200;
+		dev_desc.bDeviceClass    = static_cast<uint8_t>(CDC::COMM_DEVICE_CLASS_CODE);
+		dev_desc.bDeviceSubClass = static_cast<uint8_t>(CDC::COMM_CLASS_SUBCLASS_CODE::ACM);
+		dev_desc.bDeviceProtocol = static_cast<uint8_t>(Device_descriptor::DEVICE_PROTOCOL::NONE);
 		// dev_desc.bMaxPacketSize0 = m_driver->get_ep0_config().size;
-		dev_desc.bMaxPacketSize0 = 64;
+		dev_desc.bMaxPacketSize0 = static_cast<uint8_t>(USB_common::CONTROL_EP_SIZE::USB20);
 		dev_desc.idVendor  = 0x0483;
 		dev_desc.idProduct = 0x5740;
 		// dev_desc.idVendor  = 0xFFFF;
@@ -228,9 +226,8 @@ bool Main_task::init_usb()
 		desc.bAlternateSetting  = 0;
 		desc.bNumEndpoints      = 1;
 		desc.bInterfaceClass    = static_cast<uint8_t>(CDC::COMM_INTERFACE_CLASS_CODE);
-		desc.bInterfaceSubClass = static_cast<uint8_t>(CDC::COMM_INTERFACE_SUBCLASS_CODE::ACM);
+		desc.bInterfaceSubClass = static_cast<uint8_t>(CDC::COMM_CLASS_SUBCLASS_CODE::ACM);
 		desc.bInterfaceProtocol = static_cast<uint8_t>(CDC::COMM_CLASS_PROTO_CODE::V250);
-		// desc.bInterfaceProtocol = static_cast<uint8_t>(CDC::COMM_CLASS_PROTO_CODE::NONE);
 		desc.iInterface         = 5;
 		usb_desc_table.set_interface_descriptor(desc, 0);
 	}
@@ -250,19 +247,18 @@ bool Main_task::init_usb()
 		Endpoint_descriptor desc;
 		desc.bEndpointAddress = 0x00 | 0x01;
 		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
-		desc.wMaxPacketSize   = 512;
+		desc.wMaxPacketSize   = static_cast<uint16_t>(USB_common::BULK_EP_SIZE::USB20);
 		desc.bInterval        = 0;
 
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 
 		desc.bEndpointAddress = 0x80 | 0x01;
 		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
-		desc.wMaxPacketSize   = 512;
+		desc.wMaxPacketSize   = static_cast<uint16_t>(USB_common::BULK_EP_SIZE::USB20);
 		desc.bInterval        = 0;
 		usb_desc_table.set_endpoint_descriptor(desc, desc.bEndpointAddress);
 
 		desc.bEndpointAddress = 0x80 | 0x02;
-		// desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::BULK);
 		desc.bmAttributes     = static_cast<uint8_t>(Endpoint_descriptor::ATTRIBUTE_TRANSFER::INTERRUPT);
 		desc.wMaxPacketSize   = 8;
 		desc.bInterval        = 8;//for HS, period is 2^(bInterval-1) * 125 us, so 8 -> 16ms
@@ -367,7 +363,7 @@ bool Main_task::init_usb()
 	m_tx_buf_adapter.reset(m_tx_buf.data(), m_tx_buf.size());
 
 	logger->log(LOG_LEVEL::INFO, "main", "usb_core.initialize");
-	if(!usb_core.initialize(&usb_driver, 8, m_tx_buf_adapter, m_rx_buf_adapter))
+	if(!usb_core.initialize(&usb_driver, m_tx_buf_adapter, m_rx_buf_adapter))
 	{
 		return false;
 	}
