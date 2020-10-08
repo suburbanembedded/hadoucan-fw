@@ -318,7 +318,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		char const* host_protocol_str;
 		if(!get_str_text(config_root, "host_protocol", &host_protocol_str))
 		{
-			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element host_protocol, defaulting to lawicel_can232");
+			logger->log(LOG_LEVEL::WARN, "CAN_USB_app", "config.xml: could not find element host_protocol, defaulting to lawicel_can232");
 			m_config.host_protocol = HOST_PROTOCOL::LAWICEL_CAN232;
 		}
 		else
