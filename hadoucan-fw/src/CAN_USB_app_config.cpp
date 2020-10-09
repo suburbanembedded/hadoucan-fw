@@ -568,17 +568,20 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 				return false;
 			}
 
-			if(!get_hex_text(filter_element, "accept_code", &m_config.sja1000_filter.accept_code))
+			unsigned temp = 0;
+			if(!get_hex_text(filter_element, "accept_code", &temp))
 			{
 				logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_code");
 				return false;
 			}
+			m_config.sja1000_filter.accept_code = temp;
 			
-			if(!get_hex_text(filter_element, "accept_mask", &m_config.sja1000_filter.accept_mask))
+			if(!get_hex_text(filter_element, "accept_mask", &temp))
 			{
 				logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element filter/accept_mask");
 				return false;
 			}
+			m_config.sja1000_filter.accept_mask = temp;
 		}
 	}
 

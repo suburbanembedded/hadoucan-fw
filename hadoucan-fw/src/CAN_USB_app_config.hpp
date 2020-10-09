@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SJA1000_filter.hpp"
+
 #include "freertos_cpp_util/logging/Logger_types.hpp"
 
 #include "tinyxml2_util/tinyxml2_helper.hpp"
@@ -43,53 +45,6 @@ public:
 		FRAME_TYPE mode;
 		unsigned accept_code;
 		unsigned accept_mask;
-	};
-
-	// Lawicel AB CAN232 compat mode
-	// Emulate SJA1000 filter
-	struct SJA1000_filter
-	{
-		SJA1000_filter()
-		{
-			set_default();
-		}
-
-		enum class FILTER_MODE
-		{
-			DUAL   = 0,
-			SINGLE = 1
-		};
-
-		void set_default()
-		{
-			enable      = false;
-			mode        = FILTER_MODE::DUAL;
-			accept_code = 0x00000000;
-			accept_mask = 0xFFFFFFFF;
-		}
-
-		bool enable;
-
-		FILTER_MODE mode;
-
-		// ACR0[7..0] | ACR1[7..0] | ACR2[7..0] | ACR3[7..0]
-		unsigned accept_code;
-
-		// AMR0[7..0] | AMR1[7..0] | AMR2[7..0] | AMR3[7..0]
-		unsigned accept_mask;
-
-		//In single frame mode
-		//For Std, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[10..0, RTR, X, X, X, X, data[7..0], data[15..8]
-		//For Ext, ACR0[7..0], ACR1[7..0], ACR2[7..0], ACR3[7..0] maps to can[29..0, RTR, X, X]
-
-		//In dual frame mode
-		//For Std,
-		//        ACR0[7..0], ACR1[7..4] maps to can[10..0, RTR] <-- either filter can accept
-		//        ACR1[3..0], ACR3[3..0] maps to data[7..0]
-		//        ACR2[3..0], ACR3[7..4] maps to can[10..0, RTR] <-- either filter can accept
-		//For Ext,
-		//        ACR0[7..0], ACR1[7..0] maps to can[28..13] <-- either filter can accept
-		//        ACR2[3..0], ACR3[7..0] maps to can[28..13] <-- either filter can accept
 	};
 
 	struct Config_Set
