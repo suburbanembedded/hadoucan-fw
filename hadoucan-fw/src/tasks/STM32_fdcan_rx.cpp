@@ -413,6 +413,30 @@ void STM32_fdcan_rx::work()
 			}
 		}
 
+		//check if we should filter the packet based on data.
+		//we only need to check standard packets with cpu to emulate SJA1000's data field check
+		{
+			std::unique_lock<Mutex_static_recursive> config_lock;
+			const CAN_USB_app_config::Config_Set& m_config = can_usb_app.get_config(&config_lock);
+			if(m_config.sja1000_filter.is_enabled())
+			{
+				if(pk.rxheader.IdType == FDCAN_STANDARD_ID)
+				{
+					const uint32_t id = pk.rxheader.Identifier;
+					const bool rtr = pk.rxheader.RxFrameType == FDCAN_REMOTE_FRAME;
+					const uint8_t datalen = pk.rxheader.DataLength;
+					const uint8_t db1 = (datalen >= 1) ? (pk.data[0]) : (0);
+					const uint8_t db2 = (datalen >= 2) ? (pk.data[1]) : (0);
+					
+					const bool frame_accept = m_config.sja1000_filter.is_std_msg_accepted(id, rtr, datalen, db1, db2);
+					if(!frame_accept)
+					{
+						continue;
+					}
+				}
+			}
+		}
+
 		//stringify the packet
 		packet_str.clear();
 		if(!append_packet_type(pk.rxheader, &packet_str))

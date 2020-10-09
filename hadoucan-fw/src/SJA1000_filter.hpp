@@ -29,12 +29,12 @@ public:
 	}
 
 	//True if filter permits this given STD frame
-	bool is_std_msg_accepted(const uint32_t id, const bool rtr, const uint8_t db1, const uint8_t db2) const;
+	bool is_std_msg_accepted(const uint32_t id, const bool rtr, const uint8_t datalen, const uint8_t db1, const uint8_t db2) const;
 
 	//True if filter permits this given STD frame
 	//ID is SJA1000 packet format
 	//std id[10..0] in id[31..21], rtr in id[20], db1 in id[15..8], db2 in id[7..0]
-	bool is_std_msg_accepted(const uint32_t id) const;
+	bool is_std_msg_accepted(const uint32_t id, const uint8_t datalen) const;
 
 	//True if filter permits this given STD frame
 	bool is_ext_msg_accepted(const uint32_t id, const bool rtr) const;

@@ -391,14 +391,14 @@ bool STM32_fdcan_tx::init()
 		std::unique_lock<Mutex_static_recursive> config_lock;
 		const CAN_USB_app_config::Config_Set& m_config = can_usb_app.get_config(&config_lock);
 
-		if(m_config.sja1000_filter.enable)
+		if(m_config.sja1000_filter.is_enabled())
 		{
 			// FDCAN_FILTER_RANGE         /*!< Range filter from FilterID1 to FilterID2                        */
 			// FDCAN_FILTER_DUAL          /*!< Dual ID filter for FilterID1 or FilterID2                       */
 			// FDCAN_FILTER_MASK          /*!< Classic filter: FilterID1 = filter, FilterID2 = mask            */
 			// FDCAN_FILTER_RANGE_NO_EIDM /*!< Range filter from FilterID1 to FilterID2, EIDM mask not applied */
 
-			switch(m_config.sja1000_filter.mode)
+			switch(m_config.sja1000_filter.get_filter_mode())
 			{
 				case SJA1000_filter::FILTER_MODE::DUAL:
 				{
@@ -427,11 +427,12 @@ bool STM32_fdcan_tx::init()
 					sFilter0_std.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 					sFilter0_std.FilterID1  = m_config.sja1000_filter.get_std_id_code();
 					sFilter0_std.FilterID2  = m_config.sja1000_filter.get_std_id_mask();
-					std_allow_rtr  = (m_config.sja1000_filter.accept_std_rtr()) ? (FDCAN_FILTER_REMOTE) : (FDCAN_REJECT_REMOTE);
 
 					sFilter0_ext.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 					sFilter0_ext.FilterID1  = m_config.sja1000_filter.get_ext_id_code();
 					sFilter0_ext.FilterID2  = m_config.sja1000_filter.get_ext_id_mask();
+					
+					std_allow_rtr  = (m_config.sja1000_filter.accept_std_rtr()) ? (FDCAN_FILTER_REMOTE) : (FDCAN_REJECT_REMOTE);
 					ext_allow_rtr  = (m_config.sja1000_filter.accept_ext_rtr()) ? (FDCAN_FILTER_REMOTE) : (FDCAN_REJECT_REMOTE);
 				}
 				default:
