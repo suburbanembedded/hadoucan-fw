@@ -14,8 +14,8 @@ SJA1000_filter::~SJA1000_filter()
 
 void SJA1000_filter::set_default()
 {
-	enable      = false;
-	mode        = FILTER_MODE::SINGLE;
+	enable      = true;
+	mode        = FILTER_MODE::DUAL;
 	accept_code = 0x00000000;
 	accept_mask = 0xFFFFFFFF;
 }
