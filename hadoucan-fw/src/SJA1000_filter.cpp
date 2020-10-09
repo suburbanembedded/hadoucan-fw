@@ -53,7 +53,7 @@ bool SJA1000_filter::is_std_msg_accepted(const uint32_t id, const uint8_t datale
 			const uint32_t cd = ( (((ACR1() & 0x000000F) << 4) | (ACR3() & 0x000000F) << 0) << 8) | 0x000000FF;
 			uint32_t md = ( (((AMR1() & 0x000000F) << 4) | (AMR3() & 0x000000F) << 0) << 8) | 0x000000FF;
 
-			//PG 46, in the event there is less data, ignore the data check
+			//SJA1000 pg 46, in the event there is less data, ignore the data check
 			switch(datalen)
 			{
 				case 0:
@@ -84,7 +84,7 @@ bool SJA1000_filter::is_std_msg_accepted(const uint32_t id, const uint8_t datale
 		}
 		case FILTER_MODE::SINGLE:
 		{
-			//PG 46, in the event there is less data, ignore the data check
+			//SJA1000 pg 46, in the event there is less data, ignore the data check
 			uint32_t temp_accept_mask = accept_mask;
 			switch(datalen)
 			{
