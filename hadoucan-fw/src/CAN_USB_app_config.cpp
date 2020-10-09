@@ -538,7 +538,7 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 			}
 
 			const char sja1000_str[] = "sja1000";
-			if(strncasecmp(filter_type_str, sja1000_str, strlen(sja1000_str)) == 0)
+			if(strncasecmp(filter_type_str, sja1000_str, strlen(sja1000_str)) != 0)
 			{
 				logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: attr filter::type is not sja1000");
 				return false;

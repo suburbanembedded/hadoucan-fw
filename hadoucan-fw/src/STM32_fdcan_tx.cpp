@@ -357,32 +357,32 @@ bool STM32_fdcan_tx::init()
 	FDCAN_FilterTypeDef sFilter1_std;
 	sFilter1_std.IdType           = FDCAN_STANDARD_ID;
 	sFilter1_std.FilterIndex      = 1;
-	sFilter0_std.FilterType       = FDCAN_FILTER_MASK;
-	sFilter0_std.FilterConfig     = FDCAN_FILTER_DISABLE;
-	sFilter0_std.FilterID1        = 0;
-	sFilter0_std.FilterID2        = 0;
-	sFilter0_std.RxBufferIndex    = 0;
-	sFilter0_std.IsCalibrationMsg = 0;
+	sFilter1_std.FilterType       = FDCAN_FILTER_MASK;
+	sFilter1_std.FilterConfig     = FDCAN_FILTER_DISABLE;
+	sFilter1_std.FilterID1        = 0;
+	sFilter1_std.FilterID2        = 0;
+	sFilter1_std.RxBufferIndex    = 0;
+	sFilter1_std.IsCalibrationMsg = 0;
 
 	FDCAN_FilterTypeDef sFilter0_ext;
-	sFilter0_std.IdType           = FDCAN_EXTENDED_ID;
-	sFilter0_std.FilterIndex      = 0;
-	sFilter0_std.FilterType       = FDCAN_FILTER_MASK;
-	sFilter0_std.FilterConfig     = FDCAN_FILTER_DISABLE;
-	sFilter0_std.FilterID1        = 0;
-	sFilter0_std.FilterID2        = 0;
-	sFilter0_std.RxBufferIndex    = 0;
-	sFilter0_std.IsCalibrationMsg = 0;
+	sFilter0_ext.IdType           = FDCAN_EXTENDED_ID;
+	sFilter0_ext.FilterIndex      = 0;
+	sFilter0_ext.FilterType       = FDCAN_FILTER_MASK;
+	sFilter0_ext.FilterConfig     = FDCAN_FILTER_DISABLE;
+	sFilter0_ext.FilterID1        = 0;
+	sFilter0_ext.FilterID2        = 0;
+	sFilter0_ext.RxBufferIndex    = 0;
+	sFilter0_ext.IsCalibrationMsg = 0;
 
 	FDCAN_FilterTypeDef sFilter1_ext;
-	sFilter0_std.IdType           = FDCAN_EXTENDED_ID;
-	sFilter0_std.FilterIndex      = 1;
-	sFilter0_std.FilterType       = FDCAN_FILTER_MASK;
-	sFilter0_std.FilterConfig     = FDCAN_FILTER_DISABLE;
-	sFilter0_std.FilterID1        = 0;
-	sFilter0_std.FilterID2        = 0;
-	sFilter0_std.RxBufferIndex    = 0;
-	sFilter0_std.IsCalibrationMsg = 0;
+	sFilter1_ext.IdType           = FDCAN_EXTENDED_ID;
+	sFilter1_ext.FilterIndex      = 1;
+	sFilter1_ext.FilterType       = FDCAN_FILTER_MASK;
+	sFilter1_ext.FilterConfig     = FDCAN_FILTER_DISABLE;
+	sFilter1_ext.FilterID1        = 0;
+	sFilter1_ext.FilterID2        = 0;
+	sFilter1_ext.RxBufferIndex    = 0;
+	sFilter1_ext.IsCalibrationMsg = 0;
 
 	uint32_t std_allow_rtr = FDCAN_FILTER_REMOTE;
 	uint32_t ext_allow_rtr = FDCAN_FILTER_REMOTE;
@@ -405,22 +405,23 @@ bool STM32_fdcan_tx::init()
 					//create two traditional id+mask filters
 					sFilter0_std.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 					sFilter0_std.FilterID1  = m_config.sja1000_filter.get_std_id1_code();
-					sFilter0_std.FilterID2  = m_config.sja1000_filter.get_std_id1_mask();
+					sFilter0_std.FilterID2  = (~m_config.sja1000_filter.get_std_id1_mask()) & 0x000007FF;
 
 					sFilter1_std.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 					sFilter1_std.FilterID1  = m_config.sja1000_filter.get_std_id2_code();
-					sFilter1_std.FilterID2  = m_config.sja1000_filter.get_std_id2_mask();
+					sFilter1_std.FilterID2  = (~m_config.sja1000_filter.get_std_id2_mask()) & 0x000007FF;
 
 					sFilter0_ext.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 					sFilter0_ext.FilterID1  = m_config.sja1000_filter.get_ext_id1_code();
-					sFilter0_ext.FilterID2  = m_config.sja1000_filter.get_ext_id1_mask();
+					sFilter0_ext.FilterID2  = (~m_config.sja1000_filter.get_ext_id1_mask()) & 0x1FFFFFFF;
 
 					sFilter1_ext.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 					sFilter1_ext.FilterID1  = m_config.sja1000_filter.get_ext_id2_code();
-					sFilter1_ext.FilterID2  = m_config.sja1000_filter.get_ext_id2_mask();
+					sFilter1_ext.FilterID2  = (~m_config.sja1000_filter.get_ext_id2_mask()) & 0x1FFFFFFF;
 					
 					std_allow_rtr  = (m_config.sja1000_filter.accept_std_rtr1() || m_config.sja1000_filter.accept_std_rtr2()) ? (FDCAN_FILTER_REMOTE) : (FDCAN_REJECT_REMOTE);
 					ext_allow_rtr  = (m_config.sja1000_filter.accept_ext_rtr1() || m_config.sja1000_filter.accept_ext_rtr2()) ? (FDCAN_FILTER_REMOTE) : (FDCAN_REJECT_REMOTE);
+					break;
 				}
 				case SJA1000_filter::FILTER_MODE::SINGLE:
 				{
@@ -434,6 +435,7 @@ bool STM32_fdcan_tx::init()
 					
 					std_allow_rtr  = (m_config.sja1000_filter.accept_std_rtr()) ? (FDCAN_FILTER_REMOTE) : (FDCAN_REJECT_REMOTE);
 					ext_allow_rtr  = (m_config.sja1000_filter.accept_ext_rtr()) ? (FDCAN_FILTER_REMOTE) : (FDCAN_REJECT_REMOTE);
+					break;
 				}
 				default:
 				{
@@ -448,13 +450,13 @@ bool STM32_fdcan_tx::init()
 			sFilter0_std.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 			sFilter0_std.FilterID1    = 0x000;//filter
 			sFilter0_std.FilterID2    = 0x000;//mask none, match all
-			std_allow_rtr    = FDCAN_FILTER_REMOTE;
+			std_allow_rtr             = FDCAN_FILTER_REMOTE;
 		
 			//default to accept all
 			sFilter0_ext.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 			sFilter0_ext.FilterID1    = 0x00000000;//filter
 			sFilter0_ext.FilterID2    = 0x00000000;//mask none, match all
-			ext_allow_rtr    = FDCAN_FILTER_REMOTE;
+			ext_allow_rtr             = FDCAN_FILTER_REMOTE;
 		}
 	}
 

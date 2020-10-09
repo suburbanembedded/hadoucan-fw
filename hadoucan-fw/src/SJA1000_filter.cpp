@@ -59,10 +59,12 @@ bool SJA1000_filter::is_std_msg_accepted(const uint32_t id, const uint8_t datale
 				case 0:
 				{
 					md |= 0x0000FFFF;
+					break;
 				}
 				case 1:
 				{
 					md |= 0x000000FF;
+					break;
 				}
 			}
 
@@ -91,10 +93,12 @@ bool SJA1000_filter::is_std_msg_accepted(const uint32_t id, const uint8_t datale
 				case 0:
 				{
 					temp_accept_mask |= 0x0000FFFF;
+					break;
 				}
 				case 1:
 				{
 					temp_accept_mask |= 0x000000FF;
+					break;
 				}
 			}
 
