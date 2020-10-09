@@ -327,6 +327,11 @@ bool Lawicel_parser::parse_string(const char* in_str)
 			ret = parse_set_autostartup(in_str);
 			break;
 		}
+		case 'W':
+		{
+			ret = parse_set_filter_mode(in_str);
+			break;
+		}
 		case '!':
 		{
 			ret = parse_extended_cmd(in_str);
@@ -1244,14 +1249,85 @@ bool Lawicel_parser::parse_get_flags(const char* in_str)
 	return true;
 }
 
+bool Lawicel_parser::parse_set_filter_mode(const char* in_str)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_filter_mode", "");
+
+	// Wx\r
+	const size_t in_str_len = strlen(in_str);
+
+	if(in_str_len < 3)
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str_len < 3");
+
+		write_bell();
+		return false;
+	}
+	
+	if(in_str[0] != 'W')
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str[0] != 'W'");
+
+		write_bell();
+		return false;
+	}
+
+	const char mode = in_str[1];
+	if(!handle_set_filter_mode(mode))
+	{
+		write_bell();
+		return false;
+	}
+
+	write_cr();
+	return true;
+}
+
 bool Lawicel_parser::parse_set_accept_code(const char* in_str)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
 	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "");
 
-	write_bell();
-	return false;
+	// Mxxxxxxxx\r
+	const size_t in_str_len = strlen(in_str);
+
+	if(in_str_len < 10)
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str_len < 10");
+
+		write_bell();
+		return false;
+	}
+	
+	if(in_str[0] != 'M')
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str[0] != 'M'");
+
+		write_bell();
+		return false;
+	}
+
+	std::array<char, 9> arr;
+	std::copy_n(in_str + 1, 8, arr.data());
+
+	uint32_t code = 0;
+	if(!Byte_util::hex_str_to_u32(arr, &code))
+	{
+		write_bell();
+		return false;
+	}
+
+	if(!handle_set_accept_code(code))
+	{
+		write_bell();
+		return false;
+	}
+
+	write_cr();
+	return true;
 }
 bool Lawicel_parser::parse_set_accept_mask(const char* in_str)
 {
@@ -1259,8 +1335,43 @@ bool Lawicel_parser::parse_set_accept_mask(const char* in_str)
 
 	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_mask", "");
 
-	write_bell();
-	return false;
+	// mxxxxxxxx\r
+	const size_t in_str_len = strlen(in_str);
+
+	if(in_str_len < 10)
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str_len < 10");
+
+		write_bell();
+		return false;
+	}
+	
+	if(in_str[0] != 'm')
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str[0] != 'm'");
+
+		write_bell();
+		return false;
+	}
+
+	std::array<char, 9> arr;
+	std::copy_n(in_str + 1, 8, arr.data());
+
+	uint32_t mask = 0;
+	if(!Byte_util::hex_str_to_u32(arr, &mask))
+	{
+		write_bell();
+		return false;
+	}
+
+	if(!handle_set_accept_mask(mask))
+	{
+		write_bell();
+		return false;
+	}
+
+	write_cr();
+	return true;
 }
 
 bool Lawicel_parser::parse_get_version(const char* in_str)
