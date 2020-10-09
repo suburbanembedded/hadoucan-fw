@@ -361,11 +361,13 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 			return false;
 		}
 
-		if(strncasecmp(timesync_mode_str, "master", 4) == 0)
+		const char master_str[] = "master";
+		const char slave_str[] = "slave";
+		if(strncasecmp(timesync_mode_str, master_str, strlen(master_str)) == 0)
 		{
 			m_config.timesync_mode = CAN_USB_app_config::TIMESYNC_MODE::MASTER;
 		}	
-		else if(strncasecmp(timesync_mode_str, "slave", 4) == 0)
+		else if(strncasecmp(timesync_mode_str, slave_str, strlen(slave_str)) == 0)
 		{
 			m_config.timesync_mode = CAN_USB_app_config::TIMESYNC_MODE::SLAVE;
 		}
@@ -528,14 +530,15 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		}
 		else
 		{
-			char const* filter_type_str = nullptr;
+			char const * filter_type_str = nullptr;
 			if(filter_element->QueryStringAttribute("type", &filter_type_str) != tinyxml2::XML_SUCCESS)
 			{
 				logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find attr filter::type");
 				return false;
 			}
 
-			if(strncasecmp(filter_type_str, "sja1000", 6) == 0)
+			const char sja1000_str[] = "sja1000";
+			if(strncasecmp(filter_type_str, sja1000_str, strlen(sja1000_str)) == 0)
 			{
 				logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: attr filter::type is not sja1000");
 				return false;
@@ -554,11 +557,13 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 				return false;
 			}
 
-			if(strncasecmp(mode_str, "DUAL", 4) == 0)
+			const char dual_str[] = "DUAL";
+			const char single_str[] = "SINGLE";
+			if(strncasecmp(mode_str, dual_str, strlen(dual_str)) == 0)
 			{
 				m_config.sja1000_filter.mode = SJA1000_filter::FILTER_MODE::DUAL;
 			}
-			else if(strncasecmp(mode_str, "SINGLE", 6) == 0)
+			else if(strncasecmp(mode_str, single_str, strlen(single_str)) == 0)
 			{
 				m_config.sja1000_filter.mode = SJA1000_filter::FILTER_MODE::SINGLE;
 			}
