@@ -545,12 +545,26 @@ bool Lawicel_parser_stm32::handle_ext_bitrate_table(const std::vector<char>& tab
 	tinyxml2::XMLError err = table_doc.Parse(table_str.data(), table_str.size());
 	if(err != tinyxml2::XML_SUCCESS)
 	{
+		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::handle_ext_bitrate_table", "Parsing xml string failed");
+
+		// const size_t block_size = 32;
+		// //we overflow the log buffer if this happens too fast...
+		// for(size_t num_sent = 0; num_sent < table_str.size(); num_sent)
+		// {
+		// 	char const * const blk_ptr = table_str.data() + num_sent;
+		// 	const size_t num_to_send = std::min(block_size, table_str.size() - num_sent);
+			
+		// 	logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::handle_ext_bitrate_table", "%.*s", num_to_send, blk_ptr);
+		// 	vTaskDelay(pdMS_TO_TICKS(1));
+		// 	num_sent += num_to_send;
+		// }
 		return false;
 	}
 
 	CAN_USB_app_bitrate_table table;
 	if(!table.from_xml(table_doc))
 	{
+		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::handle_ext_bitrate_table", "Parsing xml doc failed");
 		return false;
 	}
 
