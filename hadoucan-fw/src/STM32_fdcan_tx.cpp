@@ -15,32 +15,44 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include <cinttypes>
+
 bool set_can_clk(const uint32_t can_clk)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 	using freertos_util::logging::LOG_LEVEL;
 
-	logger->log(LOG_LEVEL::INFO, "STM32_fdcan_tx::set_can_clk", "set_can_clk %d", can_clk);
+	logger->log(LOG_LEVEL::INFO, "STM32_fdcan_tx::set_can_clk", "set_can_clk %" PRIu32, can_clk);
 
 	const uint32_t hse_clk = HSE_VALUE;
 	if(hse_clk != 24000000U)
 	{
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "HSE clock is %" PRIu32 ", requires 24MHz", HSE_VALUE);
 		return false;
 	}
 
 	RCC_PeriphCLKInitTypeDef periph_config;
 	HAL_RCCEx_GetPeriphCLKConfig(&periph_config);
 
+	// HAL_RCCEx_GetPeriphCLKConfig enables all of the clocks...
+	periph_config.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_FDCAN
+                              |RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_RNG
+                              |RCC_PERIPHCLK_QSPI;
+
 	bool ret = false;
 	switch(periph_config.FdcanClockSelection)
 	{
 		case RCC_FDCANCLKSOURCE_HSE:
 		{
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection is HSE, requires PLL2");
+
 			ret = true;
 			break;
 		}
 		case RCC_FDCANCLKSOURCE_PLL:
 		{
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection is PLL, requires PLL2");
+
 			ret = false;
 			break;
 		}
@@ -77,6 +89,8 @@ bool set_can_clk(const uint32_t can_clk)
 				}
 				default:
 				{
+					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "can_clk is not 24, 60, or 80 MHz");
+
 					ret = false;
 					break;
 				}
@@ -86,6 +100,8 @@ bool set_can_clk(const uint32_t can_clk)
 		}
 		default:
 		{
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection is unknown, requires PLL2");
+
 			ret = false;
 			break;
 		}
@@ -95,6 +111,8 @@ bool set_can_clk(const uint32_t can_clk)
 	{
 		if(HAL_RCCEx_PeriphCLKConfig(&periph_config) != HAL_OK)
 		{
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "HAL_RCCEx_PeriphCLKConfig failed");
+
 			ret = false;
 		}
 	}
@@ -104,6 +122,9 @@ bool set_can_clk(const uint32_t can_clk)
 
 bool get_can_clk(uint32_t* const can_clk)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+	
 	const uint32_t hse_clk = HSE_VALUE;
 
 	RCC_PeriphCLKInitTypeDef periph_config;
@@ -147,6 +168,8 @@ bool get_can_clk(uint32_t* const can_clk)
 			break;
 		}
 	}
+
+	logger->log(LOG_LEVEL::INFO, "STM32_fdcan_tx::get_can_clk", "get_can_clk is %d", *can_clk);
 
 	return ret;
 }
@@ -244,6 +267,18 @@ bool STM32_fdcan_tx::init()
 					}
 				}
 				break;
+			}
+		}
+
+		logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "set clock");
+		uint32_t current_can_clk = 0;
+		get_can_clk(&current_can_clk);
+		if(current_can_clk != m_config.can_clock)
+		{
+			if(!set_can_clk(m_config.can_clock))
+			{
+				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "set_can_clk failed");
+				return false;
 			}
 		}
 
