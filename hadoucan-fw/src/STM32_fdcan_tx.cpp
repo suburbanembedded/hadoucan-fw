@@ -22,7 +22,7 @@ bool set_can_clk(const uint32_t can_clk)
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 	using freertos_util::logging::LOG_LEVEL;
 
-	logger->log(LOG_LEVEL::INFO, "STM32_fdcan_tx::set_can_clk", "set_can_clk %" PRIu32, can_clk);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_can_clk", "set_can_clk %" PRIu32, can_clk);
 
 	const uint32_t hse_clk = HSE_VALUE;
 	if(hse_clk != 24000000U)
@@ -169,7 +169,7 @@ bool get_can_clk(uint32_t* const can_clk)
 		}
 	}
 
-	logger->log(LOG_LEVEL::INFO, "STM32_fdcan_tx::get_can_clk", "get_can_clk is %d", *can_clk);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::get_can_clk", "get_can_clk is %d", *can_clk);
 
 	return ret;
 }
@@ -522,10 +522,18 @@ bool STM32_fdcan_tx::set_baud(const int std_baud)
 
 bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, FDCAN_HandleTypeDef* const handle)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
 	handle->Init.NominalPrescaler = std_baud.pre;      //1-512
 	handle->Init.NominalSyncJumpWidth = std_baud.sjw;  //1-128
 	handle->Init.NominalTimeSeg1 = std_baud.tseg1;     //1-256 
 	handle->Init.NominalTimeSeg2 = std_baud.tseg2;     //1-128
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalPrescaler: %d", std_baud.pre);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalSyncJumpWidth: %d", std_baud.sjw);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalTimeSeg1: %d", std_baud.tseg1);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalTimeSeg2: %d", std_baud.tseg2);
 
 	return true;
 }
@@ -562,6 +570,8 @@ bool STM32_fdcan_tx::set_baud(const int std_baud, const int fd_baud)
 }
 bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& fd_baud, FDCAN_HandleTypeDef* const handle)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
 
 	handle->Init.NominalPrescaler = std_baud.pre;      //1-512
 	handle->Init.NominalSyncJumpWidth = std_baud.sjw;  //1-128
@@ -572,6 +582,16 @@ bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Ent
 	handle->Init.DataSyncJumpWidth = fd_baud.sjw;  //1-16
 	handle->Init.DataTimeSeg1 = fd_baud.tseg1;     //1-32 
 	handle->Init.DataTimeSeg2 = fd_baud.tseg2;     //1-16
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalPrescaler: %d", std_baud.pre);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalSyncJumpWidth: %d", std_baud.sjw);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalTimeSeg1: %d", std_baud.tseg1);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalTimeSeg2: %d", std_baud.tseg2);
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "DataPrescaler: %d", fd_baud.pre);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "DataSyncJumpWidth: %d", fd_baud.sjw);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "DataTimeSeg1: %d", fd_baud.tseg1);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "DataTimeSeg2: %d", fd_baud.tseg2);
 
 	return true;
 }
