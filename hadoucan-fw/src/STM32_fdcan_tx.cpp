@@ -35,6 +35,7 @@ bool set_can_clk(const uint32_t can_clk)
 	HAL_RCCEx_GetPeriphCLKConfig(&periph_config);
 
 	// HAL_RCCEx_GetPeriphCLKConfig enables all of the clocks...
+	// we need to fix the list to the clocks actually used
 	periph_config.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_FDCAN
                               |RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_RNG
                               |RCC_PERIPHCLK_QSPI;
