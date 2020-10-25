@@ -1524,7 +1524,8 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::parse_extended_cmd", "Parsing table failed");
 		}
 
-		std::vector<char> table_str(it, in_str+in_str_len);
+		//it points to the ':', start one after
+		std::vector<char> table_str(it+1, in_str+in_str_len);
 		ret = handle_ext_bitrate_table(table_str);
 	}
 	else if(strncmp(in_str, printtable_str, printtable_str_len) == 0)
