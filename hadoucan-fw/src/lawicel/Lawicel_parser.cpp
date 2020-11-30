@@ -1564,13 +1564,13 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	{
 		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended nominal bitrate");
 
-		ret = parse_ext_bitrate_nominal();
+		ret = parse_ext_bitrate_nominal(in_str);
 	}
 	else if(strncmp(in_str, bpsdata_str, bpsdata_str_len) == 0)
 	{
 		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended data bitrate");
 
-		ret = parse_ext_bitrate_data();
+		ret = parse_ext_bitrate_data(in_str);
 	}
 	else
 	{
