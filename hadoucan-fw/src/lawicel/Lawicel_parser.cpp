@@ -1469,34 +1469,34 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 	const size_t in_str_len = strlen(in_str);
 
-	const char config_str[] = "!config";
+	constexpr char config_str[] = "!config";
 	const size_t config_str_len = strlen(config_str);
 
-	const char printconfig_str[] = "!printconfig\r";
+	constexpr char printconfig_str[] = "!printconfig\r";
 	const size_t printconfig_str_len = strlen(printconfig_str);
 
-	const char table_str[] = "!table";
+	constexpr char table_str[] = "!table";
 	const size_t table_str_len = strlen(table_str);
 
-	const char printtable_str[] = "!printtable\r";
+	constexpr char printtable_str[] = "!printtable\r";
 	const size_t printtable_str_len = strlen(printtable_str);
 
-	const char defconfig_str[] = "!defconfig\r";
+	constexpr char defconfig_str[] = "!defconfig\r";
 	const size_t defconfig_str_len = strlen(defconfig_str);
 
-	const char bootloader_str[] = "!bootloader\r";
+	constexpr char bootloader_str[] = "!bootloader\r";
 	const size_t bootloader_str_len = strlen(bootloader_str);
 
-	const char serial_str[] = "!serial\r";
+	constexpr char serial_str[] = "!serial\r";
 	const size_t serial_str_len = strlen(serial_str);
 
-	const char version_str[] = "!version";
+	constexpr char version_str[] = "!version";
 	const size_t version_str_len = strlen(version_str);
 
-	const char bpsnom_str[] = "!bpsnom";
+	constexpr char bpsnom_str[] = "!bpsnom";
 	const size_t bpsnom_str_len = strlen(bpsnom_str);
 
-	const char bpsdata_str[] = "!bpsdata";
+	constexpr char bpsdata_str[] = "!bpsdata";
 	const size_t bpsdata_str_len = strlen(bpsdata_str);
 
 	bool ret = false;
