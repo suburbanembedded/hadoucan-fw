@@ -119,9 +119,8 @@ class Lawicel_parser
 	virtual bool handle_ext_bootloader()                                  = 0;
 	virtual bool handle_ext_serial()                                      = 0;
 	virtual bool handle_ext_version()                                     = 0;
-
-	virtual bool handle_ext_bitrate_nominal(const unsigned bitrate) = 0;
-	virtual bool handle_ext_bitrate_data(const unsigned bitrate)    = 0;
+	virtual bool handle_ext_bitrate_nominal(const unsigned bitrate)       = 0;
+	virtual bool handle_ext_bitrate_data(const unsigned bitrate)          = 0;
 
 	protected:
 
