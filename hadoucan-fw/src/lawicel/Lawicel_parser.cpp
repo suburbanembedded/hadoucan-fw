@@ -1596,7 +1596,7 @@ bool Lawicel_parser::parse_ext_bitrate_nominal(const char* in_str)
 	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_bitrate_nominal", "");
 
 	unsigned bps = 0;
-	int ret = sscanf(in_str, "!bpsnom=%u\r", &bps);
+	const int ret = sscanf(in_str, "!bpsnom=%u\r", &bps);
 	if(ret != 1)
 	{
 		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_ext_bitrate_nominal", "parse failure");
@@ -1612,7 +1612,7 @@ bool Lawicel_parser::parse_ext_bitrate_data(const char* in_str)
 	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_bitrate_data", "");
 
 	unsigned bps = 0;
-	int ret = sscanf(in_str, "!bpsdata=%u\r", &bps);
+	const int ret = sscanf(in_str, "!bpsdata=%u\r", &bps);
 	if(ret != 1)
 	{
 		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_ext_bitrate_data", "parse failure");
