@@ -55,6 +55,8 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 	bool handle_ext_bootloader() override;
 	bool handle_ext_serial() override;
 	bool handle_ext_version() override;
+	bool handle_ext_bitrate_nominal(const unsigned bitrate) override;
+	bool handle_ext_bitrate_data(const unsigned bitrate) override;
 
 	protected:
 

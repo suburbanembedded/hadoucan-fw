@@ -1580,35 +1580,43 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 	const size_t in_str_len = strlen(in_str);
 
-	const char config_str[] = "!config";
+	constexpr char config_str[] = "!config";
 	const size_t config_str_len = strlen(config_str);
 
-	const char printconfig_str[] = "!printconfig\r";
+	constexpr char printconfig_str[] = "!printconfig\r";
 	const size_t printconfig_str_len = strlen(printconfig_str);
 
-	const char table_str[] = "!table";
+	constexpr char table_str[] = "!table";
 	const size_t table_str_len = strlen(table_str);
 
-	const char printtable_str[] = "!printtable\r";
+	constexpr char printtable_str[] = "!printtable\r";
 	const size_t printtable_str_len = strlen(printtable_str);
 
-	const char defconfig_str[] = "!defconfig\r";
+	constexpr char defconfig_str[] = "!defconfig\r";
 	const size_t defconfig_str_len = strlen(defconfig_str);
 
-	const char bootloader_str[] = "!bootloader\r";
+	constexpr char bootloader_str[] = "!bootloader\r";
 	const size_t bootloader_str_len = strlen(bootloader_str);
 
-	const char serial_str[] = "!serial\r";
+	constexpr char serial_str[] = "!serial\r";
 	const size_t serial_str_len = strlen(serial_str);
 
-	const char version_str[] = "!version";
+	constexpr char version_str[] = "!version";
 	const size_t version_str_len = strlen(version_str);
+
+	constexpr char bpsnom_str[] = "!bpsnom";
+	const size_t bpsnom_str_len = strlen(bpsnom_str);
+
+	constexpr char bpsdata_str[] = "!bpsdata";
+	const size_t bpsdata_str_len = strlen(bpsdata_str);
 
 	bool ret = false;
 
 	//TODO: this does not compare substrings as true
 	if(strncmp(in_str, config_str, config_str_len) == 0)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Set config");
+
 		auto it = std::find(in_str, in_str+in_str_len, ':');
 
 		if(it == (in_str+in_str_len))
@@ -1624,10 +1632,14 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	}
 	else if(strncmp(in_str, printconfig_str, printconfig_str_len) == 0)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Print config");
+
 		ret = handle_ext_print_config();
 	}
 	else if(strncmp(in_str, table_str, table_str_len) == 0)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Set bitrate table");
+
 		auto it = std::find(in_str, in_str+in_str_len, ':');
 
 		if(it == (in_str+in_str_len))
@@ -1641,29 +1653,45 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	}
 	else if(strncmp(in_str, printtable_str, printtable_str_len) == 0)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Print bitrate table");
+
 		ret = handle_ext_print_bitrate_table();
 	}
 	else if(strncmp(in_str, defconfig_str, defconfig_str_len) == 0)
 	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "defconfig");
+
 		ret = handle_ext_defconfig();
 	}
 	else if(strncmp(in_str, bootloader_str, bootloader_str_len) == 0)
 	{
-		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Rebooting to bootloader");
+		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_extended_cmd", "Rebooting to bootloader");
 
 		ret = handle_ext_bootloader();
 	}
 	else if(strncmp(in_str, serial_str, serial_str_len) == 0)
 	{
-		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended serial number");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Extended serial number");
 
 		ret = handle_ext_serial();
 	}
 	else if(strncmp(in_str, version_str, version_str_len) == 0)
 	{
-		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended version number");
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Extended version number");
 
 		ret = handle_ext_version();
+	}
+	else if(strncmp(in_str, bpsnom_str, bpsnom_str_len) == 0)
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Extended nominal bitrate");
+
+		ret = parse_ext_bitrate_nominal(in_str);
+	}
+	else if(strncmp(in_str, bpsdata_str, bpsdata_str_len) == 0)
+	{
+		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Extended data bitrate");
+
+		ret = parse_ext_bitrate_data(in_str);
 	}
 	else
 	{
@@ -1680,6 +1708,39 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 	write_cr();
 	return ret;
+}
+
+bool Lawicel_parser::parse_ext_bitrate_nominal(const char* in_str)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_bitrate_nominal", "");
+
+	unsigned bps = 0;
+	const int ret = sscanf(in_str, "!bpsnom=%u\r", &bps);
+	if(ret != 1)
+	{
+		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_ext_bitrate_nominal", "parse failure");
+		return false;
+	}
+
+	return handle_ext_bitrate_nominal(bps);
+}
+bool Lawicel_parser::parse_ext_bitrate_data(const char* in_str)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_bitrate_data", "");
+
+	unsigned bps = 0;
+	const int ret = sscanf(in_str, "!bpsdata=%u\r", &bps);
+	if(ret != 1)
+	{
+		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_ext_bitrate_data", "parse failure");
+		return false;
+	}
+
+	return handle_ext_bitrate_data(bps);
 }
 
 bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)
