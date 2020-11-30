@@ -678,3 +678,26 @@ bool Lawicel_parser_stm32::handle_ext_version()
 
 	return true;
 }
+
+bool Lawicel_parser_stm32::handle_ext_bitrate_nominal(const unsigned bitrate) override
+{
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_nominal", "");
+
+	CAN_USB_app_config config;
+	can_usb_app.get_config(&config);
+
+	config.get_config().bitrate_nominal = bitrate;
+
+	return can_usb_app.write_config(config);
+}
+bool Lawicel_parser_stm32::handle_ext_bitrate_data(const unsigned bitrate) override
+{
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_data", "");
+
+	CAN_USB_app_config config;
+	can_usb_app.get_config(&config);
+
+	config.get_config().bitrate_data = bitrate;
+
+	return can_usb_app.write_config(config);
+}

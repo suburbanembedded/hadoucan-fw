@@ -1493,6 +1493,12 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	const char version_str[] = "!version";
 	const size_t version_str_len = strlen(version_str);
 
+	const char bpsnom_str[] = "!bpsnom";
+	const size_t bpsnom_str_len = strlen(bpsnom_str);
+
+	const char bpsdata_str[] = "!bpsdata";
+	const size_t bpsdata_str_len = strlen(bpsdata_str);
+
 	bool ret = false;
 
 	//TODO: this does not compare substrings as true
@@ -1554,6 +1560,18 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 		ret = handle_ext_version();
 	}
+	else if(strncmp(in_str, bpsnom_str, bpsnom_str_len) == 0)
+	{
+		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended nominal bitrate");
+
+		ret = parse_ext_bitrate_nominal();
+	}
+	else if(strncmp(in_str, bpsdata_str, bpsdata_str_len) == 0)
+	{
+		logger->log(LOG_LEVEL::INFO, "Lawicel_parser::parse_extended_cmd", "Extended data bitrate");
+
+		ret = parse_ext_bitrate_data();
+	}
 	else
 	{
 		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_extended_cmd", "no handler for %s", in_str);
@@ -1569,6 +1587,39 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 
 	write_cr();
 	return ret;
+}
+
+bool Lawicel_parser::parse_ext_bitrate_nominal(const char* in_str)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_bitrate_nominal", "");
+
+	unsigned bps = 0;
+	int ret = sscanf(in_str, "!bpsnom=%u\r", &bps);
+	if(ret != 1)
+	{
+		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_ext_bitrate_nominal", "parse failure");
+		return false;
+	}
+
+	return handle_ext_bitrate_nominal(bps);
+}
+bool Lawicel_parser::parse_ext_bitrate_data(const char* in_str)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_bitrate_data", "");
+
+	unsigned bps = 0;
+	int ret = sscanf(in_str, "!bpsdata=%u\r", &bps);
+	if(ret != 1)
+	{
+		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_ext_bitrate_data", "parse failure");
+		return false;
+	}
+
+	return handle_ext_bitrate_data(bps);
 }
 
 bool Lawicel_parser::queue_rx_packet(const std::string& packet_str)

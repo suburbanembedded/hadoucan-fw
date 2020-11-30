@@ -111,14 +111,17 @@ class Lawicel_parser
 
 	virtual bool handle_set_autostartup(const bool enable) = 0;
 
-	virtual bool handle_ext_config(const std::vector<char>& config) = 0;
-	virtual bool handle_ext_print_config() = 0;
+	virtual bool handle_ext_config(const std::vector<char>& config)       = 0;
+	virtual bool handle_ext_print_config()                                = 0;
 	virtual bool handle_ext_bitrate_table(const std::vector<char>& table) = 0;
-	virtual bool handle_ext_print_bitrate_table() = 0;
-	virtual bool handle_ext_defconfig() = 0;
-	virtual bool handle_ext_bootloader() = 0;
-	virtual bool handle_ext_serial() = 0;
-	virtual bool handle_ext_version() = 0;
+	virtual bool handle_ext_print_bitrate_table()                         = 0;
+	virtual bool handle_ext_defconfig()                                   = 0;
+	virtual bool handle_ext_bootloader()                                  = 0;
+	virtual bool handle_ext_serial()                                      = 0;
+	virtual bool handle_ext_version()                                     = 0;
+
+	virtual bool handle_ext_bitrate_nominal(const unsigned bitrate) = 0;
+	virtual bool handle_ext_bitrate_data(const unsigned bitrate)    = 0;
 
 	protected:
 
@@ -172,6 +175,9 @@ class Lawicel_parser
 	bool parse_fd_data(const char* data_str, const uint8_t data_len, std::array<uint8_t, 64>* const data);
 
 	bool parse_extended_cmd(const char* in_str);
+
+	bool parse_ext_bitrate_nominal(const char* in_str);
+	bool parse_ext_bitrate_data(const char* in_str);
 
 	bool write_bell();
 	bool write_cr();
