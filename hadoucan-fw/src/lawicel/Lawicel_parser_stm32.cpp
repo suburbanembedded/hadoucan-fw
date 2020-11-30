@@ -681,7 +681,7 @@ bool Lawicel_parser_stm32::handle_ext_version()
 
 bool Lawicel_parser_stm32::handle_ext_bitrate_nominal(const unsigned bitrate) override
 {
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_nominal", "");
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_nominal", "%u", bitrate);
 
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
@@ -692,7 +692,7 @@ bool Lawicel_parser_stm32::handle_ext_bitrate_nominal(const unsigned bitrate) ov
 }
 bool Lawicel_parser_stm32::handle_ext_bitrate_data(const unsigned bitrate) override
 {
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_data", "");
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_data", "%u", bitrate);
 
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
