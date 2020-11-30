@@ -15,32 +15,45 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include <cinttypes>
+
 bool set_can_clk(const uint32_t can_clk)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 	using freertos_util::logging::LOG_LEVEL;
 
-	logger->log(LOG_LEVEL::INFO, "STM32_fdcan_tx::set_can_clk", "set_can_clk %d", can_clk);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_can_clk", "set_can_clk %" PRIu32, can_clk);
 
 	const uint32_t hse_clk = HSE_VALUE;
 	if(hse_clk != 24000000U)
 	{
+		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "HSE clock is %" PRIu32 ", requires 24MHz", HSE_VALUE);
 		return false;
 	}
 
 	RCC_PeriphCLKInitTypeDef periph_config;
 	HAL_RCCEx_GetPeriphCLKConfig(&periph_config);
 
+	// HAL_RCCEx_GetPeriphCLKConfig enables all of the clocks...
+	// we need to fix the list to the clocks actually used
+	periph_config.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_FDCAN
+                              |RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_RNG
+                              |RCC_PERIPHCLK_QSPI;
+
 	bool ret = false;
 	switch(periph_config.FdcanClockSelection)
 	{
 		case RCC_FDCANCLKSOURCE_HSE:
 		{
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection is HSE, requires PLL2");
+
 			ret = true;
 			break;
 		}
 		case RCC_FDCANCLKSOURCE_PLL:
 		{
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection is PLL, requires PLL2");
+
 			ret = false;
 			break;
 		}
@@ -77,6 +90,8 @@ bool set_can_clk(const uint32_t can_clk)
 				}
 				default:
 				{
+					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "can_clk is not 24, 60, or 80 MHz");
+
 					ret = false;
 					break;
 				}
@@ -86,6 +101,8 @@ bool set_can_clk(const uint32_t can_clk)
 		}
 		default:
 		{
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection is unknown, requires PLL2");
+
 			ret = false;
 			break;
 		}
@@ -95,6 +112,8 @@ bool set_can_clk(const uint32_t can_clk)
 	{
 		if(HAL_RCCEx_PeriphCLKConfig(&periph_config) != HAL_OK)
 		{
+			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::set_can_clk", "HAL_RCCEx_PeriphCLKConfig failed");
+
 			ret = false;
 		}
 	}
@@ -104,6 +123,9 @@ bool set_can_clk(const uint32_t can_clk)
 
 bool get_can_clk(uint32_t* const can_clk)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+	
 	const uint32_t hse_clk = HSE_VALUE;
 
 	RCC_PeriphCLKInitTypeDef periph_config;
@@ -147,6 +169,8 @@ bool get_can_clk(uint32_t* const can_clk)
 			break;
 		}
 	}
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::get_can_clk", "get_can_clk is %d", *can_clk);
 
 	return ret;
 }
@@ -244,6 +268,18 @@ bool STM32_fdcan_tx::init()
 					}
 				}
 				break;
+			}
+		}
+
+		logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "set clock");
+		uint32_t current_can_clk = 0;
+		get_can_clk(&current_can_clk);
+		if(current_can_clk != m_config.can_clock)
+		{
+			if(!set_can_clk(m_config.can_clock))
+			{
+				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "set_can_clk failed");
+				return false;
 			}
 		}
 
@@ -609,10 +645,18 @@ bool STM32_fdcan_tx::set_baud(const int std_baud)
 
 bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, FDCAN_HandleTypeDef* const handle)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+
 	handle->Init.NominalPrescaler = std_baud.pre;      //1-512
 	handle->Init.NominalSyncJumpWidth = std_baud.sjw;  //1-128
 	handle->Init.NominalTimeSeg1 = std_baud.tseg1;     //1-256 
 	handle->Init.NominalTimeSeg2 = std_baud.tseg2;     //1-128
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalPrescaler: %d", std_baud.pre);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalSyncJumpWidth: %d", std_baud.sjw);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalTimeSeg1: %d", std_baud.tseg1);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalTimeSeg2: %d", std_baud.tseg2);
 
 	return true;
 }
@@ -649,6 +693,8 @@ bool STM32_fdcan_tx::set_baud(const int std_baud, const int fd_baud)
 }
 bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& fd_baud, FDCAN_HandleTypeDef* const handle)
 {
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
 
 	handle->Init.NominalPrescaler = std_baud.pre;      //1-512
 	handle->Init.NominalSyncJumpWidth = std_baud.sjw;  //1-128
@@ -659,6 +705,16 @@ bool STM32_fdcan_tx::set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Ent
 	handle->Init.DataSyncJumpWidth = fd_baud.sjw;  //1-16
 	handle->Init.DataTimeSeg1 = fd_baud.tseg1;     //1-32 
 	handle->Init.DataTimeSeg2 = fd_baud.tseg2;     //1-16
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalPrescaler: %d", std_baud.pre);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalSyncJumpWidth: %d", std_baud.sjw);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalTimeSeg1: %d", std_baud.tseg1);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "NominalTimeSeg2: %d", std_baud.tseg2);
+
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "DataPrescaler: %d", fd_baud.pre);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "DataSyncJumpWidth: %d", fd_baud.sjw);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "DataTimeSeg1: %d", fd_baud.tseg1);
+	logger->log(LOG_LEVEL::DEBUG, "STM32_fdcan_tx::set_baud", "DataTimeSeg2: %d", fd_baud.tseg2);
 
 	return true;
 }

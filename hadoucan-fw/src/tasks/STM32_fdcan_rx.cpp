@@ -196,6 +196,15 @@ bool STM32_fdcan_rx::append_packet_data(const CAN_fd_packet& pk, std::string* co
 {
 	std::array<char, 2+1> str;
 
+	//RTR packets do not actually have data
+	if(pk.rxheader.FDFormat == FDCAN_CLASSIC_CAN)
+	{
+		if(pk.rxheader.RxFrameType == FDCAN_REMOTE_FRAME)
+		{
+			return true;
+		}
+	}
+
 	const size_t byte_len = get_size_from_stm32_dlc(pk.rxheader.DataLength);
 	for(size_t i = 0; i < byte_len; i++)
 	{
