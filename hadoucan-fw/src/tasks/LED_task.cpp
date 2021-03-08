@@ -19,6 +19,10 @@ void LED_task::set_mode_normal()
 {
 	m_mode = LED_MODE::NORMAL;
 }
+void LED_task::set_mode_error()
+{
+	m_mode = LED_MODE::ERROR;
+}
 
 void LED_task::all_off()
 {
@@ -75,7 +79,7 @@ void LED_task::work()
 			}
 		}
 
-		vTaskDelay(50);
+		vTaskDelay(pdMS_TO_TICKS(50));
 	}
 }
 
@@ -86,6 +90,7 @@ void LED_task::handle_boot_mode()
 void LED_task::handle_normal_mode()
 {
 	HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOD, RED1_Pin,   GPIO_PIN_SET);
 
 	if(m_can_tx_activity)
 	{
@@ -132,4 +137,6 @@ void LED_task::handle_normal_mode()
 void LED_task::handle_error_mode()
 {
 	all_off();
+
+	HAL_GPIO_WritePin(GPIOD, RED1_Pin,   GPIO_PIN_RESET);
 }
