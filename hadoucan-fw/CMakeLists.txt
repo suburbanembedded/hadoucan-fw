@@ -125,7 +125,7 @@ add_custom_target(hadoucan-fw_size
 )
 
 add_custom_target(upload_hadoucan-fw
-	COMMAND openocd -f /usr/local/share/openocd/scripts/interface/stlink.cfg -f /usr/local/share/openocd/scripts/target/stm32h7x.cfg -c "init;reset halt;load_image hadoucan-fw.elf;verify_image hadoucan-fw.elf;mem2array estack_reset_handler 32 0x24000000 2;reg msp $estack_reset_handler(0); resume $estack_reset_handler(1);exit"
+	COMMAND openocd -f /usr/local/share/openocd/scripts/interface/stlink-v2.cfg -f /usr/local/share/openocd/scripts/target/stm32h7x.cfg -c "init;reset halt;load_image hadoucan-fw.elf;verify_image hadoucan-fw.elf;mem2array estack_reset_handler 32 0x24000000 2;reg msp $estack_reset_handler(0); resume $estack_reset_handler(1);exit"
 	DEPENDS hadoucan-fw.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM
