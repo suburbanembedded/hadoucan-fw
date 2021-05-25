@@ -63,6 +63,8 @@ public:
 
 		freertos_util::logging::LOG_LEVEL log_level;
 		unsigned uart_baud;
+
+		unsigned usb_tx_delay;
 	};
 
 	static Config_Set get_defualt()

@@ -2,6 +2,8 @@
 
 #include "freertos_cpp_util/logging/Global_logger.hpp"
 
+#include "CAN_USB_app_config.hpp"
+
 constexpr size_t USB_tx_buffer_task::BUFFER_HIGH_WATERMARK;
 
 constexpr uint32_t USB_tx_buffer_task::USB_HS_PACKET_WAIT_MS;
@@ -15,6 +17,13 @@ void USB_tx_buffer_task::work()
 	m_packet_buf.reserve(512);
 
 	std::function<bool(void)> has_buffer_pred = std::bind(&USB_tx_buffer_task::has_buffer, this);
+
+
+	unsigned usb_tx_delay = 50;
+	{
+		std::unique_lock<Mutex_static_recursive> lock;
+		usb_tx_delay = can_usb_app.get_config(&lock).usb_tx_delay;
+	}
 
 	for(;;)
 	{

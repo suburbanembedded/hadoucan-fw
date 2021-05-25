@@ -39,6 +39,8 @@ void CAN_USB_app_config::set_defualt()
 
 	m_config.log_level = freertos_util::logging::LOG_LEVEL::INFO;
 	m_config.uart_baud = 921600U;
+
+	m_config.usb_tx_delay = 50;
 }
 
 bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
@@ -241,6 +243,15 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 
 		node = config_doc->NewElement("uart_baud");
 		node->SetText(m_config.uart_baud);
+		debug->InsertEndChild(node);
+	}
+
+	{
+		tinyxml2::XMLElement* timeout = config_doc->NewElement("timeout");
+		config_doc_root->InsertEndChild(debug);
+
+		node = config_doc->NewElement("usb_tx_delay");
+		node->SetText(freertos_util::logging::LOG_LEVEL_to_str(m_config.usb_tx_delay));
 		debug->InsertEndChild(node);
 	}
 
@@ -520,6 +531,21 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		if(!get_uint_text(debug_element, "uart_baud", &m_config.uart_baud))
 		{
 			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug/uart_baud");
+			return false;
+		}
+	}
+
+	{
+		const tinyxml2::XMLElement* debug_element = config_root->FirstChildElement("debug");
+		if(debug_element == nullptr)
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug");
+			return false;
+		}
+
+		if(!get_uint_text(debug_element, "usb_tx_delay", &m_config.usb_tx_delay))
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/usb_tx_delay");
 			return false;
 		}
 	}
