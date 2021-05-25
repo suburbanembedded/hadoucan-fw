@@ -238,6 +238,12 @@ void STM32_fdcan_rx::work()
 	std::string packet_str;
 	packet_str.reserve(1+8+128+4+1);
 
+	m_can_rx_poll_interval = 16;
+	{
+		std::unique_lock<Mutex_static_recursive> lock;
+		m_can_rx_poll_interval = can_usb_app.get_config(&lock).can_rx_poll_interval;
+	}
+
 	for(;;)
 	{
 		//if the fifo is empty, wait for the watermark interrupt or a timeout
@@ -248,7 +254,7 @@ void STM32_fdcan_rx::work()
 			const uint32_t fifo0_depth = HAL_FDCAN_GetRxFifoFillLevel(m_fdcan_handle, FDCAN_RX_FIFO0);
 			if(fifo0_depth == 0)
 			{
-				queue_set_pk = m_can_fd_queue.pop_front(&pk, pdMS_TO_TICKS(50));
+				queue_set_pk = m_can_fd_queue.pop_front(&pk, pdMS_TO_TICKS(m_can_rx_poll_interval));
 			}
 		}
 
