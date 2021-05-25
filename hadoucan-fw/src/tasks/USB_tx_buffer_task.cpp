@@ -6,8 +6,6 @@
 
 constexpr size_t USB_tx_buffer_task::BUFFER_HIGH_WATERMARK;
 
-constexpr uint32_t USB_tx_buffer_task::USB_HS_PACKET_WAIT_MS;
-
 void USB_tx_buffer_task::work()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
@@ -31,7 +29,7 @@ void USB_tx_buffer_task::work()
 
 		{
 			std::unique_lock<Mutex_static> lock(m_tx_buf_mutex);
-			m_tx_buf_condvar.wait_for(lock, std::chrono::milliseconds(USB_HS_PACKET_WAIT_MS), std::cref(has_buffer_pred));
+			m_tx_buf_condvar.wait_for(lock, std::chrono::milliseconds(usb_tx_delay), std::cref(has_buffer_pred));
 			
 			//might be empty if timed out
 			if(!m_tx_buf.empty())

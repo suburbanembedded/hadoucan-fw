@@ -112,8 +112,6 @@ protected:
 		return false;
 	}
 
-	static constexpr uint32_t USB_HS_PACKET_WAIT_MS = 50;
-
 	std::deque<uint8_t> m_tx_buf;
 	Mutex_static m_tx_buf_mutex;
 	Condition_variable m_tx_buf_condvar;
