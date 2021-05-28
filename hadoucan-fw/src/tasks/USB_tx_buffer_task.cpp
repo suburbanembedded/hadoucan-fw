@@ -3,6 +3,9 @@
 #include "freertos_cpp_util/logging/Global_logger.hpp"
 
 #include "CAN_USB_app_config.hpp"
+#include "global_app_inst.hpp"
+
+#include "freertos_cpp_util/Mutex_static_recursive.hpp"
 
 constexpr size_t USB_tx_buffer_task::BUFFER_HIGH_WATERMARK;
 
