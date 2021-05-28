@@ -253,21 +253,21 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 		config_doc_root->InsertEndChild(timeout);
 
 		tinyxml2::XMLComment* comment = config_doc->NewComment("Set usb_tx_delay to number of ms to wait for full USB packet");
-		config_doc_root->InsertEndChild(comment);
+		timeout->InsertEndChild(comment);
 
 		node = config_doc->NewElement("usb_tx_delay");
 		node->SetText(m_config.usb_tx_delay);
 		timeout->InsertEndChild(node);
 
 		comment = config_doc->NewComment("Set can_rx_poll_interval number of ms to check for can packets in fifo under the watermark");
-		config_doc_root->InsertEndChild(comment);
+		timeout->InsertEndChild(comment);
 
 		node = config_doc->NewElement("can_rx_poll_interval");
 		node->SetText(m_config.can_rx_poll_interval);
 		timeout->InsertEndChild(node);
 
 		comment = config_doc->NewComment("Set can_rx_isr_watermark to number of can packets to collect in the CAN controller ram before triggering isr");
-		config_doc_root->InsertEndChild(comment);
+		timeout->InsertEndChild(comment);
 
 		node = config_doc->NewElement("can_rx_isr_watermark");
 		node->SetText(m_config.can_rx_isr_watermark);
