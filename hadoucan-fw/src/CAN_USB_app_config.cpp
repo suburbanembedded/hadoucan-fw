@@ -41,6 +41,7 @@ void CAN_USB_app_config::set_defualt()
 	m_config.uart_baud = 921600U;
 
 	m_config.usb_tx_delay         = 50;
+	m_config.usb_tx_pkt_watermark = 512;
 	m_config.can_rx_poll_interval = 50;
 	m_config.can_rx_isr_watermark = 16;
 }
@@ -257,6 +258,13 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 
 		node = config_doc->NewElement("usb_tx_delay");
 		node->SetText(m_config.usb_tx_delay);
+		timeout->InsertEndChild(node);
+
+		comment = config_doc->NewComment("Set usb_tx_pkt_watermark to number of bytes to try and send in one USB packet, for FS try 64, for HS try 512.");
+		timeout->InsertEndChild(comment);
+
+		node = config_doc->NewElement("usb_tx_pkt_watermark");
+		node->SetText(m_config.usb_tx_pkt_watermark);
 		timeout->InsertEndChild(node);
 
 		comment = config_doc->NewComment("Set can_rx_poll_interval number of ms to check for can packets in fifo under the watermark");
@@ -565,6 +573,12 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 		if(!get_uint_text(timeout_element, "usb_tx_delay", &m_config.usb_tx_delay))
 		{
 			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/usb_tx_delay");
+			return false;
+		}
+
+		if(!get_uint_text(timeout_element, "usb_tx_pkt_watermark", &m_config.usb_tx_pkt_watermark))
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/usb_tx_pkt_watermark");
 			return false;
 		}
 

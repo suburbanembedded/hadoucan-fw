@@ -65,6 +65,7 @@ public:
 		unsigned uart_baud;
 
 		unsigned usb_tx_delay;
+		unsigned usb_tx_pkt_watermark;
 		unsigned can_rx_poll_interval;
 		unsigned can_rx_isr_watermark;
 	};
