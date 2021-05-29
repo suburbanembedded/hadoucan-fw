@@ -555,26 +555,26 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 	}
 
 	{
-		const tinyxml2::XMLElement* debug_element = config_root->FirstChildElement("debug");
-		if(debug_element == nullptr)
+		const tinyxml2::XMLElement* timeout_element = config_root->FirstChildElement("timeout");
+		if(timeout_element == nullptr)
 		{
-			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug");
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout");
 			return false;
 		}
 
-		if(!get_uint_text(debug_element, "usb_tx_delay", &m_config.usb_tx_delay))
+		if(!get_uint_text(timeout_element, "usb_tx_delay", &m_config.usb_tx_delay))
 		{
 			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/usb_tx_delay");
 			return false;
 		}
 
-		if(!get_uint_text(debug_element, "can_rx_poll_interval", &m_config.can_rx_poll_interval))
+		if(!get_uint_text(timeout_element, "can_rx_poll_interval", &m_config.can_rx_poll_interval))
 		{
 			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/can_rx_poll_interval");
 			return false;
 		}
 
-		if(!get_uint_text(debug_element, "can_rx_isr_watermark", &m_config.can_rx_isr_watermark))
+		if(!get_uint_text(timeout_element, "can_rx_isr_watermark", &m_config.can_rx_isr_watermark))
 		{
 			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/can_rx_isr_watermark");
 			return false;
