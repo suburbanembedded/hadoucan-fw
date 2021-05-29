@@ -19,11 +19,13 @@ void USB_tx_buffer_task::work()
 
 	std::function<bool(void)> has_buffer_pred = std::bind(&USB_tx_buffer_task::has_buffer, this);
 
-
-	unsigned usb_tx_delay = 50;
+	//read config
+	m_usb_tx_pkt_watermark = 512;
+	m_usb_tx_delay         = 50;
 	{
 		std::unique_lock<Mutex_static_recursive> lock;
-		usb_tx_delay = can_usb_app.get_config(&lock).usb_tx_delay;
+		m_usb_tx_delay         = can_usb_app.get_config(&lock).usb_tx_delay;
+		m_usb_tx_pkt_watermark = can_usb_app.get_config(&lock).usb_tx_pkt_watermark;
 	}
 
 	for(;;)
@@ -32,7 +34,7 @@ void USB_tx_buffer_task::work()
 
 		{
 			std::unique_lock<Mutex_static> lock(m_tx_buf_mutex);
-			m_tx_buf_condvar.wait_for(lock, std::chrono::milliseconds(usb_tx_delay), std::cref(has_buffer_pred));
+			m_tx_buf_condvar.wait_for(lock, std::chrono::milliseconds(m_usb_tx_delay), std::cref(has_buffer_pred));
 			
 			//might be empty if timed out
 			if(!m_tx_buf.empty())
