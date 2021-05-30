@@ -63,6 +63,11 @@ public:
 
 		freertos_util::logging::LOG_LEVEL log_level;
 		unsigned uart_baud;
+
+		unsigned usb_tx_delay;
+		unsigned usb_tx_pkt_watermark;
+		unsigned can_rx_poll_interval;
+		unsigned can_rx_isr_watermark;
 	};
 
 	static Config_Set get_defualt()

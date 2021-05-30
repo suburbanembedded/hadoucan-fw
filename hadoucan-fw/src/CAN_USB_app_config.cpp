@@ -39,6 +39,11 @@ void CAN_USB_app_config::set_defualt()
 
 	m_config.log_level = freertos_util::logging::LOG_LEVEL::INFO;
 	m_config.uart_baud = 921600U;
+
+	m_config.usb_tx_delay         = 50;
+	m_config.usb_tx_pkt_watermark = 512;
+	m_config.can_rx_poll_interval = 50;
+	m_config.can_rx_isr_watermark = 16;
 }
 
 bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
@@ -242,6 +247,39 @@ bool CAN_USB_app_config::to_xml(tinyxml2::XMLDocument* const config_doc) const
 		node = config_doc->NewElement("uart_baud");
 		node->SetText(m_config.uart_baud);
 		debug->InsertEndChild(node);
+	}
+
+	{
+		tinyxml2::XMLElement* timeout = config_doc->NewElement("timeout");
+		config_doc_root->InsertEndChild(timeout);
+
+		tinyxml2::XMLComment* comment = config_doc->NewComment("Set usb_tx_delay to number of ms to wait for full USB packet");
+		timeout->InsertEndChild(comment);
+
+		node = config_doc->NewElement("usb_tx_delay");
+		node->SetText(m_config.usb_tx_delay);
+		timeout->InsertEndChild(node);
+
+		comment = config_doc->NewComment("Set usb_tx_pkt_watermark to number of bytes to try and send in one USB packet, for FS try 64, for HS try 512.");
+		timeout->InsertEndChild(comment);
+
+		node = config_doc->NewElement("usb_tx_pkt_watermark");
+		node->SetText(m_config.usb_tx_pkt_watermark);
+		timeout->InsertEndChild(node);
+
+		comment = config_doc->NewComment("Set can_rx_poll_interval number of ms to check for can packets in fifo under the watermark");
+		timeout->InsertEndChild(comment);
+
+		node = config_doc->NewElement("can_rx_poll_interval");
+		node->SetText(m_config.can_rx_poll_interval);
+		timeout->InsertEndChild(node);
+
+		comment = config_doc->NewComment("Set can_rx_isr_watermark to number of can packets to collect in the CAN controller ram before triggering isr");
+		timeout->InsertEndChild(comment);
+
+		node = config_doc->NewElement("can_rx_isr_watermark");
+		node->SetText(m_config.can_rx_isr_watermark);
+		timeout->InsertEndChild(node);
 	}
 
 	return true;
@@ -522,6 +560,40 @@ bool CAN_USB_app_config::from_xml(const tinyxml2::XMLDocument& config_doc)
 			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element debug/uart_baud");
 			return false;
 		}
+	}
+
+	{
+		const tinyxml2::XMLElement* timeout_element = config_root->FirstChildElement("timeout");
+		if(timeout_element == nullptr)
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout");
+			return false;
+		}
+
+		if(!get_uint_text(timeout_element, "usb_tx_delay", &m_config.usb_tx_delay))
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/usb_tx_delay");
+			return false;
+		}
+
+		if(!get_uint_text(timeout_element, "usb_tx_pkt_watermark", &m_config.usb_tx_pkt_watermark))
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/usb_tx_pkt_watermark");
+			return false;
+		}
+
+		if(!get_uint_text(timeout_element, "can_rx_poll_interval", &m_config.can_rx_poll_interval))
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/can_rx_poll_interval");
+			return false;
+		}
+
+		if(!get_uint_text(timeout_element, "can_rx_isr_watermark", &m_config.can_rx_isr_watermark))
+		{
+			logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "config.xml: could not find element timeout/can_rx_isr_watermark");
+			return false;
+		}
+		
 	}
 
 	return true;

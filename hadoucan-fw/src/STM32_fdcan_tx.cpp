@@ -2,6 +2,7 @@
 
 #include "lawicel/STM32_FDCAN_DLC.hpp"
 
+#include "CAN_USB_app_config.hpp"
 #include "global_app_inst.hpp"
 
 #include "main.h"
@@ -408,8 +409,14 @@ bool STM32_fdcan_tx::init()
 		return false;
 	}
 
+	unsigned can_rx_isr_watermark = 16;
+	{
+		std::unique_lock<Mutex_static_recursive> lock;
+		can_rx_isr_watermark = can_usb_app.get_config(&lock).can_rx_isr_watermark;
+	}
+
 	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFifoWatermark");
-	ret = HAL_FDCAN_ConfigFifoWatermark(m_fdcan_handle, FDCAN_CFG_RX_FIFO0, 16);
+	ret = HAL_FDCAN_ConfigFifoWatermark(m_fdcan_handle, FDCAN_CFG_RX_FIFO0, can_rx_isr_watermark);
 	if(ret != HAL_OK)
 	{
 		logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigFifoWatermark for FIFO0 failed");

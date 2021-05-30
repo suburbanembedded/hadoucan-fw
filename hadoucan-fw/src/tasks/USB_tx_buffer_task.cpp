@@ -2,9 +2,12 @@
 
 #include "freertos_cpp_util/logging/Global_logger.hpp"
 
-constexpr size_t USB_tx_buffer_task::BUFFER_HIGH_WATERMARK;
+#include "CAN_USB_app_config.hpp"
+#include "global_app_inst.hpp"
 
-constexpr uint32_t USB_tx_buffer_task::USB_HS_PACKET_WAIT_MS;
+#include "freertos_cpp_util/Mutex_static_recursive.hpp"
+
+constexpr size_t USB_tx_buffer_task::BUFFER_HIGH_WATERMARK;
 
 void USB_tx_buffer_task::work()
 {
@@ -16,13 +19,22 @@ void USB_tx_buffer_task::work()
 
 	std::function<bool(void)> has_buffer_pred = std::bind(&USB_tx_buffer_task::has_buffer, this);
 
+	//read config
+	m_usb_tx_pkt_watermark = 512;
+	m_usb_tx_delay         = 50;
+	{
+		std::unique_lock<Mutex_static_recursive> lock;
+		m_usb_tx_delay         = can_usb_app.get_config(&lock).usb_tx_delay;
+		m_usb_tx_pkt_watermark = can_usb_app.get_config(&lock).usb_tx_pkt_watermark;
+	}
+
 	for(;;)
 	{
 		m_packet_buf.clear();
 
 		{
 			std::unique_lock<Mutex_static> lock(m_tx_buf_mutex);
-			m_tx_buf_condvar.wait_for(lock, std::chrono::milliseconds(USB_HS_PACKET_WAIT_MS), std::cref(has_buffer_pred));
+			m_tx_buf_condvar.wait_for(lock, std::chrono::milliseconds(m_usb_tx_delay), std::cref(has_buffer_pred));
 			
 			//might be empty if timed out
 			if(!m_tx_buf.empty())

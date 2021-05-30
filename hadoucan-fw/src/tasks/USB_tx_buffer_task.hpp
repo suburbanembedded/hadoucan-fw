@@ -23,6 +23,9 @@ public:
 	USB_tx_buffer_task()
 	{
 		m_usb_driver = nullptr;
+
+		m_usb_tx_pkt_watermark = 512;
+		m_usb_tx_delay         = 50;
 	}
 
 	void set_usb_driver(usb_driver_base* const usb_driver)
@@ -103,21 +106,23 @@ protected:
 			return false;
 		}
 
-		if(m_tx_buf.size() >= 512)
+		if(m_tx_buf.size() >= m_usb_tx_pkt_watermark)
 		{
-			//yay, full USB HS packet
+			//yay, we have a watermarks worth of data
 			return true;
 		}
 
 		return false;
 	}
 
-	static constexpr uint32_t USB_HS_PACKET_WAIT_MS = 50;
-
 	std::deque<uint8_t> m_tx_buf;
 	Mutex_static m_tx_buf_mutex;
 	Condition_variable m_tx_buf_condvar;
 	Condition_variable m_tx_buf_drain_condvar;
+
+	//params
+	unsigned m_usb_tx_pkt_watermark;
+	unsigned m_usb_tx_delay;
 
 	usb_driver_base* m_usb_driver;
 };
