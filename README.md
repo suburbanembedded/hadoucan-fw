@@ -37,13 +37,13 @@ The first-in-class PPS timesync feature allows any number of Hadou-CAN to synchr
 ## Documentation
 
 User Guide
-https://suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_User_Guide.pdf
+https://docs.suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_User_Guide.pdf
 
 Datasheet
-https://suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_Datasheet.pdf
+https://docs.suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_Datasheet.pdf
 
 Quickstart Guide
-https://suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_Quickstart_Guide.pdf
+https://docs.suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_Quickstart_Guide.pdf
 
 ## Store
 
