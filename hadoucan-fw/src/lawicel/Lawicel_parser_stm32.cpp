@@ -381,21 +381,107 @@ bool Lawicel_parser_stm32::handle_get_flags()
 
 	return false;
 }
+bool Lawicel_parser_stm32::handle_set_filter_mode(const char mode)
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_filter_mode", "");
+
+	SJA1000_filter::FILTER_MODE filter_mode = SJA1000_filter::FILTER_MODE::DUAL;
+	bool ret = true;
+	switch(mode)
+	{
+		case '0':
+		{
+			logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_filter_mode", "Setting filter to DUAL");
+
+			filter_mode = SJA1000_filter::FILTER_MODE::DUAL;
+			ret = true;
+			break;
+		}
+		case '1':
+		{
+			logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_filter_mode", "Setting filter to SINGLE");
+
+			filter_mode = SJA1000_filter::FILTER_MODE::SINGLE;
+			ret = true;
+			break;
+		}
+		default:
+		{
+			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_set_filter_mode", "Invalid argument");
+
+			ret = false;
+			break;
+		}
+	}
+
+	if(ret)
+	{
+		CAN_USB_app_config config;
+		can_usb_app.get_config(&config);
+
+		if(config.get_config().sja1000_filter.mode != filter_mode)
+		{
+			config.get_config().sja1000_filter.mode = filter_mode;
+			
+			if(!can_usb_app.write_config(config))
+			{
+				logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_set_filter_mode", "config update failed");
+				return false;
+			}
+		}
+	}
+
+	return ret;	
+}
 bool Lawicel_parser_stm32::handle_set_accept_code(const uint32_t code)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_accept_code", "");
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_accept_code", "Setting accept_code to 0x%08X", code);
 
-	return false;
+	{
+		CAN_USB_app_config config;
+		can_usb_app.get_config(&config);
+
+		if(config.get_config().sja1000_filter.accept_code != code)
+		{
+			config.get_config().sja1000_filter.accept_code = code;
+			
+			if(!can_usb_app.write_config(config))
+			{
+				logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_set_accept_code", "config update failed");
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
 bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_accept_mask", "");
+	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_accept_mask", "Setting accept_mask to 0x%08X", mask);
 
-	return false;
+	{
+		CAN_USB_app_config config;
+		can_usb_app.get_config(&config);
+
+		if(config.get_config().sja1000_filter.accept_mask != mask)
+		{
+			config.get_config().sja1000_filter.accept_mask = mask;
+			
+			if(!can_usb_app.write_config(config))
+			{
+				logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_set_accept_mask", "config update failed");
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
 bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 {

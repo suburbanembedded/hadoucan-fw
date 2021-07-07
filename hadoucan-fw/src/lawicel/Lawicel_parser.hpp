@@ -101,6 +101,7 @@ class Lawicel_parser
 
 	virtual bool handle_get_flags() = 0;
 	
+	virtual bool handle_set_filter_mode(const char mode) = 0;
 	virtual bool handle_set_accept_code(const uint32_t code) = 0;
 	virtual bool handle_set_accept_mask(const uint32_t mask) = 0;
 	
@@ -148,6 +149,7 @@ class Lawicel_parser
 
 	bool parse_get_flags(const char* in_str);
 
+	bool parse_set_filter_mode(const char* in_str);
 	bool parse_set_accept_code(const char* in_str);
 	bool parse_set_accept_mask(const char* in_str);
 

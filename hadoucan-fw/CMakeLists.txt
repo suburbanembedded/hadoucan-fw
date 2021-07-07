@@ -8,9 +8,10 @@ add_executable(hadoucan-fw.elf
 
 	#src/syscalls.c
 	
+	src/hal_inst.c
 	src/main.cpp
 	src/main_cube.c
-	src/hal_inst.c
+	src/SJA1000_filter.cpp
 	src/sw_ver.cpp
 
 	src/global_app_inst.cpp
