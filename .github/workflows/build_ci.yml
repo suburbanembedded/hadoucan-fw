@@ -71,7 +71,7 @@ jobs:
     
     steps:
     - name: Get artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4.1.7
       with:
         name: hadoucan-fw-release
         path: ${{ github.workspace }}/hadoucan-fw-release-${{ github.sha }}.tar.gz
