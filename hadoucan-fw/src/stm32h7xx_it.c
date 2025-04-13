@@ -3,7 +3,6 @@
 #include "main.h"
 #include "hal_inst.h"
 
-#include "cmsis_os.h"
 #include "core_cm7.h"
 
 extern PCD_HandleTypeDef hpcd_USB_OTG_HS;
