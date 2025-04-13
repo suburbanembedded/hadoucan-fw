@@ -28,6 +28,8 @@ add_definitions(
 	#-DGTEST_LINKED_AS_SHARED_LIBRARY=0
 	#-DGTEST_CREATE_SHARED_LIBRARY=0
 
+	-DINCLUDE_xSemaphoreGetMutexHolder
+
 	-DSPIFFS_USE_MAGIC
 	-DSPIFFS_USE_MAGIC_LENGTH
 	-DSPIFFS_LOCK=spiffs_lock_dispatch
@@ -42,11 +44,25 @@ add_definitions(
 	-DMBEDTLS_CONFIG_FILE=<config-no-entropy.h>
 )
 
+set(FREERTOS_PORT GCC_ARM_CM7 CACHE STRING "")
+set(FREERTOS_HEAP 4           CACHE STRING "")
+
 include_directories(
 	hadoucan-fw/include
 	external/
 	external/mbedtls/include
 )
+
+add_library(freertos_config INTERFACE)
+target_include_directories(freertos_config SYSTEM
+	INTERFACE
+		hadoucan-fw/include
+)
+target_compile_definitions(freertos_config
+	INTERFACE
+		projCOVERAGE_TEST=0
+)
+
 
 add_library(spiffs
 	external/spiffs/src/spiffs_cache.c
@@ -65,6 +81,7 @@ add_subdirectory(external/stm32cube_fw_h7_v1_4_0)
 add_subdirectory(external/tinyxml2)
 add_subdirectory(external/mbedtls)
 add_subdirectory(external/crc)
+add_subdirectory(external/FreeRTOS-Kernel)
 
 add_subdirectory(external/bootloader_util)
 add_subdirectory(external/common_util)

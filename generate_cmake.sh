@@ -6,8 +6,8 @@ if [ -d build ]; then rm -rf build; fi
 
 BASE_PATH=$PWD
 
-RAM_TOOL="-DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_atollic_ram.cmake"
-FLASH_TOOL="-DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_atollic_flash.cmake"
+RAM_TOOL="-DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_default_ram.cmake"
+FLASH_TOOL="-DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_default_flash.cmake"
 
 TINYXML2_OPTS="-DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DBUILD_TESTS=OFF"
 
