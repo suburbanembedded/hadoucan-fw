@@ -71,6 +71,10 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 /*-----------------------------------------------------------
  * Application specific definitions.
  *
@@ -187,6 +191,10 @@ void handle_config_assert(const char* file, const int line, const char* msg);
 
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() freertos_config_runtime_stat_timer()
 #define portGET_RUN_TIME_COUNTER_VALUE()         freertos_get_runtime_stat_timer()
+
+#ifdef __cplusplus
+    }
+#endif
 
 #endif /* FREERTOS_CONFIG_H */
 
