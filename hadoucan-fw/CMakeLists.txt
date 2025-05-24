@@ -88,7 +88,7 @@ target_link_libraries(hadoucan-fw.elf
 # Generate intel hex image
 add_custom_command(
 	OUTPUT hadoucan-fw.hex
-	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -S -Oihex hadoucan-fw.elf hadoucan-fw.hex
+	COMMAND arm-none-eabi-objcopy -S -Oihex hadoucan-fw.elf hadoucan-fw.hex
 	DEPENDS hadoucan-fw.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM	
@@ -103,7 +103,7 @@ add_custom_target(hadoucan-fw_hex
 # Generate raw image
 add_custom_command(
 	OUTPUT hadoucan-fw.bin
-	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-objcopy -S -Obinary hadoucan-fw.elf hadoucan-fw.bin
+	COMMAND arm-none-eabi-objcopy -S -Obinary hadoucan-fw.elf hadoucan-fw.bin
 	DEPENDS hadoucan-fw.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM	
@@ -118,7 +118,7 @@ add_custom_target(hadoucan-fw_bin
 # Print the image size
 add_custom_target(hadoucan-fw_size
 	ALL
-	COMMAND ${ATOLLIC_PATH}/arm-atollic-eabi-size --format=sysv hadoucan-fw.elf
+	COMMAND arm-none-eabi-size --format=sysv hadoucan-fw.elf
 	DEPENDS hadoucan-fw.elf
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM
