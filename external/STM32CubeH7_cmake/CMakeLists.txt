@@ -6,6 +6,7 @@ target_include_directories(stm32h743xx_cmsis PUBLIC
 	${STM32CUBEH7_DIR}/Drivers/CMSIS/Include
 	${STM32CUBEH7_DIR}/Drivers/CMSIS/Device/ST
 	${STM32CUBEH7_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include
+	${STM32CUBEH7_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc
 )
 
 add_library(stm32h750xx_cmsis 
@@ -16,6 +17,7 @@ target_include_directories(stm32h750xx_cmsis PUBLIC
 	${STM32CUBEH7_DIR}/Drivers/CMSIS/Include
 	${STM32CUBEH7_DIR}/Drivers/CMSIS/Device/ST
 	${STM32CUBEH7_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include
+	${STM32CUBEH7_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc
 )
 
 add_library(stm32h753xx_cmsis 
@@ -26,6 +28,7 @@ target_include_directories(stm32h753xx_cmsis PUBLIC
 	${STM32CUBEH7_DIR}/Drivers/CMSIS/Include
 	${STM32CUBEH7_DIR}/Drivers/CMSIS/Device/ST
 	${STM32CUBEH7_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include
+	${STM32CUBEH7_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc
 )
 
 add_library(stm32h7xx_hal
