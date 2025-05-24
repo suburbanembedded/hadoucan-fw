@@ -21,6 +21,7 @@ add_definitions(
 
 	-DUSE_HAL_DRIVER
 	-DHSE_VALUE=\(\(uint32_t\)24000000\)
+	-DUSE_PWR_LDO_SUPPLY
 	
 	-DWORD_SIZE=4
 
