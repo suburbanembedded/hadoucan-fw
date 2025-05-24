@@ -130,3 +130,75 @@ target_include_directories(stm32h7xx_ll PUBLIC
 target_link_libraries(stm32h7xx_ll
 	stm32h750xx_cmsis
 )
+
+add_library(freertos_v10
+
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/croutine.c
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/event_groups.c
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/list.c
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/queue.c
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/tasks.c
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/timers.c
+
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/port.c
+
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
+)
+
+add_library(freertos_v10_heap1
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_1.c
+)
+
+add_library(freertos_v10_heap2
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_2.c
+)
+
+add_library(freertos_v10_heap3
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_3.c
+)
+
+add_library(freertos_v10_heap4
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
+)
+
+add_library(freertos_v10_heap5
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_5.c
+)
+
+add_library(freertos_v10_cmsis
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c
+)
+
+target_include_directories(freertos_v10 PUBLIC
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1
+)
+
+target_link_libraries(freertos_v10_heap1
+	freertos_v10
+)
+
+target_link_libraries(freertos_v10_heap2
+	freertos_v10
+)
+
+target_link_libraries(freertos_v10_heap3
+	freertos_v10
+)
+
+target_link_libraries(freertos_v10_heap4
+	freertos_v10
+)
+
+target_link_libraries(freertos_v10_heap5
+	freertos_v10
+)
+
+target_link_libraries(freertos_v10_cmsis
+	freertos_v10
+	stm32h750xx_cmsis
+)
+
+target_include_directories(freertos_v10_cmsis PUBLIC
+	${STM32CUBEH7_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS
+)
