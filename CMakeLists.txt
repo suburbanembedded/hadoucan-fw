@@ -6,6 +6,8 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 project(hadoucan-fw C CXX ASM)
 
+set(STM32CUBEH7_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/STM32CubeH7)
+
 find_package(Doxygen
              REQUIRED dot
              OPTIONAL_COMPONENTS mscgen)
@@ -61,7 +63,7 @@ target_include_directories(spiffs PUBLIC
 )
 
 add_subdirectory(hadoucan-fw)
-add_subdirectory(external/stm32cube_fw_h7_v1_4_0)
+# add_subdirectory(external/stm32cube_fw_h7_v1_4_0)
 add_subdirectory(external/tinyxml2)
 add_subdirectory(external/mbedtls)
 add_subdirectory(external/crc)
@@ -73,4 +75,4 @@ add_subdirectory(external/freertos_cpp_util)
 add_subdirectory(external/libusb_dev_cpp)
 add_subdirectory(external/mbedtls_util)
 add_subdirectory(external/tinyxml2_util)
-
+add_subdirectory(external/STM32CubeH7_cmake)
