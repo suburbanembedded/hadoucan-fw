@@ -37,3 +37,6 @@
 [submodule "external/cmake-modules"]
 	path = external/cmake-modules
 	url = git@github.com:suburbanembedded/cmake-modules.git
+[submodule "external/STM32CubeH7"]
+	path = external/STM32CubeH7
+	url = git@github.com:suburbanembedded/STM32CubeH7.git
