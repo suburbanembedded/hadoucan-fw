@@ -8,11 +8,14 @@ project(hadoucan-fw C CXX ASM)
 
 set(STM32CUBEH7_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/STM32CubeH7)
 
+set(BUILD_SHARED_LIBS OFF)
+
 find_package(Doxygen
              REQUIRED dot
              OPTIONAL_COMPONENTS mscgen)
 
 set(INSTALL_GTEST OFF)
+set(BUILD_TESTS OFF)
 
 add_definitions(
 	-DSTM32H750xx
