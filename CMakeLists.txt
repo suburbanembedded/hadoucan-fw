@@ -8,14 +8,16 @@ project(hadoucan-fw C CXX ASM)
 
 set(STM32CUBEH7_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/STM32CubeH7)
 
-set(BUILD_SHARED_LIBS OFF)
 
 find_package(Doxygen
              REQUIRED dot
              OPTIONAL_COMPONENTS mscgen)
 
+set(BUILD_SHARED_LIBS OFF)
+set(BUILD_STATIC_LIBS ON)
 set(INSTALL_GTEST OFF)
 set(BUILD_TESTS OFF)
+set(ENABLE_PROGRAMS OFF)
 
 add_definitions(
 	-DSTM32H750xx
@@ -67,7 +69,6 @@ target_include_directories(spiffs PUBLIC
 )
 
 add_subdirectory(hadoucan-fw)
-# add_subdirectory(external/stm32cube_fw_h7_v1_4_0)
 add_subdirectory(external/tinyxml2)
 add_subdirectory(external/mbedtls)
 add_subdirectory(external/crc)

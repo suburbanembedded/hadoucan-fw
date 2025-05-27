@@ -6,8 +6,10 @@ set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
 set(CMAKE_C_COMPILER   arm-none-eabi-gcc)
 set(CMAKE_CXX_COMPILER arm-none-eabi-g++)
 
-set(CXX_STANDARD 11)
-set(C_STANDARD 11)
+set(CMAKE_CXX_STANDARD   14)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_C_STANDARD     11)
+set(CMAKE_C_EXTENSIONS   OFF)
 
 set( ARCH_STM32 "-mthumb -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -fstrict-volatile-bitfields")
 set( FLAGS_STM32 "${ARCH_STM32} -ffunction-sections -fdata-sections" )
