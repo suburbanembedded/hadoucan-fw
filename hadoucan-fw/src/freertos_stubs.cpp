@@ -19,6 +19,29 @@ void vApplicationIdleHook(void);
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
 void vApplicationMallocFailedHook(void);
 
+// 0 == thread mode
+// else, active isr
+uint8_t get_active_isr()
+{
+  // Interrupt program status register
+  uint32_t IPSR;
+  __asm__ volatile (
+    "MRS %0, IPSR"
+    : "=r" (IPSR)
+    : 
+    : "memory"
+  );
+
+  const uint32_t ISR_NUMBER = (IPSR & 0x000000FFUL) >> 0;
+
+  return ISR_NUMBER;
+}
+
+bool is_isr_active()
+{
+  return get_active_isr() != 0;
+}
+
 void vApplicationIdleHook( void )
 {
    /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
