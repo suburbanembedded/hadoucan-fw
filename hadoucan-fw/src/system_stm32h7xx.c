@@ -97,7 +97,6 @@ extern int end_ram_d3_s4_noload;
 extern int start_bbram_noload;
 extern int end_bbram_noload;
 
-
 #if !defined  (HSE_VALUE)
 #define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */
 #endif /* HSE_VALUE */
