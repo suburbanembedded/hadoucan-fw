@@ -51,6 +51,7 @@
 
 #include "stm32h7xx.h"
 #include <math.h>
+#include <string.h>
 
 extern int start_isr_vector;
 
