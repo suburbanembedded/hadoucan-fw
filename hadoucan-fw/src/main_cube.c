@@ -93,7 +93,7 @@ void StartDefaultTask(void const * argument);
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
+int main2(void)
 {
 
   /* USER CODE BEGIN 1 */
