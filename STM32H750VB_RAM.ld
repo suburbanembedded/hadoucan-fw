@@ -81,9 +81,11 @@ SECTIONS
     . = ALIGN(4);
     start_ram_itcm = .;
     *(.ram_itcm)
+    /*
     ../external/STM32CubeH7_cmake/libfreertos_v10.a(.text .text*)
     ../external/STM32CubeH7_cmake/libfreertos_v10_cmsis.a(.text .text*)
     ../external/STM32CubeH7_cmake/libfreertos_v10_heap4.a(.text .text*)
+    */
     . = ALIGN(4);
     end_ram_itcm = .;
   } >ITCMRAM AT> AXI_D1_SRAM
