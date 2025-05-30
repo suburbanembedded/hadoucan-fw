@@ -450,22 +450,151 @@ int main(void)
 
 	//Enable ISR
 	__set_BASEPRI(0);
-  __ISB();
+	__ISB();
 
 	//Enable backup domain in standby and Vbat mode
 	HAL_PWREx_EnableBkUpReg();
 
 	MX_GPIO_Init();
-	MX_USART1_UART_Init();
-	// MX_FDCAN1_Init();
 	MX_CRC_Init();
 	MX_HASH_Init();
-	MX_RTC_Init();
 	MX_RNG_Init();
-	// MX_TIM3_Init();
-	// MX_QUADSPI_Init();
+	MX_TIM3_Init();
+	MX_USART1_UART_Init();
+	MX_FDCAN1_Init();
+	MX_QUADSPI_Init();
+	MX_RTC_Init();
 
-	MX_USB_OTG_HS_PCD_Init();
+	// Wait 100ms for clock startup
+	{
+		const uint32_t t0 = HAL_GetTick();
+		while((HAL_GetTick() - t0) < 100)
+		{
+
+		}
+
+		HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
+	}
+
+
+	#if 0
+	// Startup FDCAN clock and GPIOs
+	if(0)
+	{
+		MX_FDCAN1_Init();
+	}
+	else
+	{
+		RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+	    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
+	    PeriphClkInitStruct.PLL2.PLL2M = 2;
+	    PeriphClkInitStruct.PLL2.PLL2N = 20;
+	    PeriphClkInitStruct.PLL2.PLL2P = 2;
+	    PeriphClkInitStruct.PLL2.PLL2Q = 4;
+	    PeriphClkInitStruct.PLL2.PLL2R = 3;
+	    PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+	    PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+	    PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+	    PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+	    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+	    {
+	      Error_Handler();
+	    }
+
+	    /* Peripheral clock enable */
+	    __HAL_RCC_FDCAN_CLK_ENABLE();
+
+	    __HAL_RCC_GPIOA_CLK_ENABLE();
+	    /**FDCAN1 GPIO Configuration
+	    PA11     ------> FDCAN1_RX
+	    PA12     ------> FDCAN1_TX
+	    */
+	    GPIO_InitTypeDef GPIO_InitStruct = {0};
+	    GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+	    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	    GPIO_InitStruct.Pull = GPIO_NOPULL;
+	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	    GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
+	    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	}
+	#endif
+
+	// Startup USB clock and GPIOs
+	if(0)
+	{
+		MX_USB_OTG_HS_PCD_Init();
+	}
+	else
+	{
+	  /** Initializes the peripherals clock
+	  */
+  		RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+	    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USB;
+	    PeriphClkInitStruct.PLL3.PLL3M = 2;
+	    PeriphClkInitStruct.PLL3.PLL3N = 16;
+	    PeriphClkInitStruct.PLL3.PLL3P = 2;
+	    PeriphClkInitStruct.PLL3.PLL3Q = 4;
+	    PeriphClkInitStruct.PLL3.PLL3R = 2;
+	    PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_3;
+	    PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
+	    PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
+	    PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL3;
+	    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+	    {
+	      Error_Handler();
+	    }
+
+	  /** Enable USB Voltage detector
+	  */
+	    HAL_PWREx_EnableUSBVoltageDetector();
+
+	    __HAL_RCC_GPIOC_CLK_ENABLE();
+	    __HAL_RCC_GPIOA_CLK_ENABLE();
+	    __HAL_RCC_GPIOB_CLK_ENABLE();
+	    /**USB_OTG_HS GPIO Configuration
+	    PC0     ------> USB_OTG_HS_ULPI_STP
+	    PC2_C     ------> USB_OTG_HS_ULPI_DIR
+	    PC3_C     ------> USB_OTG_HS_ULPI_NXT
+	    PA3     ------> USB_OTG_HS_ULPI_D0
+	    PA5     ------> USB_OTG_HS_ULPI_CK
+	    PB0     ------> USB_OTG_HS_ULPI_D1
+	    PB1     ------> USB_OTG_HS_ULPI_D2
+	    PB10     ------> USB_OTG_HS_ULPI_D3
+	    PB11     ------> USB_OTG_HS_ULPI_D4
+	    PB12     ------> USB_OTG_HS_ULPI_D5
+	    PB13     ------> USB_OTG_HS_ULPI_D6
+	    PB5     ------> USB_OTG_HS_ULPI_D7
+	    */
+		GPIO_InitTypeDef GPIO_InitStruct = {0};
+	    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_2|GPIO_PIN_3;
+	    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	    GPIO_InitStruct.Pull = GPIO_NOPULL;
+	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	    GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+	    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+	    GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_5;
+	    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	    GPIO_InitStruct.Pull = GPIO_NOPULL;
+	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	    GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+	    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_10|GPIO_PIN_11
+	                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_5;
+	    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	    GPIO_InitStruct.Pull = GPIO_NOPULL;
+	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	    GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+	    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	    /* Peripheral clock enable */
+	    __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+	    __HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
+	    /* USER CODE BEGIN USB_OTG_HS_MspInit 1 */
+
+	    /* USER CODE END USB_OTG_HS_MspInit 1 */
+	}
 
 	if(0)
 	{
