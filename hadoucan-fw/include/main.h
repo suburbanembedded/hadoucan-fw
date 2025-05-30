@@ -61,14 +61,14 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define ULPI_CLK_EN_Pin GPIO_PIN_0
 #define ULPI_CLK_EN_GPIO_Port GPIOA
-#define ULPI_RESETB_Pin GPIO_PIN_1
-#define ULPI_RESETB_GPIO_Port GPIOA
+#define ULPI_nRESET_Pin GPIO_PIN_1
+#define ULPI_nRESET_GPIO_Port GPIOA
 #define MASTER_TIMESYNC_nOE_Pin GPIO_PIN_4
 #define MASTER_TIMESYNC_nOE_GPIO_Port GPIOC
-#define CAN_nSILENT_Pin GPIO_PIN_14
-#define CAN_nSILENT_GPIO_Port GPIOB
-#define CAN_nSTDBY_Pin GPIO_PIN_15
-#define CAN_nSTDBY_GPIO_Port GPIOB
+#define CAN_SILENT_Pin GPIO_PIN_14
+#define CAN_SILENT_GPIO_Port GPIOB
+#define CAN_STDBY_Pin GPIO_PIN_15
+#define CAN_STDBY_GPIO_Port GPIOB
 #define RED1_Pin GPIO_PIN_12
 #define RED1_GPIO_Port GPIOD
 #define GREEN1_Pin GPIO_PIN_13
@@ -83,6 +83,20 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
+
+void SystemClock_Config(void);
+void MPU_Config(void);
+void MX_GPIO_Init(void);
+void MX_CRC_Init(void);
+void MX_FDCAN1_Init(void);
+void MX_HASH_Init(void);
+void MX_QUADSPI_Init(void);
+void MX_RNG_Init(void);
+void MX_TIM3_Init(void);
+void MX_USART1_UART_Init(void);
+void MX_RTC_Init(void);
+void MX_USB_OTG_HS_PCD_Init(void);
+void StartDefaultTask(void const * argument);
 
 #ifdef __cplusplus
 }
