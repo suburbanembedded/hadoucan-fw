@@ -56,9 +56,9 @@
 extern int start_isr_vector;
 
 //Initialized ram regions
-// extern int start_ram_itcm_laddr;
-// extern int start_ram_itcm;
-// extern int end_ram_itcm;
+extern int start_ram_itcm_laddr;
+extern int start_ram_itcm;
+extern int end_ram_itcm;
 extern int start_ram_dtcm_laddr;
 extern int start_ram_dtcm;
 extern int end_ram_dtcm;
@@ -96,7 +96,6 @@ extern int start_ram_d3_s4_noload;
 extern int end_ram_d3_s4_noload;
 extern int start_bbram_noload;
 extern int end_bbram_noload;
-
 #if !defined  (HSE_VALUE)
 #define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */
 #endif /* HSE_VALUE */
@@ -363,6 +362,8 @@ void SystemInit (void)
   /* Configure the Vector Table location add offset address for cortex-M4 ------------------*/
 #if defined(USER_VECT_TAB_ADDRESS)
   SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal D2 AXI-RAM or in Internal FLASH */
+#else
+  SCB->VTOR = (uint32_t) &start_isr_vector;
 #endif /* USER_VECT_TAB_ADDRESS */
 
 #else
@@ -385,8 +386,6 @@ void SystemInit (void)
   /* Configure the Vector Table location -------------------------------------*/
 #if defined(USER_VECT_TAB_ADDRESS)
   SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal D1 AXI-RAM or in Internal FLASH */
-#else
-  SCB->VTOR = (uint32_t) &start_isr_vector;
 #endif /* USER_VECT_TAB_ADDRESS */
 
 #endif /*DUAL_CORE && CORE_CM4*/
