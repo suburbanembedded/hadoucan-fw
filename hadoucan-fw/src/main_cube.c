@@ -647,7 +647,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(MASTER_TIMESYNC_nOE_GPIO_Port, MASTER_TIMESYNC_nOE_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, CAN_nSILENT_Pin|CAN_nSTDBY_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, RED1_Pin|GREEN1_Pin|RED2_Pin|GREEN2_Pin, GPIO_PIN_SET);
@@ -695,8 +695,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(MASTER_TIMESYNC_nOE_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CAN_nSILENT_Pin CAN_nSTDBY_Pin */
-  GPIO_InitStruct.Pin = CAN_nSILENT_Pin|CAN_nSTDBY_Pin;
+  /*Configure GPIO pins : CAN_SILENT_Pin CAN_STDBY_Pin */
+  GPIO_InitStruct.Pin = CAN_SILENT_Pin|CAN_STDBY_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
