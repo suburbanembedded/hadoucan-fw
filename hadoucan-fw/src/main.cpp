@@ -465,6 +465,8 @@ int main(void)
 	// MX_TIM3_Init();
 	// MX_QUADSPI_Init();
 
+	MX_USB_OTG_HS_PCD_Init();
+
 	if(0)
 	{
 		/*Configure GPIO pin : PA8 */
