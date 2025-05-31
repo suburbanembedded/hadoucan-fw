@@ -68,15 +68,15 @@ target_link_libraries(hadoucan-fw.elf
 	freertos_cpp_util
 	mbedtls_util
 	tinyxml2_util
-	
-	usb_dev_cpp
-	usb_dev_cpp_stm32
 
 	spi_flash
 	spiffs_flash
 	spiffs_util
 
 	crc
+
+	tinyusb
+	tinyusb_dcd
 
 	tinyxml2_static
 

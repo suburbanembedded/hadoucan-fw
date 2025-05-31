@@ -7,6 +7,8 @@
 
 #include "freertos_cpp_util/Mutex_static_recursive.hpp"
 
+#include "tusb.h"
+
 constexpr size_t USB_tx_buffer_task::BUFFER_HIGH_WATERMARK;
 
 void USB_tx_buffer_task::work()
@@ -53,23 +55,8 @@ void USB_tx_buffer_task::work()
 			//notify we drained some from the buffer
 			m_tx_buf_drain_condvar.notify_one();
 
-			logger->log(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Waiting for buffer");
-			
-			//wait for a free tx buffer from driver
-			Buffer_adapter_base* tx_buf = m_usb_driver->wait_tx_buffer(0x81);
-
-			logger->log(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Got buffer");
-
-			tx_buf->reset();
-			tx_buf->insert(m_packet_buf.data(), m_packet_buf.size());
-
-			//give full tx buffer to the driver
-			if(!m_usb_driver->enqueue_tx_buffer(0x81, tx_buf))
-			{
-				logger->log(LOG_LEVEL::ERROR, "USB_tx_buffer_task", "failed to enqueue tx buffer");
-			}
-
-			logger->log(LOG_LEVEL::TRACE, "USB_tx_buffer_task", "Sent buffer: %.*s", tx_buf->size(), tx_buf->data());
+			tud_cdc_write(m_packet_buf.data(), m_packet_buf.size());
+			tud_cdc_write_flush();
 		}
 	}
 }

@@ -13,8 +13,6 @@ extern USB_rx_buffer_task usb_rx_buffer_task;
 extern USB_tx_buffer_task usb_tx_buffer_task;
 
 extern Test_USB_Core_task   test_usb_core;
-extern Test_USB_CDC_task    test_usb_cdc;
-extern Test_USB_Driver_task test_usb_drvr;
 
 extern LED_task led_task;
 extern USB_lawicel_task usb_lawicel_task;

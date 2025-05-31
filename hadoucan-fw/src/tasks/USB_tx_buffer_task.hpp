@@ -1,13 +1,12 @@
 #pragma once
 
-#include "libusb_dev_cpp/driver/usb_driver_base.hpp"
-
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/Mutex_static.hpp"
 #include "freertos_cpp_util/Condition_variable.hpp"
 
 #include <algorithm>
 #include <deque>
+#include <functional>
 #include <vector>
 
 #include <cstring>
@@ -22,15 +21,8 @@ public:
 
 	USB_tx_buffer_task()
 	{
-		m_usb_driver = nullptr;
-
 		m_usb_tx_pkt_watermark = 512;
 		m_usb_tx_delay         = 50;
-	}
-
-	void set_usb_driver(usb_driver_base* const usb_driver)
-	{
-		m_usb_driver = usb_driver;
 	}
 
 	void work() override;
@@ -123,6 +115,4 @@ protected:
 	//params
 	unsigned m_usb_tx_pkt_watermark;
 	unsigned m_usb_tx_delay;
-
-	usb_driver_base* m_usb_driver;
 };
