@@ -24,8 +24,6 @@ void USB_rx_buffer_task::work()
 			uint32_t ret = tud_cdc_n_read(0, m_packet_buf.data(), m_packet_buf.size());
 			m_packet_buf.resize(ret);
 
-			tud_cdc_n_write(0, m_packet_buf.data(), m_packet_buf.size());
-
 			volatile uint8_t* in_ptr = m_packet_buf.data();
 			if(m_packet_buf.size())
 			{
