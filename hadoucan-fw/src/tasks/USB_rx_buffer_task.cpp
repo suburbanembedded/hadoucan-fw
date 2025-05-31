@@ -6,6 +6,11 @@
 
 void USB_rx_buffer_task::work()
 {
+	while( ! tud_cdc_n_ready(0) )
+	{
+		vTaskDelay(pdMS_TO_TICKS(250));
+	}
+
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 	using freertos_util::logging::LOG_LEVEL;
 
@@ -16,8 +21,10 @@ void USB_rx_buffer_task::work()
 	{
 		{
 			m_packet_buf.resize(512);
-			uint32_t ret = tud_cdc_read(m_packet_buf.data(), m_packet_buf.size());
+			uint32_t ret = tud_cdc_n_read(0, m_packet_buf.data(), m_packet_buf.size());
 			m_packet_buf.resize(ret);
+
+			tud_cdc_n_write(0, m_packet_buf.data(), m_packet_buf.size());
 
 			volatile uint8_t* in_ptr = m_packet_buf.data();
 			if(m_packet_buf.size())

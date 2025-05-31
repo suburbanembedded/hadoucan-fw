@@ -195,8 +195,6 @@ bool Main_task::init_usb()
 	      Error_Handler();
 	    }
 
-		HAL_PWREx_EnableUSBVoltageDetector();
-
 	    // Init pins
 		__HAL_RCC_GPIOC_CLK_ENABLE();
 		__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -254,6 +252,13 @@ bool Main_task::init_usb()
 
 			vTaskDelay(pdMS_TO_TICKS(50));
 		}
+		
+		USB_OTG_HS->GCCFG &= ~USB_OTG_GCCFG_VBDEN;
+
+		USB_OTG_HS->GOTGCTL |= USB_OTG_GOTGCTL_BVALOEN;
+		USB_OTG_HS->GOTGCTL |= USB_OTG_GOTGCTL_BVALOVAL;
+
+		HAL_PWREx_EnableUSBVoltageDetector();
 	}
 
 	// Start tinyusb
@@ -266,6 +271,13 @@ bool Main_task::init_usb()
 			.speed = TUSB_SPEED_AUTO
 		};
 		tusb_init(1, &dev_init);
+
+		// tud_cdc_configure_t cdc_init = {
+		// 	.rx_persistent = 0;
+		// 	.tx_persistent = 0;
+		// 	.tx_overwritabe_if_not_connected = 1;
+		// };
+		// tud_cdc_configure(&cdc_init);
 	}
 
 	return true;

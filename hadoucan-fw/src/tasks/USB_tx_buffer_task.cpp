@@ -13,6 +13,11 @@ constexpr size_t USB_tx_buffer_task::BUFFER_HIGH_WATERMARK;
 
 void USB_tx_buffer_task::work()
 {
+	while( ! tud_cdc_n_ready(0) )
+	{
+		vTaskDelay(pdMS_TO_TICKS(250));
+	}
+
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 	using freertos_util::logging::LOG_LEVEL;
 
@@ -55,8 +60,8 @@ void USB_tx_buffer_task::work()
 			//notify we drained some from the buffer
 			m_tx_buf_drain_condvar.notify_one();
 
-			tud_cdc_write(m_packet_buf.data(), m_packet_buf.size());
-			tud_cdc_write_flush();
+			tud_cdc_n_write(0, m_packet_buf.data(), m_packet_buf.size());
+			tud_cdc_n_write_flush(0);
 		}
 	}
 }

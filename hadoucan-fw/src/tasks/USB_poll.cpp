@@ -43,8 +43,6 @@ void Test_USB_Core_task::work()
 	for(;;)
 	{
 		tud_task();
-		
-		tud_cdc_write_flush();
 
 		taskYIELD();
 	}
@@ -245,5 +243,19 @@ extern "C"
 	void tud_resume_cb(void)
 	{
 		
+	}
+
+	void tud_mount_cb(void)
+	{
+
+	}
+	void tud_umount_cb(void)
+	{
+
+	}
+
+	void tud_cdc_line_state_cb(uint8_t instance, bool dtr, bool rts)
+	{
+	
 	}
 }
