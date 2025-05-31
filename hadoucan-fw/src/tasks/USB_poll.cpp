@@ -33,11 +33,6 @@
 
 using freertos_util::logging::LOG_LEVEL;
 
-namespace
-{
-	static const bool isr_mode = true;
-}
-
 void Test_USB_Core_task::work()
 {
 	for(;;)
