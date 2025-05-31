@@ -258,4 +258,18 @@ extern "C"
 	{
 	
 	}
+
+	// RX complete data available
+	void tud_cdc_rx_cb(uint8_t itf)
+	{
+		// TODO wake USB_rx_buffer_task
+		usb_rx_buffer_task.rx_data_available();
+	}
+
+	// TX complete space available
+	void tud_cdc_tx_complete_cb(uint8_t itf)
+	{
+		// TODO wake USB_tx_buffer_task
+		usb_tx_buffer_task.tx_space_available();
+	}
 }
