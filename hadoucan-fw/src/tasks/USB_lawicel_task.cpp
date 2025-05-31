@@ -1,5 +1,7 @@
 #include "USB_lawicel_task.hpp"
 
+#include "tusb.h"
+
 #include <vector>
 #include <algorithm>
 
@@ -7,7 +9,7 @@
 
 USB_lawicel_task::USB_lawicel_task()
 {
-	m_usb_tx_buffer = nullptr;
+	m_usb_rx_buffer = nullptr;
 }
 
 bool USB_lawicel_task::usb_input_drop(uint8_t c)
@@ -36,11 +38,6 @@ void USB_lawicel_task::set_can_tx(STM32_fdcan_tx* const can_tx)
 	m_can = can_tx;
 }
 
-void USB_lawicel_task::set_usb_tx(USB_tx_buffer_task* const usb_tx_buffer)
-{
-	m_usb_tx_buffer = usb_tx_buffer;
-}
-
 void USB_lawicel_task::set_usb_rx(USB_rx_buffer_task* const usb_rx_buffer)
 {
 	m_usb_rx_buffer = usb_rx_buffer;
@@ -50,8 +47,10 @@ void USB_lawicel_task::set_usb_rx(USB_rx_buffer_task* const usb_rx_buffer)
 
 bool USB_lawicel_task::write_string_usb(const char* str)
 {
-	m_usb_tx_buffer->write(str);
-	return true;
+	const uint32_t num_to_write = strlen(str);
+	const uint32_t ret = tud_cdc_n_write(0, str, num_to_write);
+
+	return ret == num_to_write;
 }
 
 void USB_lawicel_task::work()

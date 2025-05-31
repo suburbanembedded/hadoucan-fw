@@ -20,6 +20,16 @@ void USB_rx_buffer_task::work()
 	for(;;)
 	{
 		{
+			if( ! tud_cdc_n_available(0) )
+			{
+				// wait for read avail
+				std::unique_lock<Mutex_static> lock(m_rx_buf_mutex);
+				do
+				{
+					m_usb_read_ready_condvar.wait(lock);
+				} while( ! m_usb_read_ready.load() );
+			}
+
 			m_packet_buf.resize(512);
 			uint32_t ret = tud_cdc_n_read(0, m_packet_buf.data(), m_packet_buf.size());
 			m_packet_buf.resize(ret);

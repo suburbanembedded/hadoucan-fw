@@ -132,7 +132,6 @@ void Main_task::work()
 	can_usb_app.get_can_tx().set_can_handle(&hfdcan1);
 
 	usb_lawicel_task.set_can_tx(&can_usb_app.get_can_tx());
-	usb_lawicel_task.set_usb_tx(&usb_tx_buffer_task);
 	usb_lawicel_task.set_usb_rx(&usb_rx_buffer_task);
 
 	//TODO: refactor can handle init
@@ -148,8 +147,7 @@ void Main_task::work()
 	usb_lawicel_task.launch("usb_lawicel", 5);
 
 	//process usb packets
-	// usb_rx_buffer_task.launch("usb_rx_buf", 6);
-	// usb_tx_buffer_task.launch("usb_tx_buf", 7);
+	usb_rx_buffer_task.launch("usb_rx_buf", 6);
 
 	if(config_struct.auto_startup)
 	{

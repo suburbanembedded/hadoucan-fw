@@ -10,7 +10,6 @@
 #include "USB_poll.hpp"
 
 extern USB_rx_buffer_task usb_rx_buffer_task;
-extern USB_tx_buffer_task usb_tx_buffer_task;
 
 extern Test_USB_Core_task   test_usb_core;
 

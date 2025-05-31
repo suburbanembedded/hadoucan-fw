@@ -264,7 +264,8 @@ extern "C"
 	{
 		// TODO wake USB_rx_buffer_task
 		// TODO wake USB_lawicel_task and remove USB_rx_buffer_task, have USB_lawicel_task directly do IO
-		usb_rx_buffer_task.rx_data_available();
+		// usb_rx_buffer_task.get_mutex();
+		usb_rx_buffer_task.notify_usb_read_ready();
 	}
 
 	// TX complete space available
@@ -272,6 +273,6 @@ extern "C"
 	{
 		// TODO wake USB_tx_buffer_task
 		// TODO wake USB_lawicel_task and remove USB_tx_buffer_task, have USB_lawicel_task directly do IO
-		usb_tx_buffer_task.tx_space_available();
+		// usb_tx_buffer_task.tx_space_available();
 	}
 }

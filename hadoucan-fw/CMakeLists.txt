@@ -14,7 +14,6 @@ add_executable(hadoucan-fw.elf
 
 	src/global_app_inst.cpp
 
-	src/tasks/USB_tx_buffer_task.cpp
 	src/tasks/USB_rx_buffer_task.cpp
 
 	src/freertos_stubs.cpp

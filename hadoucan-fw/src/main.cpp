@@ -10,7 +10,6 @@
 #include "tasks/Task_instances.hpp"
 
 #include "tasks/USB_rx_buffer_task.hpp"
-#include "tasks/USB_tx_buffer_task.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
