@@ -50,6 +50,11 @@ bool USB_lawicel_task::write_string_usb(const char* str)
 	const uint32_t num_to_write = strlen(str);
 	const uint32_t ret = tud_cdc_n_write(0, str, num_to_write);
 
+	if(ret)
+	{
+		tud_cdc_n_write_flush(0);
+	}
+
 	return ret == num_to_write;
 }
 
