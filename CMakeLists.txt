@@ -8,7 +8,6 @@ project(hadoucan-fw C CXX ASM)
 
 set(STM32CUBEH7_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/STM32CubeH7)
 
-
 find_package(Doxygen
              REQUIRED dot
              OPTIONAL_COMPONENTS mscgen)
@@ -98,9 +97,12 @@ target_link_libraries(tinyusb_dcd
 )
 
 add_subdirectory(hadoucan-fw)
-add_subdirectory(external/tinyxml2)
-add_subdirectory(external/mbedtls)
+
 add_subdirectory(external/crc)
+add_subdirectory(external/mbedtls)
+add_subdirectory(external/STM32CubeH7_cmake)
+add_subdirectory(external/tinyusb/src)
+add_subdirectory(external/tinyxml2)
 
 add_subdirectory(external/bootloader_util)
 add_subdirectory(external/common_util)
@@ -108,5 +110,3 @@ add_subdirectory(external/emb_fs_util)
 add_subdirectory(external/freertos_cpp_util)
 add_subdirectory(external/mbedtls_util)
 add_subdirectory(external/tinyxml2_util)
-add_subdirectory(external/STM32CubeH7_cmake)
-add_subdirectory(external/tinyusb/src)
