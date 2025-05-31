@@ -376,50 +376,62 @@ bool Main_task::init_usb()
 	usb_core.set_descriptor_table(&usb_desc_table);
 	usb_core.set_config_callback(&handle_usb_set_config_thunk, this);
 
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	/**USB_OTG_HS GPIO Configuration    
-	PC0     ------> USB_OTG_HS_ULPI_STP
-	PC2_C     ------> USB_OTG_HS_ULPI_DIR
-	PC3_C     ------> USB_OTG_HS_ULPI_NXT
-	PA3     ------> USB_OTG_HS_ULPI_D0
-	PA5     ------> USB_OTG_HS_ULPI_CK
-	PB0     ------> USB_OTG_HS_ULPI_D1
-	PB1     ------> USB_OTG_HS_ULPI_D2
-	PB10     ------> USB_OTG_HS_ULPI_D3
-	PB11     ------> USB_OTG_HS_ULPI_D4
-	PB12     ------> USB_OTG_HS_ULPI_D5
-	PB13     ------> USB_OTG_HS_ULPI_D6
-	PB5     ------> USB_OTG_HS_ULPI_D7 
-	*/
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_2|GPIO_PIN_3;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
-	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	// Startup USB clock and GPIO
+	{
+		{
+			HAL_GPIO_WritePin(GPIOA, ULPI_CLK_EN_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_RESET);
 
-	GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_5;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+			vTaskDelay(pdMS_TO_TICKS(50));
 
-	GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_10|GPIO_PIN_11 
-	                      |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_5;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+			HAL_GPIO_WritePin(GPIOA, ULPI_nRESET_Pin, GPIO_PIN_SET);
+		}
 
-	__HAL_RCC_USB_OTG_HS_CLK_ENABLE();
-	__HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
+		__HAL_RCC_GPIOC_CLK_ENABLE();
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+		/**USB_OTG_HS GPIO Configuration    
+		PC0     ------> USB_OTG_HS_ULPI_STP
+		PC2_C     ------> USB_OTG_HS_ULPI_DIR
+		PC3_C     ------> USB_OTG_HS_ULPI_NXT
+		PA3     ------> USB_OTG_HS_ULPI_D0
+		PA5     ------> USB_OTG_HS_ULPI_CK
+		PB0     ------> USB_OTG_HS_ULPI_D1
+		PB1     ------> USB_OTG_HS_ULPI_D2
+		PB10     ------> USB_OTG_HS_ULPI_D3
+		PB11     ------> USB_OTG_HS_ULPI_D4
+		PB12     ------> USB_OTG_HS_ULPI_D5
+		PB13     ------> USB_OTG_HS_ULPI_D6
+		PB5     ------> USB_OTG_HS_ULPI_D7 
+		*/
+		GPIO_InitTypeDef GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_2|GPIO_PIN_3;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+		HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+		GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_5;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+		GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_10|GPIO_PIN_11 
+		                      |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_5;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+		HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+		__HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+		__HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
+	}
 
 	// TODO: switch to isr mode
 	// HAL_NVIC_SetPriority(OTG_HS_IRQn, 5, 0);
