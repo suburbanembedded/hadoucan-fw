@@ -27,7 +27,7 @@ void USB_rx_buffer_task::work()
 				do
 				{
 					m_usb_read_ready_condvar.wait(lock);
-				} while( ! m_usb_read_ready.load() );
+				} while( ! m_usb_read_ready.exchange(false) );
 			}
 
 			m_packet_buf.resize(512);
