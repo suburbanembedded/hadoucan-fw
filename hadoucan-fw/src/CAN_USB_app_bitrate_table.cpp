@@ -272,14 +272,14 @@ bool CAN_USB_app_bitrate_table::from_xml(const tinyxml2::XMLDocument& table_doc)
 	const tinyxml2::XMLElement* const bitrate_tables_root = table_doc.FirstChildElement("bitrate_tables");
 	if(bitrate_tables_root == nullptr)
 	{
-		logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "table.xml: could not find element bitrate_tables");
+		logger->log(LOG_LEVEL::error, "CAN_USB_app", "table.xml: could not find element bitrate_tables");
 		return false;
 	}
 
 	tinyxml2::XMLElement const * table_element = bitrate_tables_root->FirstChildElement("table");
 	if(table_element == nullptr)
 	{
-		logger->log(LOG_LEVEL::ERROR, "CAN_USB_app", "No bitrate table found");
+		logger->log(LOG_LEVEL::error, "CAN_USB_app", "No bitrate table found");
 		return false;
 	}
 
@@ -288,14 +288,14 @@ bool CAN_USB_app_bitrate_table::from_xml(const tinyxml2::XMLDocument& table_doc)
 		int clock = 0;
 		if(table_element->QueryIntAttribute("clock", &clock) != tinyxml2::XML_SUCCESS)
 		{
-			logger->log(LOG_LEVEL::WARN, "CAN_USB_app", "Could not get attribute named clock for table, skipping table");
+			logger->log(LOG_LEVEL::warn, "CAN_USB_app", "Could not get attribute named clock for table, skipping table");
 			continue;
 		}
 
 		tinyxml2::XMLElement const * entry_element = table_element->FirstChildElement("entry");
 		if(entry_element == nullptr)
 		{
-			logger->log(LOG_LEVEL::WARN, "CAN_USB_app", "Empty bitrate_table for clock %d, skipping table", clock);
+			logger->log(LOG_LEVEL::warn, "CAN_USB_app", "Empty bitrate_table for clock %d, skipping table", clock);
 			continue;
 		}
 
@@ -355,7 +355,7 @@ bool CAN_USB_app_bitrate_table::from_xml(const tinyxml2::XMLDocument& table_doc)
 			}
 			else
 			{
-				logger->log(LOG_LEVEL::WARN, "CAN_USB_app", "Dropping bitrate_table entry of unknown type %s", type);
+				logger->log(LOG_LEVEL::warn, "CAN_USB_app", "Dropping bitrate_table entry of unknown type %s", type);
 				continue;
 			}
 

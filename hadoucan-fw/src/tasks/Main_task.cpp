@@ -31,19 +31,19 @@ void Main_task::work()
 {
 	{
 		freertos_util::logging::Global_logger::set(&logging_task.get_logger());
-		freertos_util::logging::Global_logger::get()->set_sev_mask_level(freertos_util::logging::LOG_LEVEL::INFO);
+		freertos_util::logging::Global_logger::get()->set_sev_mask_level(freertos_util::logging::LOG_LEVEL::info);
 	}
 
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
 	{
 		CAN_USB_app::get_unique_id_str(&usb_id_str);
-		logger->log(LOG_LEVEL::INFO, "main", "Initialing");
-		logger->log(LOG_LEVEL::INFO, "main", "CAN FD <-> USB Adapter");
-		logger->log(LOG_LEVEL::INFO, "main", "P/N: SM-1301");
-		logger->log(LOG_LEVEL::INFO, "main", "S/N: %s", usb_id_str.data());
-		logger->log(LOG_LEVEL::INFO, "main", "Version: %d.%d.%d", SW_VER_MAJOR, SW_VER_MINOR, SW_VER_PATCH);
-		logger->log(LOG_LEVEL::INFO, "main", "Commit: %s", GIT_COMMIT);
+		logger->log(LOG_LEVEL::info, "main", "Initialing");
+		logger->log(LOG_LEVEL::info, "main", "CAN FD <-> USB Adapter");
+		logger->log(LOG_LEVEL::info, "main", "P/N: SM-1301");
+		logger->log(LOG_LEVEL::info, "main", "S/N: %s", usb_id_str.data());
+		logger->log(LOG_LEVEL::info, "main", "Version: %d.%d.%d", SW_VER_MAJOR, SW_VER_MINOR, SW_VER_PATCH);
+		logger->log(LOG_LEVEL::info, "main", "Commit: %s", GIT_COMMIT);
 	}
 	{
 		const uint32_t idcode = DBGMCU->IDCODE;
@@ -52,42 +52,42 @@ void Main_task::work()
 
 		if(dev_id == 0x450)
 		{
-			logger->log(LOG_LEVEL::INFO, "main", "Dev ID STM32H7xx (42, 43/53, 50)");
+			logger->log(LOG_LEVEL::info, "main", "Dev ID STM32H7xx (42, 43/53, 50)");
 		}
 		else
 		{
-			logger->log(LOG_LEVEL::WARN, "main", "Unk dev ID");
+			logger->log(LOG_LEVEL::warn, "main", "Unk dev ID");
 		}
 
 		switch(rev_id)
 		{
 			case 0x1001:
 			{
-				logger->log(LOG_LEVEL::INFO, "main", "Silicon rev Z");
-				logger->log(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
+				logger->log(LOG_LEVEL::info, "main", "Silicon rev Z");
+				logger->log(LOG_LEVEL::warn, "main", "This silicon revision is not supported");
 				break;
 			}
 			case 0x1003:
 			{
-				logger->log(LOG_LEVEL::INFO, "main", "Silicon rev Y");
+				logger->log(LOG_LEVEL::info, "main", "Silicon rev Y");
 				break;
 			}
 			case 0x2001:
 			{
-				logger->log(LOG_LEVEL::INFO, "main", "Silicon rev X");
-				logger->log(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
+				logger->log(LOG_LEVEL::info, "main", "Silicon rev X");
+				logger->log(LOG_LEVEL::warn, "main", "This silicon revision is not supported");
 				break;
 			}
 			case 0x2003:
 			{
-				logger->log(LOG_LEVEL::INFO, "main", "Silicon rev V");
-				logger->log(LOG_LEVEL::WARN, "main", "This silicon revision is not supported, but will be soon");
+				logger->log(LOG_LEVEL::info, "main", "Silicon rev V");
+				logger->log(LOG_LEVEL::warn, "main", "This silicon revision is not supported, but will be soon");
 				break;
 			}
 			default:
 			{
-				logger->log(LOG_LEVEL::WARN, "main", "Silicon rev unknown");
-				logger->log(LOG_LEVEL::WARN, "main", "This silicon revision is not supported");
+				logger->log(LOG_LEVEL::warn, "main", "Silicon rev unknown");
+				logger->log(LOG_LEVEL::warn, "main", "This silicon revision is not supported");
 				break;
 			}
 		}
@@ -116,11 +116,11 @@ void Main_task::work()
 
 	if(!init_usb())
 	{
-		logger->log(LOG_LEVEL::ERROR, "main", "USB init failed");
+		logger->log(LOG_LEVEL::error, "main", "USB init failed");
 	}
 	
 	//USB polling
-	test_usb_core.launch("usb_core", 1);
+	usb_core_task.launch("usb_core", 1);
 
 	//CPU load & stack info
 	system_mon_task.launch("SysMon", 2);
@@ -153,12 +153,12 @@ void Main_task::work()
 	{
 		if(!can_usb_app.get_can_tx().open())
 		{
-			logger->log(LOG_LEVEL::ERROR, "main", "CAN was requested to auto-start, but it failed");
+			logger->log(LOG_LEVEL::error, "main", "CAN was requested to auto-start, but it failed");
 		}
 	}
 
 	led_task.set_mode_normal();
-	logger->log(LOG_LEVEL::INFO, "main", "Ready");
+	logger->log(LOG_LEVEL::info, "main", "Ready");
 
 	for(;;)
 	{
@@ -285,7 +285,7 @@ bool Main_task::mount_fs()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::INFO, "main", "Ready");
+	logger->log(LOG_LEVEL::info, "main", "Ready");
 
 	{
 		std::lock_guard<Mutex_static_recursive> lock(can_usb_app.get_mutex());
@@ -297,7 +297,7 @@ bool Main_task::mount_fs()
 
 		if(!m_qspi.init())
 		{
-			logger->log(LOG_LEVEL::ERROR, "main", "m_qspi.init failed");
+			logger->log(LOG_LEVEL::error, "main", "m_qspi.init failed");
 
 			for(;;)
 			{
@@ -312,39 +312,39 @@ bool Main_task::mount_fs()
 		uint16_t flash_pn = 0;
 		if(m_qspi.get_jdec_id(&mfg_id, &flash_pn))
 		{
-			logger->log(LOG_LEVEL::INFO, "main", "flash mfg id %02" PRIX32, uint32_t(mfg_id));
-			logger->log(LOG_LEVEL::INFO, "main", "flash pn %04" PRIX32, uint32_t(flash_pn));
+			logger->log(LOG_LEVEL::info, "main", "flash mfg id %02" PRIX32, uint32_t(mfg_id));
+			logger->log(LOG_LEVEL::info, "main", "flash pn %04" PRIX32, uint32_t(flash_pn));
 		}
 		else
 		{
-			logger->log(LOG_LEVEL::ERROR, "main", "get_jdec_id failed");
+			logger->log(LOG_LEVEL::error, "main", "get_jdec_id failed");
 		}
 
 		uint64_t unique_id = 0;
 		if(m_qspi.get_unique_id(&unique_id))
 		{
-			// logger->log(LOG_LEVEL::INFO, "main", "flash sn %016" PRIX64, unique_id);
+			// logger->log(LOG_LEVEL::info, "main", "flash sn %016" PRIX64, unique_id);
 			//aparently PRIX64 is broken
-			logger->log(LOG_LEVEL::INFO, "main", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
+			logger->log(LOG_LEVEL::info, "main", "flash sn %08" PRIX32 "%08" PRIX32, Byte_util::get_upper_half(unique_id), Byte_util::get_lower_half(unique_id));
 		}
 		else
 		{
-			logger->log(LOG_LEVEL::ERROR, "main", "get_unique_id failed");
+			logger->log(LOG_LEVEL::error, "main", "get_unique_id failed");
 		}
 
-		logger->log(LOG_LEVEL::INFO, "main", "Mounting flash fs");
+		logger->log(LOG_LEVEL::info, "main", "Mounting flash fs");
 		int mount_ret = m_fs.mount();
 		if(mount_ret != SPIFFS_OK)
 		{
-			logger->log(LOG_LEVEL::ERROR, "main", "Flash mount failed: %d", mount_ret);
-			logger->log(LOG_LEVEL::ERROR, "main", "You will need to reload the config");
+			logger->log(LOG_LEVEL::error, "main", "Flash mount failed: %d", mount_ret);
+			logger->log(LOG_LEVEL::error, "main", "You will need to reload the config");
 
-			logger->log(LOG_LEVEL::INFO, "main", "Format flash");
+			logger->log(LOG_LEVEL::info, "main", "Format flash");
 			int format_ret = m_fs.format();
 			if(format_ret != SPIFFS_OK)
 			{
-				logger->log(LOG_LEVEL::FATAL, "main", "Flash format failed: %d", format_ret);
-				logger->log(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
+				logger->log(LOG_LEVEL::fatal, "main", "Flash format failed: %d", format_ret);
+				logger->log(LOG_LEVEL::fatal, "main", "Try a power cycle, your board may be broken");
 
 				for(;;)
 				{
@@ -352,12 +352,12 @@ bool Main_task::mount_fs()
 				}
 			}
 
-			logger->log(LOG_LEVEL::INFO, "main", "Mounting flash fs");
+			logger->log(LOG_LEVEL::info, "main", "Mounting flash fs");
 			mount_ret = m_fs.mount();
 			if(mount_ret != SPIFFS_OK)
 			{
-				logger->log(LOG_LEVEL::FATAL, "main", "Flash mount failed right after we formatted it: %d", mount_ret);
-				logger->log(LOG_LEVEL::FATAL, "main", "Try a power cycle, your board may be broken");
+				logger->log(LOG_LEVEL::fatal, "main", "Flash mount failed right after we formatted it: %d", mount_ret);
+				logger->log(LOG_LEVEL::fatal, "main", "Try a power cycle, your board may be broken");
 
 				for(;;)
 				{
@@ -366,13 +366,13 @@ bool Main_task::mount_fs()
 			}
 			else
 			{
-				logger->log(LOG_LEVEL::INFO, "main", "Flash mount ok");
+				logger->log(LOG_LEVEL::info, "main", "Flash mount ok");
 			}
 
 			//write default config
 			if(!can_usb_app.write_default_config())
 			{
-				logger->log(LOG_LEVEL::FATAL, "main", "Writing default config failed");
+				logger->log(LOG_LEVEL::fatal, "main", "Writing default config failed");
 
 				for(;;)
 				{
@@ -381,7 +381,7 @@ bool Main_task::mount_fs()
 			}
 			if(!can_usb_app.write_default_bitrate_table())
 			{
-				logger->log(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
+				logger->log(LOG_LEVEL::fatal, "main", "Writing default bitrate table failed");
 
 				for(;;)
 				{
@@ -391,7 +391,7 @@ bool Main_task::mount_fs()
 		}
 		else
 		{
-			logger->log(LOG_LEVEL::INFO, "main", "Flash mount ok");
+			logger->log(LOG_LEVEL::info, "main", "Flash mount ok");
 		}
 	}
 
@@ -402,14 +402,14 @@ bool Main_task::load_config()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::INFO, "main", "Load config");
+	logger->log(LOG_LEVEL::info, "main", "Load config");
 	if(!can_usb_app.load_config())
 	{
-		logger->log(LOG_LEVEL::WARN, "main", "Config load failed, restoring default");
+		logger->log(LOG_LEVEL::warn, "main", "Config load failed, restoring default");
 
 		if(!can_usb_app.write_default_config())
 		{
-			logger->log(LOG_LEVEL::FATAL, "main", "Writing default config load failed");
+			logger->log(LOG_LEVEL::fatal, "main", "Writing default config load failed");
 
 			for(;;)
 			{
@@ -418,21 +418,21 @@ bool Main_task::load_config()
 		}
 		else
 		{
-			logger->log(LOG_LEVEL::WARN, "main", "Default config wrote ok");
+			logger->log(LOG_LEVEL::warn, "main", "Default config wrote ok");
 		}
 	}
 	else
 	{
-		logger->log(LOG_LEVEL::INFO, "main", "Config ok");
+		logger->log(LOG_LEVEL::info, "main", "Config ok");
 	}
 
 	if(!can_usb_app.load_bitrate_table())
 	{
-		logger->log(LOG_LEVEL::WARN, "main", "Bitrate table load failed, restoring default");
+		logger->log(LOG_LEVEL::warn, "main", "Bitrate table load failed, restoring default");
 
 		if(!can_usb_app.write_default_bitrate_table())
 		{
-			logger->log(LOG_LEVEL::FATAL, "main", "Writing default bitrate table failed");
+			logger->log(LOG_LEVEL::fatal, "main", "Writing default bitrate table failed");
 
 			for(;;)
 			{
@@ -441,12 +441,12 @@ bool Main_task::load_config()
 		}
 		else
 		{
-			logger->log(LOG_LEVEL::WARN, "main", "Default bitrate table wrote ok");
+			logger->log(LOG_LEVEL::warn, "main", "Default bitrate table wrote ok");
 		}
 	}
 	else
 	{
-		logger->log(LOG_LEVEL::INFO, "main", "Bitrate table ok");
+		logger->log(LOG_LEVEL::info, "main", "Bitrate table ok");
 	}
 
 	return true;

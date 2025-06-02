@@ -76,10 +76,10 @@ void USB_lawicel_task::work()
 	for(;;)
 	{
 		{
-			logger->log(LOG_LEVEL::TRACE, "USB_lawicel_task", "wait(lock, has_line_pred)");
+			logger->log(LOG_LEVEL::trace, "USB_lawicel_task", "wait(lock, has_line_pred)");
 			std::unique_lock<Mutex_static> lock(m_usb_rx_buffer->get_mutex());
 			m_usb_rx_buffer->get_cv().wait(lock, std::cref(m_has_line_pred));
-			logger->log(LOG_LEVEL::TRACE, "USB_lawicel_task", "woke");
+			logger->log(LOG_LEVEL::trace, "USB_lawicel_task", "woke");
 
 			if(!m_usb_rx_buffer->get_line(&usb_line))
 			{
@@ -95,27 +95,27 @@ void USB_lawicel_task::work()
 		//drop lines that are now empty
 		if(strnlen((char*)usb_line.data(), usb_line.size()) == 0)
 		{
-			logger->log(LOG_LEVEL::WARN, "USB_lawicel_task", "Empty line");
+			logger->log(LOG_LEVEL::warn, "USB_lawicel_task", "Empty line");
 			continue;
 		}
 
 		//drop lines that are only '\r'
 		if(usb_line.front() == '\r')
 		{
-			logger->log(LOG_LEVEL::WARN, "USB_lawicel_task", "Line only contains \\r");
+			logger->log(LOG_LEVEL::warn, "USB_lawicel_task", "Line only contains \\r");
 			continue;
 		}
 
-		logger->log(LOG_LEVEL::TRACE, "USB_lawicel_task", "got line: [%s]", usb_line.data());
+		logger->log(LOG_LEVEL::trace, "USB_lawicel_task", "got line: [%s]", usb_line.data());
 
 		//process line
 		if(!m_parser.parse_string((char*)usb_line.data()))
 		{
-			logger->log(LOG_LEVEL::ERROR, "USB_lawicel_task", "parse error");
+			logger->log(LOG_LEVEL::error, "USB_lawicel_task", "parse error");
 		}
 		else
 		{
-			logger->log(LOG_LEVEL::TRACE, "USB_lawicel_task", "ok");
+			logger->log(LOG_LEVEL::trace, "USB_lawicel_task", "ok");
 		}
 	}
 }
