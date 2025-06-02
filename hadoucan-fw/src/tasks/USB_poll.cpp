@@ -1,39 +1,12 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Ha Thach (tinyusb.org)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
-#include "USB_poll.hpp"
+#include "tasks/USB_poll.hpp"
 
 #include "Task_instances.hpp"
 
 #include "freertos_cpp_util/logging/Global_logger.hpp"
 
-#include "tusb.h"
-
 using freertos_util::logging::LOG_LEVEL;
 
-void Test_USB_Core_task::work()
+void USB_core_task::work()
 {
 	for(;;)
 	{
@@ -41,6 +14,37 @@ void Test_USB_Core_task::work()
 
 		taskYIELD();
 	}
+}
+
+void USB_core_task::wait_for_usb_rx_avail()
+{
+	while( ! (RX_AVAIL_BIT & m_events.wait_bits(RX_AVAIL_BIT, true, true, portMAX_DELAY)) )
+	{
+
+	}
+}
+void USB_core_task::wait_for_usb_tx_complete()
+{
+	while( ! (TX_COMPL_BIT & m_events.wait_bits(TX_COMPL_BIT, true, true, portMAX_DELAY)) )
+	{
+
+	}
+}
+
+void USB_core_task::get_unique_id(std::array<uint32_t, 3>* const id)
+{
+	uint32_t volatile * const addr = reinterpret_cast<uint32_t*>(0x1FF1E800);
+
+	std::copy_n(addr, 3, id->data());
+}
+
+void USB_core_task::get_unique_id_str(std::array<char, 25>* const id_str)
+{
+	//0x012345670123456701234567
+	std::array<uint32_t, 3> id;
+	get_unique_id(&id);
+
+	snprintf(id_str->data(), id_str->size(), "%08" PRIX32 "%08" PRIX32 "%08" PRIX32, id[0], id[1], id[2]);
 }
 
 extern "C"
@@ -139,13 +143,21 @@ extern "C"
 	char const *string_desc_arr[] =
 	{
 		(const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-		"SM",          // 1: Manufacturer
-		"Hadoucan",    // 2: Product
-		NULL,          // 3: Serials will use unique ID if possible
-		"Hadoucan CDC" // 4: CDC Interface
+		"Suburban Marine, Inc.", // 1: Manufacturer
+		"HadouCAN",              // 2: Product
+		NULL,                    // 3: Serials will use unique ID if possible
+		"HadouCAN CDC"           // 4: CDC Interface
 	};
 
-	static uint16_t desc_str_u16 [32 + 1];
+	void ascii_to_u16le(const size_t len, char const * const in, uint16_t* const out)
+	{
+		for(size_t i = 0; i < len; i++)
+		{
+			out[i+1] = in[i];
+		}
+	}
+
+	static uint16_t desc_str_u16 [64 + 1];
 	uint16_t const * tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 	{
 		size_t chr_count = 0;
@@ -160,7 +172,13 @@ extern "C"
 			}
 			case STRID_SERIAL:
 			{
-				chr_count = 0;
+				std::array<char, 25> id_str;
+				USB_core_task::get_unique_id_str(&id_str);
+
+				chr_count = id_str.size() - 1;
+
+				ascii_to_u16le(chr_count, id_str.data(), desc_str_u16);
+
 				break;
 			}
 			default:
@@ -169,15 +187,10 @@ extern "C"
 
 				const char *str = string_desc_arr[index];
 
-				// Cap at max char
-				chr_count = strlen(str);
-				size_t const max_count = sizeof(desc_str_u16) / sizeof(desc_str_u16[0]) - 1; // -1 for string type
-				if ( chr_count > max_count ) chr_count = max_count;
+				chr_count = std::min(strlen(str), sizeof(desc_str_u16) / sizeof(desc_str_u16[0]) - 1);
 
-				// Convert ASCII string into UTF-16
-				for ( size_t i = 0; i < chr_count; i++ ) {
-					desc_str_u16[1 + i] = str[i];
-				}
+				ascii_to_u16le(chr_count, str, desc_str_u16);
+
 				break;
 			}
 		}
@@ -251,23 +264,27 @@ extern "C"
 
 	void tud_cdc_line_state_cb(uint8_t instance, bool dtr, bool rts)
 	{
-	
+		usb_core_task.m_dtr.store(dtr);
+		usb_core_task.m_rts.store(rts);
+	}
+
+	void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const* p_line_coding)
+	{
+		usb_core_task.m_bit_rate.store(p_line_coding->bit_rate);
+		usb_core_task.m_stop_bits.store(p_line_coding->stop_bits);
+		usb_core_task.m_parity.store(p_line_coding->parity);
+		usb_core_task.m_data_bits.store(p_line_coding->data_bits);
 	}
 
 	// RX complete data available
 	void tud_cdc_rx_cb(uint8_t itf)
 	{
-		// TODO wake USB_rx_buffer_task
-		// TODO wake USB_lawicel_task and remove USB_rx_buffer_task, have USB_lawicel_task directly do IO
-		// usb_rx_buffer_task.get_mutex();
-		usb_rx_buffer_task.notify_usb_read_ready();
+		usb_core_task.m_events.set_bits(USB_core_task::RX_AVAIL_BIT);
 	}
 
 	// TX complete space available
 	void tud_cdc_tx_complete_cb(uint8_t itf)
 	{
-		// TODO wake USB_tx_buffer_task
-		// TODO wake USB_lawicel_task and remove USB_tx_buffer_task, have USB_lawicel_task directly do IO
-		// usb_tx_buffer_task.tx_space_available();
+		usb_core_task.m_events.set_bits(USB_core_task::TX_COMPL_BIT);
 	}
 }

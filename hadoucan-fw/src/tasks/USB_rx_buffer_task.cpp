@@ -1,58 +1,49 @@
-#include "USB_rx_buffer_task.hpp"
+#include "tasks/USB_rx_buffer_task.hpp"
+
+#include "Task_instances.hpp"
 
 #include "freertos_cpp_util/logging/Global_logger.hpp"
 
-#include "tusb.h"
+using freertos_util::logging::LOG_LEVEL;
 
 void USB_rx_buffer_task::work()
 {
-	while( ! tud_cdc_n_ready(0) )
-	{
-		vTaskDelay(pdMS_TO_TICKS(250));
-	}
-
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
-	using freertos_util::logging::LOG_LEVEL;
 
-	std::vector<uint8_t> m_packet_buf;
-	m_packet_buf.reserve(512);
+	logger->log(LOG_LEVEL::info, "USB_rx_buffer_task", "Starting");
+
+	std::vector<uint8_t> in_buf;
+	in_buf.reserve(512);
 
 	for(;;)
 	{
 		{
-			if( ! tud_cdc_n_available(0) )
+			while( ! tud_cdc_n_available(0) )
 			{
-				// wait for read avail
-				std::unique_lock<Mutex_static> lock(m_rx_buf_mutex);
-				do
-				{
-					m_usb_read_ready_condvar.wait(lock);
-				} while( ! m_usb_read_ready.exchange(false) );
+				usb_core_task.wait_for_usb_rx_avail();
 			}
 
-			m_packet_buf.resize(512);
-			uint32_t ret = tud_cdc_n_read(0, m_packet_buf.data(), m_packet_buf.size());
-			m_packet_buf.resize(ret);
+			in_buf.resize(512);
+			uint32_t ret = tud_cdc_n_read(0, in_buf.data(), in_buf.size());
+			in_buf.resize(ret);
 
-			volatile uint8_t* in_ptr = m_packet_buf.data();
-			if(m_packet_buf.size())
 			{
 				std::unique_lock<Mutex_static> lock(m_rx_buf_mutex);
 
 				//if we are very full, wait for some space
-				if((m_rx_buf.size() + m_packet_buf.size()) > BUFFER_HIGH_WATERMARK)
+				if((m_rx_buf.size() + in_buf.size()) > BUFFER_HIGH_WATERMARK)
 				{
 					do
 					{
 						m_rx_buf_read_condvar.wait(lock);
-					} while((m_rx_buf.size() + m_packet_buf.size()) > BUFFER_LOW_WATERMARK);
+					} while((m_rx_buf.size() + in_buf.size()) > BUFFER_LOW_WATERMARK);
 				}
 
-				m_rx_buf.insert(m_rx_buf.end(), in_ptr, in_ptr + m_packet_buf.size());
+				m_rx_buf.insert(m_rx_buf.end(), in_buf.data(), in_buf.data() + in_buf.size());
 			}
 		}
 
-		logger->log(LOG_LEVEL::TRACE, "USB_rx_buffer_task", "added buf to stream");
+		logger->log(LOG_LEVEL::trace, "USB_rx_buffer_task", "added buf to stream");
 
 		m_rx_buf_write_condvar.notify_one();
 	}

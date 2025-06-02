@@ -103,20 +103,9 @@ public:
     return m_rx_buf_write_condvar;
   }
 
-  void notify_usb_read_ready()
-  {
-    std::unique_lock<Mutex_static> lock(m_rx_buf_mutex);
-    m_usb_read_ready.store(true);
-    m_usb_read_ready_condvar.notify_one();
-  }
-
 protected:
   Mutex_static m_rx_buf_mutex;
   Condition_variable m_rx_buf_write_condvar;///< this is notified when data is added to the buffer
   Condition_variable m_rx_buf_read_condvar;///< this is notified when data is removed from the buffer
-  
-  Condition_variable m_usb_read_ready_condvar;///< this is notified when data is availible to read from usb
-  std::atomic<bool> m_usb_read_ready;
-
   std::deque<uint8_t> m_rx_buf;
 };
