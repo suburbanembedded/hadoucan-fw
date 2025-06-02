@@ -107,6 +107,11 @@ void Main_task::work()
 		freertos_util::logging::Global_logger::get()->set_sev_mask_level(config_struct.log_level);
 	}
 
+	if(!init_usb())
+	{
+		logger->log(LOG_LEVEL::error, "main", "USB init failed");
+	}
+
 	//timesync processing
 	//currently config then no-op
 	timesync_task.launch("timesync", 1);
@@ -114,19 +119,11 @@ void Main_task::work()
 	//led blink/strobe
 	led_task.launch("led", 1);
 
-	if(!init_usb())
-	{
-		logger->log(LOG_LEVEL::error, "main", "USB init failed");
-	}
-	
-	//USB polling
-	usb_core_task.launch("usb_core", 1);
-
 	//CPU load & stack info
-	system_mon_task.launch("SysMon", 2);
+	system_mon_task.launch("SysMon", 1);
 
 	//start logging_task
-	logging_task.launch("logging", 3);
+	logging_task.launch("logging", 2);
 	
 	can_usb_app.get_can_tx().set_can_instance(FDCAN1);
 	can_usb_app.get_can_tx().set_can_handle(&hfdcan1);
@@ -141,13 +138,16 @@ void Main_task::work()
 	stm32_fdcan_rx_task.set_can_handle(&hfdcan1);
 
 	//can RX
-	stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 4);
+	stm32_fdcan_rx_task.launch("stm32_fdcan_rx", 3);
 
 	//protocol state machine
-	usb_lawicel_task.launch("usb_lawicel", 5);
+	usb_lawicel_task.launch("usb_lawicel", 4);
 
 	//process usb packets
-	usb_rx_buffer_task.launch("usb_rx_buf", 6);
+	usb_rx_buffer_task.launch("usb_rx_buf", 5);
+
+	//USB polling
+	usb_core_task.launch("usb_core", 6);
 
 	if(config_struct.auto_startup)
 	{
