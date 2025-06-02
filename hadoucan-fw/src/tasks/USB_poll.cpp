@@ -142,11 +142,11 @@ extern "C"
 
 	char const *string_desc_arr[] =
 	{
-		(const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-		"Suburban Marine, Inc.", // 1: Manufacturer
-		"HadouCAN",              // 2: Product
-		NULL,                    // 3: Serials will use unique ID if possible
-		"HadouCAN CDC"           // 4: CDC Interface
+		(const char[]) { 0x09, 0x04 }, // English
+		"Suburban Marine, Inc.",       // 1: Manufacturer
+		"HadouCAN",                    // 2: Product
+		NULL,                          // 3: SN
+		"HadouCAN CDC"                 // 4: CDC Interface
 	};
 
 	void ascii_to_u16le(const size_t len, char const * const in, uint16_t* const out)
