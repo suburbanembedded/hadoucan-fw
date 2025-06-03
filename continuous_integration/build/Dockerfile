@@ -12,7 +12,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
      git               \
      cmake             \
      python-is-python3 \
-     python-serial     \
+     python3-serial    \
      doxygen           \
      graphviz          \
      mscgen            \
