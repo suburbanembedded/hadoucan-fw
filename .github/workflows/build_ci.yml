@@ -28,8 +28,19 @@ jobs:
       with:
         submodules: true
 
-    - name: login to docker.pkg.github.com
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+    - name: login to ghcr.io
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create builder
+      uses: docker/setup-buildx-action@v3
+      id: builder
+      with:
+        platforms: linux/amd64
+        driver-opts: env.BUILDKIT_STEP_LOG_MAX_SIZE=16777216
 
     - name: fetch container master
       run: docker pull $DOCKER_REPO:master || true

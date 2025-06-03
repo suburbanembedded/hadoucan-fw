@@ -1,16 +1,32 @@
-FROM ubuntu:18.04
-
-RUN apt-get update && apt-get install -y wget rsync libc6-i386 libusb-0.1-4 libwebkitgtk-3.0-0 libncurses5
-
-RUN apt-get update && apt-get install -y build-essential git cmake python python-serial doxygen graphviz mscgen
-
-RUN groupadd buildbot && useradd --no-log-init --create-home --home-dir /home/buildbot -g buildbot buildbot
+FROM ubuntu:22.04
 
 USER root
-RUN mkdir -p /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/
-RUN  wget -qO- http://download.atollic.com/TrueSTUDIO/installers/Atollic_TrueSTUDIO_for_STM32_linux_x86_64_v9.3.0_20190212-0734.tar.gz | \
-     tar -xz --to-stdout Atollic_TrueSTUDIO_for_STM32_9.3.0_installer/install.data | \
-     tar -xz -C /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+     wget               \
+     rsync              \
+     libc6-i386         \
+     libusb-0.1-4       \
+     libwebkitgtk-3.0-0 \
+     libncurses5        \
+     && apt-get clean
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+     build-essential \
+     git             \
+     cmake           \
+     python          \
+     python-serial   \
+     doxygen         \
+     graphviz        \
+     mscgen          \
+     && apt-get clean
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+     gcc-arm-none-eabi \
+     && apt-get clean
+
+RUN groupadd buildbot && useradd --no-log-init --create-home --home-dir /home/buildbot -g buildbot buildbot
 
 USER buildbot
 WORKDIR /home/buildbot
