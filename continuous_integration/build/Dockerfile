@@ -8,14 +8,14 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
      && apt-get clean
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-     build-essential \
-     git             \
-     cmake           \
-     python          \
-     python-serial   \
-     doxygen         \
-     graphviz        \
-     mscgen          \
+     build-essential   \
+     git               \
+     cmake             \
+     python-is-python3 \
+     python-serial     \
+     doxygen           \
+     graphviz          \
+     mscgen            \
      && apt-get clean
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
