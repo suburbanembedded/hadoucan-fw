@@ -1504,7 +1504,7 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	//TODO: this does not compare substrings as true
 	if(strncmp(in_str, config_str, config_str_len) == 0)
 	{
-		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Set config");
+		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_extended_cmd", "Set config");
 
 		auto it = std::find(in_str, in_str+in_str_len, ':');
 
@@ -1521,7 +1521,7 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	}
 	else if(strncmp(in_str, printconfig_str, printconfig_str_len) == 0)
 	{
-		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_extended_cmd", "Print config");
+		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_extended_cmd", "Print config");
 
 		ret = handle_ext_print_config();
 	}
@@ -1603,13 +1603,13 @@ bool Lawicel_parser::parse_ext_bitrate_nominal(const char* in_str)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_bitrate_nominal", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser::parse_ext_bitrate_nominal", "");
 
 	unsigned bps = 0;
 	const int ret = sscanf(in_str, "!bpsnom=%u\r", &bps);
 	if(ret != 1)
 	{
-		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_ext_bitrate_nominal", "parse failure");
+		logger->log(LOG_LEVEL::warn, "Lawicel_parser::parse_ext_bitrate_nominal", "parse failure");
 		return false;
 	}
 
@@ -1619,13 +1619,13 @@ bool Lawicel_parser::parse_ext_bitrate_data(const char* in_str)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser::parse_ext_bitrate_data", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser::parse_ext_bitrate_data", "");
 
 	unsigned bps = 0;
 	const int ret = sscanf(in_str, "!bpsdata=%u\r", &bps);
 	if(ret != 1)
 	{
-		logger->log(LOG_LEVEL::WARN, "Lawicel_parser::parse_ext_bitrate_data", "parse failure");
+		logger->log(LOG_LEVEL::warn, "Lawicel_parser::parse_ext_bitrate_data", "parse failure");
 		return false;
 	}
 

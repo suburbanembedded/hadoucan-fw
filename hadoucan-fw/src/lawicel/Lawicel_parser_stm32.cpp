@@ -683,7 +683,7 @@ bool Lawicel_parser_stm32::handle_ext_bitrate_nominal(const unsigned bitrate)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_nominal", "%u", bitrate);
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_bitrate_nominal", "%u", bitrate);
 
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
@@ -696,7 +696,7 @@ bool Lawicel_parser_stm32::handle_ext_bitrate_data(const unsigned bitrate)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 	
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_data", "%u", bitrate);
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_bitrate_data", "%u", bitrate);
 
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
