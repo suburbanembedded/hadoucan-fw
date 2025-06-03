@@ -7,9 +7,6 @@
 [submodule "external/tinyxml2"]
 	path = external/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
-[submodule "external/libusb_dev_cpp"]
-	path = external/libusb_dev_cpp
-	url = git@github.com:jacobschloss/libusb_dev_cpp.git
 [submodule "external/common_util"]
 	path = external/common_util
 	url = git@github.com:suburbanembedded/common_util.git
