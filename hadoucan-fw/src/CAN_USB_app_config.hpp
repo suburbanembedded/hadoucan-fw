@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SJA1000_filter.hpp"
+
 #include "freertos_cpp_util/logging/Logger_types.hpp"
 
 #include "tinyxml2_util/tinyxml2_helper.hpp"
@@ -26,9 +28,30 @@ public:
 		SLAVE
 	};
 
+	enum class HOST_PROTOCOL
+	{
+		LAWICEL_CAN232 = 0
+	};
+
+	struct Simple_filter
+	{
+		enum class FRAME_TYPE
+		{
+			STD,
+			EXT
+		};
+
+		bool enable;
+		FRAME_TYPE mode;
+		unsigned accept_code;
+		unsigned accept_mask;
+	};
+
 	struct Config_Set
 	{
 		unsigned config_version;
+
+		HOST_PROTOCOL host_protocol;
 
 		bool autopoll;
 		bool listen_only;
@@ -57,9 +80,7 @@ public:
 		bool protocol_brs;
 		bool protocol_fd_iso;
 
-		bool filter_accept_enable;
-		unsigned filter_accept_code;
-		unsigned filter_accept_mask;
+		SJA1000_filter sja1000_filter;
 
 		freertos_util::logging::LOG_LEVEL log_level;
 		unsigned uart_baud;
