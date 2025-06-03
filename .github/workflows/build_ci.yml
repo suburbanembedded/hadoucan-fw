@@ -18,7 +18,7 @@ jobs:
 
     if: github.event_name == 'push' || github.event_name == 'pull_request'
 
-    runs-on: Linux
+    runs-on: [self-hosted, linux]
     timeout-minutes: 30
     continue-on-error: false
 
@@ -63,7 +63,7 @@ jobs:
 
   release:
 
-    runs-on: Linux
+    runs-on: [self-hosted, linux]
     timeout-minutes: 30
     
     needs: build
