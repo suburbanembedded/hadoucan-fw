@@ -18,12 +18,13 @@ jobs:
 
     if: github.event_name == 'push' || github.event_name == 'pull_request'
 
-    runs-on: ubuntu-18.04
+    runs-on: Linux
     timeout-minutes: 30
+    continue-on-error: false
 
     steps:
     - name: clone
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -49,20 +50,20 @@ jobs:
       run: ./scripts/build_ci.sh
 
     - name: Upload debug artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: hadoucan-fw-debug
         path: ${{ github.workspace }}/hadoucan-fw-debug-${{ github.sha }}.tar.gz
 
     - name: Upload release artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: hadoucan-fw-release
         path: ${{ github.workspace }}/hadoucan-fw-release-${{ github.sha }}.tar.gz
 
   release:
 
-    runs-on: ubuntu-18.04
+    runs-on: Linux
     timeout-minutes: 30
     
     needs: build
@@ -71,7 +72,7 @@ jobs:
     
     steps:
     - name: Get artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: hadoucan-fw-release
         path: ${{ github.workspace }}/hadoucan-fw-release-${{ github.sha }}.tar.gz
@@ -80,7 +81,7 @@ jobs:
       run: mv hadoucan-fw-release-${{ github.sha }}.tar.gz hadoucan-fw-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
 
     - name: Upload release artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: hadoucan-fw-release
         path: ${{ github.workspace }}/hadoucan-fw-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
