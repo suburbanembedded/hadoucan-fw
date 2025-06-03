@@ -153,7 +153,7 @@ void System_mon_task::work()
 
 				// Stack_string<128> msg4;
 
-				if(logging_task.get_logger().log(freertos_util::logging::LOG_LEVEL::INFO, "SysMon", "%s", task_msg.c_str()))
+				if(logging_task.get_logger().log(freertos_util::logging::LOG_LEVEL::info, "SysMon", "%s", task_msg.c_str()))
 				{
 					// msg4.append("System_mon_task::work log PASS\r\n");
 					// HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(const_cast<char*>(msg4.c_str())), msg4.size(), -1);
@@ -199,7 +199,7 @@ void System_mon_task::work()
 
 		task_msg.clear();
 		task_msg.sprintf("heap used: %" PRIu32 " / %" PRIu32, configTOTAL_HEAP_SIZE - xPortGetFreeHeapSize(), configTOTAL_HEAP_SIZE);
-		if(logging_task.get_logger().log(freertos_util::logging::LOG_LEVEL::INFO, "SysMon", "%s", task_msg.c_str()))
+		if(logging_task.get_logger().log(freertos_util::logging::LOG_LEVEL::info, "SysMon", "%s", task_msg.c_str()))
 		{
 
 		}

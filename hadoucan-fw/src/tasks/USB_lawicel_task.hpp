@@ -1,7 +1,6 @@
 #pragma once
 
 #include "USB_rx_buffer_task.hpp"
-#include "USB_tx_buffer_task.hpp"
 
 #include "tasks/STM32_fdcan_rx.hpp"
 #include "STM32_fdcan_tx.hpp"
@@ -23,7 +22,6 @@ public:
 	static bool usb_input_drop(uint8_t c);
 
 	void set_can_tx(STM32_fdcan_tx* const can_tx);
-	void set_usb_tx(USB_tx_buffer_task* const usb_tx_buffer);
 	void set_usb_rx(USB_rx_buffer_task* const usb_rx_buffer);
 	bool write_string_usb(const char* str);
 
@@ -40,7 +38,6 @@ protected:
 
 	Lawicel_parser_stm32 m_parser;
 
-	USB_tx_buffer_task* m_usb_tx_buffer;
 	USB_rx_buffer_task* m_usb_rx_buffer;
 
 	std::function<bool(void)> m_has_line_pred;

@@ -30,25 +30,25 @@ void Timesync_task::work()
 	{
 		case CAN_USB_app_config::TIMESYNC_MODE::MASTER:
 		{
-			logger->log(LOG_LEVEL::INFO, "Timesync_task", "Timesync master mode");
+			logger->log(LOG_LEVEL::info, "Timesync_task", "Timesync master mode");
 			if(!oc_config())
 			{
-				logger->log(LOG_LEVEL::ERROR, "Timesync_task", "oc_config failed");
+				logger->log(LOG_LEVEL::error, "Timesync_task", "oc_config failed");
 			}
 			break;
 		}
 		case CAN_USB_app_config::TIMESYNC_MODE::SLAVE:
 		{
-			logger->log(LOG_LEVEL::INFO, "Timesync_task", "Timesync slave mode");
+			logger->log(LOG_LEVEL::info, "Timesync_task", "Timesync slave mode");
 			if(!ic_config())
 			{
-				logger->log(LOG_LEVEL::ERROR, "Timesync_task", "ic_config failed");
+				logger->log(LOG_LEVEL::error, "Timesync_task", "ic_config failed");
 			}
 			break;
 		}
 		default:
 		{
-			logger->log(LOG_LEVEL::ERROR, "Timesync_task", "unknown time sync mode, disabling");
+			logger->log(LOG_LEVEL::error, "Timesync_task", "unknown time sync mode, disabling");
 			break;
 		}
 	}

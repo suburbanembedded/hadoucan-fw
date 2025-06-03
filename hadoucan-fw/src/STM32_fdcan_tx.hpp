@@ -1,6 +1,5 @@
 #pragma once
 
-#include "CAN_USB_app_config.hpp"
 #include "CAN_USB_app_bitrate_table.hpp"
 
 #include "stm32h7xx_hal.h"

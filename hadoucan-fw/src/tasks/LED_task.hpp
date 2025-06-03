@@ -22,6 +22,7 @@ public:
 	//modes
 	void set_mode_boot();
 	void set_mode_normal();
+	void set_mode_error();
 
 protected:
 

@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <functional>
+#include <string>
 
 class STM32_fdcan_rx : public Task_static<2048>
 {
@@ -82,4 +83,6 @@ protected:
 
 	std::atomic_bool m_can_fifo1_full;
 	std::atomic_uint m_can_fifo1_msg_lost;
+
+	unsigned m_can_rx_poll_interval;
 };
