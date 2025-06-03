@@ -81,20 +81,20 @@ bool Lawicel_parser_stm32::handle_std_baud(const CAN_NOM_BPS baud)
 
 	if(config.get_config().bitrate_nominal != stm32_baud)
 	{
-		logger->log(LOG_LEVEL::INFO, "Lawicel_parser_stm32::handle_std_baud", "Updating baud to %u", stm32_baud);
+		logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32::handle_std_baud", "Updating baud to %u", stm32_baud);
 
 		config.get_config().bitrate_nominal = stm32_baud;
 
 		//write new config to flash
 		if(!can_usb_app.write_config(config))
 		{
-			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_std_baud", "Writing config.xml failed");
+			logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_std_baud", "Writing config.xml failed");
 			return false;
 		}
 	}
 	else
 	{
-		logger->log(LOG_LEVEL::INFO, "Lawicel_parser_stm32::handle_std_baud", "Requested baud already set");
+		logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32::handle_std_baud", "Requested baud already set");
 	}
 
 	return true;
@@ -103,7 +103,7 @@ bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t BTR0, const uint8_t BT
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_cust_baud", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_cust_baud", "");
 
 	//number of clock cycles a bit period maybe shortened or lengthened
 	const uint8_t sjw = (BTR0 & 0xC0) >> 6;
@@ -137,7 +137,7 @@ bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t BTR0, const uint8_t BT
 
 	if(prescaler_multiplier_remainder != 0)
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "CAN kernel clock is not a multiple of 8MHz so cannot use SJA1000 bitrate commands");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_cust_baud", "CAN kernel clock is not a multiple of 8MHz so cannot use SJA1000 bitrate commands");
 		return false;
 	}
 
@@ -152,22 +152,22 @@ bool Lawicel_parser_stm32::handle_cust_baud(const uint8_t BTR0, const uint8_t BT
 
 	if(!Comparison_util::is_within_inclusive(new_baud.pre, 1, 512))
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "PRE out of range");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_cust_baud", "PRE out of range");
 		return false;
 	}
 	if(!Comparison_util::is_within_inclusive(new_baud.sjw, 1, 128))
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "SJW out of range");	
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_cust_baud", "SJW out of range");	
 		return false;
 	}
 	if(!Comparison_util::is_within_inclusive(new_baud.tseg1, 1, 256))
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "TSEG1 out of range");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_cust_baud", "TSEG1 out of range");
 		return false;
 	}
 	if(!Comparison_util::is_within_inclusive(new_baud.tseg2, 1, 128))
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_cust_baud", "TSEG2 out of range");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_cust_baud", "TSEG2 out of range");
 		return false;
 	}
 
@@ -177,7 +177,7 @@ bool Lawicel_parser_stm32::handle_open()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_open", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_open", "");
 
 	//check if we need to update the default mode
 	{
@@ -190,7 +190,7 @@ bool Lawicel_parser_stm32::handle_open()
 		
 			if(!can_usb_app.write_config(config))
 			{
-				logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "config update failed");
+				logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_open", "config update failed");
 				return false;
 			}
 		}
@@ -198,11 +198,11 @@ bool Lawicel_parser_stm32::handle_open()
 
 	if(!m_fdcan->open())
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->open() failed");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_open", "fdcan->open() failed");
 		return false;
 	}
 
-	logger->log(LOG_LEVEL::INFO, "Lawicel_parser_stm32::handle_open", "fdcan->open() ok");
+	logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32::handle_open", "fdcan->open() ok");
 
 	return true;
 }
@@ -210,7 +210,7 @@ bool Lawicel_parser_stm32::handle_open_listen()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_open_listen", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_open_listen", "");
 
 	//check if we need to update the default mode
 	{
@@ -223,7 +223,7 @@ bool Lawicel_parser_stm32::handle_open_listen()
 			
 			if(!can_usb_app.write_config(config))
 			{
-				logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open_listen", "config update failed");
+				logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_open_listen", "config update failed");
 				return false;
 			}
 		}
@@ -231,7 +231,7 @@ bool Lawicel_parser_stm32::handle_open_listen()
 
 	if(!m_fdcan->open())
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open_listen", "fdcan->open() failed");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_open_listen", "fdcan->open() failed");
 		return false;
 	}
 
@@ -241,15 +241,15 @@ bool Lawicel_parser_stm32::handle_close()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_close", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_close", "");
 
 	if(!m_fdcan->close())
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->close() failed");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_open", "fdcan->close() failed");
 		return false;
 	}
 
-	logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_open", "fdcan->close() ok");
+	logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_open", "fdcan->close() ok");
 
 	return true;
 }
@@ -257,7 +257,7 @@ bool Lawicel_parser_stm32::handle_tx_std(const uint32_t id, const uint8_t data_l
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_std", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser_stm32::handle_tx_std", "");
 
 	if(!m_fdcan->tx_std(id, data_len, data))
 	{
@@ -272,7 +272,7 @@ bool Lawicel_parser_stm32::handle_tx_ext(const uint32_t id, const uint8_t data_l
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_ext", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser_stm32::handle_tx_ext", "");
 
 	if(!m_fdcan->tx_ext(id, data_len, data))
 	{
@@ -287,7 +287,7 @@ bool Lawicel_parser_stm32::handle_tx_rtr_std(const uint32_t id, const uint8_t da
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_rtr_std", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser_stm32::handle_tx_rtr_std", "");
 
 	if(!m_fdcan->tx_std_rtr(id, data_len))
 	{
@@ -302,7 +302,7 @@ bool Lawicel_parser_stm32::handle_tx_rtr_ext(const uint32_t id, const uint8_t da
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_rtr_ext", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser_stm32::handle_tx_rtr_ext", "");
 
 	if(!m_fdcan->tx_ext_rtr(id, data_len))
 	{
@@ -317,7 +317,7 @@ bool Lawicel_parser_stm32::handle_tx_fd_std(const uint32_t id, const uint8_t dat
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_std", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser_stm32::handle_tx_fd_std", "");
 
 	if(!m_fdcan->tx_fd_std(id, STM32_fdcan_tx::BRS::OFF, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
 	{
@@ -332,7 +332,7 @@ bool Lawicel_parser_stm32::handle_tx_fd_ext(const uint32_t id, const uint8_t dat
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_ext", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser_stm32::handle_tx_fd_ext", "");
 
 	if(!m_fdcan->tx_fd_ext(id, STM32_fdcan_tx::BRS::OFF, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
 	{
@@ -347,7 +347,7 @@ bool Lawicel_parser_stm32::handle_tx_fd_std_brs(const uint32_t id, const uint8_t
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_std_brs", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser_stm32::handle_tx_fd_std_brs", "");
 
 	if(!m_fdcan->tx_fd_std(id, STM32_fdcan_tx::BRS::ON, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
 	{
@@ -362,7 +362,7 @@ bool Lawicel_parser_stm32::handle_tx_fd_ext_brs(const uint32_t id, const uint8_t
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::TRACE, "Lawicel_parser_stm32::handle_tx_fd_ext_brs", "");
+	logger->log(LOG_LEVEL::trace, "Lawicel_parser_stm32::handle_tx_fd_ext_brs", "");
 
 	if(!m_fdcan->tx_fd_ext(id, STM32_fdcan_tx::BRS::ON, STM32_fdcan_tx::ESI::ACTIVE, data_len, data))
 	{
@@ -377,7 +377,7 @@ bool Lawicel_parser_stm32::handle_get_flags()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_get_flags", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_get_flags", "");
 
 	return false;
 }
@@ -439,7 +439,7 @@ bool Lawicel_parser_stm32::handle_set_accept_code(const uint32_t code)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_accept_code", "Setting accept_code to 0x%08X", code);
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_set_accept_code", "Setting accept_code to 0x%08X", code);
 
 	{
 		CAN_USB_app_config config;
@@ -463,7 +463,7 @@ bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_accept_mask", "Setting accept_mask to 0x%08X", mask);
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_set_accept_mask", "Setting accept_mask to 0x%08X", mask);
 
 	{
 		CAN_USB_app_config config;
@@ -487,10 +487,10 @@ bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_get_version", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_get_version", "");
 
 	const std::array<char, 2> hw_ver = {'0', '1'};
-	const std::array<char, 2> sw_ver = {'0', 'A'};
+	const std::array<char, 2> sw_ver = {'0', 'C'};
 	
 	ver->data()[0] = static_cast<uint8_t>(hw_ver[0]);
 	ver->data()[1] = static_cast<uint8_t>(hw_ver[1]);
@@ -504,7 +504,7 @@ bool Lawicel_parser_stm32::handle_get_serial(std::array<uint8_t, 4>* const sn)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_get_serial", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_get_serial", "");
 
 	//CAN232 has a 4 hex digit serial number, eg 2 bytes
 	//hash down our real id to 2 bytes, as uniform as we can
@@ -546,7 +546,7 @@ bool Lawicel_parser_stm32::handle_set_timestamp(const bool enable)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_timestamp", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_set_timestamp", "");
 
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
@@ -560,7 +560,7 @@ bool Lawicel_parser_stm32::handle_set_autostartup(const bool enable)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_autostartup", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_set_autostartup", "");
 
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
@@ -574,20 +574,20 @@ bool Lawicel_parser_stm32::handle_ext_config(const std::vector<char>& config_str
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_config", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_config", "");
 
 	tinyxml2::XMLDocument config_doc;
 	tinyxml2::XMLError err = config_doc.Parse(config_str.data(), config_str.size());
 	if(err != tinyxml2::XML_SUCCESS)
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_ext_config", "config_doc.Parse failed, %s", tinyxml2::XMLDocument::ErrorIDToName(err));
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_ext_config", "config_doc.Parse failed, %s", tinyxml2::XMLDocument::ErrorIDToName(err));
 		return false;
 	}
 
 	CAN_USB_app_config config;
 	if(!config.from_xml(config_doc))
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_ext_config", "config.from_xml failed");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_ext_config", "config.from_xml failed");
 		return false;
 	}
 
@@ -597,7 +597,7 @@ bool Lawicel_parser_stm32::handle_ext_print_config()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_print_config", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_print_config", "");
 
 	CAN_USB_app_config config;
 	can_usb_app.get_config(&config);
@@ -612,12 +612,12 @@ bool Lawicel_parser_stm32::handle_ext_print_config()
 	config_doc.Print(&xml_printer);
 	const char* doc_str = xml_printer.CStr();
 
-	logger->log(LOG_LEVEL::INFO, "Lawicel_parser_stm32", "Printing config file");
+	logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32", "Printing config file");
 	// print to debug header
 	// uart1_puts(doc_str);
 	// print to usb
 	write_string(doc_str);
-	logger->log(LOG_LEVEL::INFO, "Lawicel_parser_stm32", "End of config file");
+	logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32", "End of config file");
 
 	return true;
 }
@@ -625,13 +625,13 @@ bool Lawicel_parser_stm32::handle_ext_bitrate_table(const std::vector<char>& tab
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bitrate_table", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_bitrate_table", "");
 
 	tinyxml2::XMLDocument table_doc;
 	tinyxml2::XMLError err = table_doc.Parse(table_str.data(), table_str.size());
 	if(err != tinyxml2::XML_SUCCESS)
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::handle_ext_bitrate_table", "Parsing xml string failed");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser::handle_ext_bitrate_table", "Parsing xml string failed");
 
 		// const size_t block_size = 32;
 		// //we overflow the log buffer if this happens too fast...
@@ -640,7 +640,7 @@ bool Lawicel_parser_stm32::handle_ext_bitrate_table(const std::vector<char>& tab
 		// 	char const * const blk_ptr = table_str.data() + num_sent;
 		// 	const size_t num_to_send = std::min(block_size, table_str.size() - num_sent);
 			
-		// 	logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::handle_ext_bitrate_table", "%.*s", num_to_send, blk_ptr);
+		// 	logger->log(LOG_LEVEL::error, "Lawicel_parser::handle_ext_bitrate_table", "%.*s", num_to_send, blk_ptr);
 		// 	vTaskDelay(pdMS_TO_TICKS(1));
 		// 	num_sent += num_to_send;
 		// }
@@ -650,7 +650,7 @@ bool Lawicel_parser_stm32::handle_ext_bitrate_table(const std::vector<char>& tab
 	CAN_USB_app_bitrate_table table;
 	if(!table.from_xml(table_doc))
 	{
-		logger->log(LOG_LEVEL::ERROR, "Lawicel_parser::handle_ext_bitrate_table", "Parsing xml doc failed");
+		logger->log(LOG_LEVEL::error, "Lawicel_parser::handle_ext_bitrate_table", "Parsing xml doc failed");
 		return false;
 	}
 
@@ -660,7 +660,7 @@ bool Lawicel_parser_stm32::handle_ext_print_bitrate_table()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_print_bitrate_table", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_print_bitrate_table", "");
 
 	CAN_USB_app_bitrate_table table;
 	can_usb_app.get_bitrate_tables(&table);
@@ -675,12 +675,12 @@ bool Lawicel_parser_stm32::handle_ext_print_bitrate_table()
 	table_doc.Print(&xml_printer);
 	const char* doc_str = xml_printer.CStr();
 
-	logger->log(LOG_LEVEL::INFO, "Lawicel_parser_stm32", "Printing bitrate table");
+	logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32", "Printing bitrate table");
 	// print to debug header
 	// uart1_puts(doc_str);
 	// print to usb
 	write_string(doc_str);
-	logger->log(LOG_LEVEL::INFO, "Lawicel_parser_stm32", "End of bitrate table");
+	logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32", "End of bitrate table");
 
 	return true;
 }
@@ -688,7 +688,7 @@ bool Lawicel_parser_stm32::handle_ext_defconfig()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_defconfig", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_defconfig", "");
 
 	if(!can_usb_app.write_default_config())
 	{
@@ -705,7 +705,7 @@ bool Lawicel_parser_stm32::handle_ext_bootloader()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_bootloader", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_bootloader", "");
 
 	const Bootloader_key key = Bootloader_key::get_key_boot();
 	key.to_addr(reinterpret_cast<uint8_t*>(0x38800000));
@@ -735,7 +735,7 @@ bool Lawicel_parser_stm32::handle_ext_serial()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_serial", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_serial", "");
 
 	std::array<char, 25> id_str;
 	CAN_USB_app::get_unique_id_str(&id_str);
@@ -749,7 +749,7 @@ bool Lawicel_parser_stm32::handle_ext_version()
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 	
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_ext_version", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_version", "");
 	
 	std::array<uint8_t, 4> ver;
 	handle_get_version(&ver);

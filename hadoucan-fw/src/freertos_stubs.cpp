@@ -19,6 +19,29 @@ void vApplicationIdleHook(void);
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
 void vApplicationMallocFailedHook(void);
 
+// 0 == thread mode
+// else, active isr
+uint8_t get_active_isr()
+{
+  // Interrupt program status register
+  uint32_t IPSR;
+  __asm__ volatile (
+    "MRS %0, IPSR"
+    : "=r" (IPSR)
+    : 
+    : "memory"
+  );
+
+  const uint32_t ISR_NUMBER = (IPSR & 0x000000FFUL) >> 0;
+
+  return ISR_NUMBER;
+}
+
+bool is_isr_active()
+{
+  return get_active_isr() != 0;
+}
+
 void vApplicationIdleHook( void )
 {
    /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
@@ -31,8 +54,33 @@ void vApplicationIdleHook( void )
    function, because it is the responsibility of the idle task to clean up
    memory allocated by the kernel to any task that has since been deleted. */
 
-  // TODO: turn this back on
-  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+   // Disable ISR and sync
+  __asm__ volatile (
+    "cpsid i\n"
+    "isb\n"
+    "dsb\n"
+    : 
+    : 
+    : "memory"
+  );
+
+  // Only enabled ISR or events cause wake
+  // Clear deep sleep register, sleep normal
+  // Do not sleep on return to thread mode
+  CLEAR_BIT (SCB->SCR, SCB_SCR_SEVONPEND_Msk | SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk);
+
+  // sync SCB write, WFI, sync/reload pipeline, enable ISR, sync/reload pipeline
+  // certain platforms can crash on complex wfi return if no isb after wfi (arm core bug? - https://cliffle.com/blog/stm32-wfi-bug/)
+  __asm__ volatile (
+    "dsb\n"
+    "wfi\n"
+    "isb\n"
+    "cpsie i\n"
+    "isb\n"
+    : 
+    : 
+    : "memory"
+  );
 }
 
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)

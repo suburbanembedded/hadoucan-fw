@@ -1,0 +1,6 @@
+[
+    {
+        "name": "CustomToolchain",
+        "toolchainFile": "Toolchain_stm32h750_gcc_ram.cmake"
+    }
+]

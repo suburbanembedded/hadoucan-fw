@@ -7,9 +7,6 @@
 [submodule "external/tinyxml2"]
 	path = external/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
-[submodule "external/libusb_dev_cpp"]
-	path = external/libusb_dev_cpp
-	url = git@github.com:jacobschloss/libusb_dev_cpp.git
 [submodule "external/common_util"]
 	path = external/common_util
 	url = git@github.com:suburbanembedded/common_util.git
@@ -37,3 +34,9 @@
 [submodule "external/cmake-modules"]
 	path = external/cmake-modules
 	url = git@github.com:suburbanembedded/cmake-modules.git
+[submodule "external/STM32CubeH7"]
+	path = external/STM32CubeH7
+	url = https://github.com/STMicroelectronics/STM32CubeH7.git
+[submodule "external/tinyusb"]
+	path = external/tinyusb
+	url = git@github.com:suburbanmarine/tinyusb.git

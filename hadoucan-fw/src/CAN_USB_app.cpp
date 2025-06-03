@@ -26,13 +26,13 @@ bool CAN_USB_app::load_config()
 
 		if(!load_xml_file(m_fs.get_fs(), "config.xml", &config_doc))
 		{
-			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening config.xml failed");
+			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Opening config.xml failed");
 			return false;
 		}
 
 		if(!m_config.from_xml(config_doc))
 		{
-			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing config.xml failed");
+			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Parsing config.xml failed");
 			return false;
 		}
 	}
@@ -49,12 +49,12 @@ bool CAN_USB_app::load_bitrate_table()
 
 		if(!load_xml_file(m_fs.get_fs(), "table.xml", &table_doc))
 		{
-			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening table.xml failed");
+			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Opening table.xml failed");
 		}
 
 		if(!m_bitrate_tables.from_xml(table_doc))
 		{
-			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing table.xml failed");
+			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Parsing table.xml failed");
 			return false;
 		}
 	}
@@ -67,7 +67,7 @@ bool CAN_USB_app::write_config(const CAN_USB_app_config& config)
 	tinyxml2::XMLDocument config_doc;
 	if(!config.to_xml(&config_doc))
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app::write_config", "config to xml failed");
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app::write_config", "config to xml failed");
 		return false;
 	}
 
@@ -76,7 +76,7 @@ bool CAN_USB_app::write_config(const CAN_USB_app_config& config)
 	
 		if(!write_xml_file(m_fs.get_fs(), "config.xml", config_doc))
 		{
-			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app::write_config", "Writing config.xml failed");
+			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app::write_config", "Writing config.xml failed");
 			return false;
 		}
 
@@ -106,7 +106,7 @@ bool CAN_USB_app::write_bitrate_table(const CAN_USB_app_bitrate_table& table)
 
 		if(!write_xml_file(m_fs.get_fs(), "table.xml", table_doc))
 		{
-			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing table.xml failed");
+			freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Writing table.xml failed");
 			return false;
 		}
 
@@ -128,14 +128,14 @@ bool CAN_USB_app::load_xml_file(spiffs* const fs, const char* name, tinyxml2::XM
 	spiffs_file fd = SPIFFS_open(fs, name, SPIFFS_RDONLY, 0);
 	if(fd < 0)
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(fs));
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
 	spiffs_stat stat;
 	if(SPIFFS_fstat(fs, fd, &stat) < 0)
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Getting size of %s: %" PRId32, name, SPIFFS_errno(fs));
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Getting size of %s: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
@@ -143,13 +143,13 @@ bool CAN_USB_app::load_xml_file(spiffs* const fs, const char* name, tinyxml2::XM
 	data.resize(stat.size);
 	if(SPIFFS_read(fs, fd, data.data(), data.size()) < 0)
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Reading %s failed: %" PRId32, name, SPIFFS_errno(fs));
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Reading %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
 	if(SPIFFS_close(fs, fd) < 0)
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(fs));
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
@@ -157,7 +157,7 @@ bool CAN_USB_app::load_xml_file(spiffs* const fs, const char* name, tinyxml2::XM
 	tinyxml2::XMLError err = out_xml->Parse(data.data(), data.size());
 	if(err != tinyxml2::XML_SUCCESS)
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Parsing %s failed: %" PRId32, name, err);
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Parsing %s failed: %" PRId32, name, err);
 		return false;
 	}
 
@@ -175,33 +175,33 @@ bool CAN_USB_app::write_xml_file(spiffs* const fs, const char* name, const tinyx
 	int xml_printer_len = xml_printer.CStrSize();
 	if(xml_printer_len < 1)
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "xml print error");
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "xml print error");
 		return false;
 	}
 
 	//Remove trailing null
 	const size_t doc_str_len = xml_printer_len - 1;
 
-	freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::INFO, "CAN_USB_app", "Writing %s", name);
+	freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::info, "CAN_USB_app", "Writing %s", name);
 	spiffs_file fd = SPIFFS_open(fs, name, SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
 	if(fd < 0)
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(fs));
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Opening %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
 	if(SPIFFS_write(fs, fd, const_cast<char*>(doc_str), doc_str_len) < 0)
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Writing %s failed: %" PRId32, name, SPIFFS_errno(fs));
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Writing %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
 
 	if(SPIFFS_close(fs, fd) < 0)
 	{
-		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::ERROR, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(fs));
+		freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::error, "CAN_USB_app", "Closing %s failed: %" PRId32, name, SPIFFS_errno(fs));
 		return false;
 	}
-	freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::INFO, "CAN_USB_app", "Write %s success", name);
+	freertos_util::logging::Global_logger::get()->log(LOG_LEVEL::info, "CAN_USB_app", "Write %s success", name);
 
 	return true;
 }
