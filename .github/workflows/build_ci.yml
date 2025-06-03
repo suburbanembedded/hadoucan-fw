@@ -14,7 +14,7 @@ env:
   REGISTRY: ghcr.io
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
   DOCKER_REPO: ghcr.io/${{ github.repository }}/hadoucan-fw-ci
-  DOCKER_REPO_CACHE: ghcr.io/${{ github.repository }}/heimdall-ci-cache
+  DOCKER_REPO_CACHE: ghcr.io/${{ github.repository }}/hadoucan-fw-ci-cache
 
 jobs:
   build:

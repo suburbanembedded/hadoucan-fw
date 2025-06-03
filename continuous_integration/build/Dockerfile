@@ -5,10 +5,6 @@ USER root
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
      wget               \
      rsync              \
-     libc6-i386         \
-     libusb-0.1-4       \
-     libwebkitgtk-3.0-0 \
-     libncurses5        \
      && apt-get clean
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
