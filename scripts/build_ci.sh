@@ -13,7 +13,7 @@ docker stop $CONTAINER_ID
 
 pushd $GITHUB_WORKSPACE/build/ram/debug/hadoucan-fw
 ls -la
-id
+
 sha256sum -b hadoucan-fw.elf hadoucan-fw.hex hadoucan-fw.bin | tee sha256.txt
 tar -czf $GITHUB_WORKSPACE/hadoucan-fw-debug-$GITHUB_SHA.tar.gz    hadoucan-fw.elf hadoucan-fw.hex hadoucan-fw.bin sha256.txt
 popd
