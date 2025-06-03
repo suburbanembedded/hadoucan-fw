@@ -147,7 +147,7 @@ bool STM32_fdcan_rx::append_packet_type(const FDCAN_RxHeaderTypeDef& rxheader, s
 	}
 	else
 	{
-		logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_rx::append_packet_type", "Illegal frame");
+		logger->log(LOG_LEVEL::trace, "STM32_fdcan_rx::append_packet_type", "Illegal frame");
 	}
 
 	return success;
@@ -274,12 +274,12 @@ void STM32_fdcan_rx::work()
 			if(fifo0_msg_lost > 0)
 			{
 				m_can_fifo0_msg_lost.store(0);
-				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO0 lost %d msg in the last second", fifo0_msg_lost);
+				logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "FIFO0 lost %d msg in the last second", fifo0_msg_lost);
 			}
 			if(fifo1_msg_lost > 0)
 			{
 				m_can_fifo1_msg_lost.store(false);
-				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO1 lost %d msg in the last second", fifo1_msg_lost);
+				logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "FIFO1 lost %d msg in the last second", fifo1_msg_lost);
 			}
 		}
 
@@ -300,32 +300,32 @@ void STM32_fdcan_rx::work()
 				}
 				case 1:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec stuff error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "lec stuff error");
 					break;
 				}
 				case 2:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec form error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "lec form error");
 					break;
 				}
 				case 3:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec ack error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "lec ack error");
 					break;
 				}
 				case 4:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec bit1 error error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "lec bit1 error error");
 					break;
 				}
 				case 5:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec bit0 error error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "lec bit0 error error");
 					break;
 				}
 				case 6:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "lec crc error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "lec crc error");
 					break;
 				}
 				case 7:
@@ -341,32 +341,32 @@ void STM32_fdcan_rx::work()
 				}
 				case 1:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec stuff error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "dlec stuff error");
 					break;
 				}
 				case 2:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec form error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "dlec form error");
 					break;
 				}
 				case 3:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec ack error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "dlec ack error");
 					break;
 				}
 				case 4:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec bit1 error error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "dlec bit1 error error");
 					break;
 				}
 				case 5:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec bit0 error error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "dlec bit0 error error");
 					break;
 				}
 				case 6:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "dlec crc error");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "dlec crc error");
 					break;
 				}
 				case 7:
@@ -408,22 +408,22 @@ void STM32_fdcan_rx::work()
 			if(fifo0_full)
 			{
 				m_can_fifo0_full.store(false);
-				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO0 full");
+				logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "FIFO0 full");
 
 				if(HAL_FDCAN_ActivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO0_FULL, 0) != HAL_OK)
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "Could not reenable FDCAN_IT_RX_FIFO0_FULL");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "Could not reenable FDCAN_IT_RX_FIFO0_FULL");
 				}
 			}
 
 			if(fifo1_full)
 			{
 				m_can_fifo1_full.store(false);
-				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "FIFO1 full");
+				logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "FIFO1 full");
 
 				if(HAL_FDCAN_ActivateNotification(m_fdcan_handle, FDCAN_IT_RX_FIFO1_FULL, 0) != HAL_OK)
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "Could not reenable FDCAN_IT_RX_FIFO0_FULL");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "Could not reenable FDCAN_IT_RX_FIFO0_FULL");
 				}
 			}
 		}
@@ -432,22 +432,22 @@ void STM32_fdcan_rx::work()
 		packet_str.clear();
 		if(!append_packet_type(pk.rxheader, &packet_str))
 		{
-			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_type failed");
+			logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "append_packet_type failed");
 			continue;
 		}
 		if(!append_packet_id(pk.rxheader, &packet_str))
 		{
-			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_id failed");
+			logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "append_packet_id failed");
 			continue;
 		}
 		if(!append_packet_dlc(pk.rxheader, &packet_str))
 		{
-			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_dlc failed");
+			logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "append_packet_dlc failed");
 			continue;
 		}
 		if(!append_packet_data(pk, &packet_str))
 		{
-			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_data failed");
+			logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "append_packet_data failed");
 			continue;
 		}
 
@@ -462,7 +462,7 @@ void STM32_fdcan_rx::work()
 			{
 				if(!append_packet_timestamp(pk.rxheader, &packet_str))
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "append_packet_timestamp failed");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "append_packet_timestamp failed");
 					continue;
 				}
 			}
@@ -475,12 +475,12 @@ void STM32_fdcan_rx::work()
 			//m_usb_tx_buffer->write(packet_str.begin(), packet_str.end());
 			if(!m_rx_callback(packet_str))
 			{
-				logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "m_rx_callback failed");
+				logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "m_rx_callback failed");
 			}
 		}
 		else
 		{
-			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "m_rx_callback is nullptr");
+			logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "m_rx_callback is nullptr");
 		}
 	}
 }
@@ -506,7 +506,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 				if(!m_can_fd_queue.push_back_isr(pk))
 				{
 					//TODO: assert? WD reset?
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "can_fifo0_callback m_can_fd_queue push failed");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "can_fifo0_callback m_can_fd_queue push failed");
 				}
 			}
 			else
@@ -519,7 +519,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 		//turn isr back on
 		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_WATERMARK, 0) != HAL_OK)
 		{
-			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "HAL_FDCAN_ActivateNotification FDCAN_IT_RX_FIFO0_WATERMARK failed");
+			logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "HAL_FDCAN_ActivateNotification FDCAN_IT_RX_FIFO0_WATERMARK failed");
 		}
 	}
 
@@ -534,7 +534,7 @@ void STM32_fdcan_rx::can_fifo0_callback(FDCAN_HandleTypeDef *hfdcan, uint32_t Rx
 		m_can_fifo0_msg_lost++;
 		if(HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_MESSAGE_LOST, 0) != HAL_OK)
 		{
-			logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_rx", "HAL_FDCAN_ActivateNotification FDCAN_IT_RX_FIFO0_MESSAGE_LOST failed");
+			logger->log(LOG_LEVEL::error, "STM32_fdcan_rx", "HAL_FDCAN_ActivateNotification FDCAN_IT_RX_FIFO0_MESSAGE_LOST failed");
 		}
 	}
 }

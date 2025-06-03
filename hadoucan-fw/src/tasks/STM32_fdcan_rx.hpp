@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <functional>
+#include <string>
 
 class STM32_fdcan_rx : public Task_static<2048>
 {

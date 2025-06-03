@@ -10,7 +10,6 @@
 #include "tasks/Task_instances.hpp"
 
 #include "tasks/USB_rx_buffer_task.hpp"
-#include "tasks/USB_tx_buffer_task.hpp"
 
 #include "freertos_cpp_util/Task_static.hpp"
 #include "freertos_cpp_util/BSema_static.hpp"
@@ -446,23 +445,24 @@ int main(void)
 
 	HAL_Init();
 
-	//TODO: fix this to keep JTAG/SWD on, maybe
-	set_all_gpio_low_power();
-
 	SystemClock_Config();
+
+	//Enable ISR
+	__set_BASEPRI(0);
+	__ISB();
 
 	//Enable backup domain in standby and Vbat mode
 	HAL_PWREx_EnableBkUpReg();
 
 	MX_GPIO_Init();
-	MX_USART1_UART_Init();
-	// MX_FDCAN1_Init();
 	MX_CRC_Init();
 	MX_HASH_Init();
-	MX_RTC_Init();
 	MX_RNG_Init();
 	// MX_TIM3_Init();
+	MX_USART1_UART_Init();
+	// MX_FDCAN1_Init();
 	// MX_QUADSPI_Init();
+	MX_RTC_Init();
 
 	if(0)
 	{
@@ -503,7 +503,6 @@ int main(void)
 
 	main_task.launch("main_task", 15);
 
-	HAL_NVIC_SetPriorityGrouping( NVIC_PRIORITYGROUP_4 );
 	vTaskStartScheduler();
 
 	for(;;)
