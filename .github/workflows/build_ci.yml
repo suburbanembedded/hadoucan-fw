@@ -42,20 +42,20 @@ jobs:
         platforms: linux/amd64
         driver-opts: env.BUILDKIT_STEP_LOG_MAX_SIZE=16777216
 
-    - name: fetch container master
-      run: docker pull $DOCKER_REPO:master || true
-
-    - name: fetch container for branch
-      run: docker pull $DOCKER_REPO:${GITHUB_REF##*/} || true
-
     - name: build container
-      run: docker build --cache-from $DOCKER_REPO:master --cache-from $DOCKER_REPO:${GITHUB_REF##*/} continuous_integration/build --file continuous_integration/build/Dockerfile --tag hadoucan-fw-tools
-
-    - name: tag container
-      run: docker tag hadoucan-fw-tools $DOCKER_REPO:${GITHUB_REF##*/}
-
-    - name: push container
-      run: docker push $DOCKER_REPO:${GITHUB_REF##*/}
+      uses: docker/build-push-action@v6
+      with:
+        builder: ${{ steps.builder.outputs.name }}
+        context: ${{ github.workspace }}/continuous_integration/build
+        file: ${{ github.workspace }}/continuous_integration/build/Dockerfile
+        platforms: linux/amd64
+        provenance: false
+        push: true
+        tags: hadoucan-fw-tools
+        cache-from: |
+          type=registry,ref=$DOCKER_REPO:master
+          type=registry,ref=$DOCKER_REPO:${GITHUB_REF##*/}
+        cache-to: type=registry,mode=max,ref=$DOCKER_REPO:${GITHUB_REF##*/}
 
     - name: build
       run: ./scripts/build_ci.sh
