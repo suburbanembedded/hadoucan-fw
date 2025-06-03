@@ -475,7 +475,7 @@ bool STM32_fdcan_tx::init()
 				}
 				default:
 				{
-					logger->log(LOG_LEVEL::ERROR, "STM32_fdcan_tx::init", "sja1000_filter.mode invalid");
+					logger->log(LOG_LEVEL::error, "STM32_fdcan_tx::init", "sja1000_filter.mode invalid");
 					return false;
 				}
 			}
@@ -583,7 +583,7 @@ bool STM32_fdcan_tx::init()
 	// ret = HAL_FDCAN_ConfigGlobalFilter(m_fdcan_handle, FDCAN_ACCEPT_IN_RX_FIFO0, FDCAN_ACCEPT_IN_RX_FIFO1, DISABLE, DISABLE);
 
 	//reject all non-matching frames
-	logger->log(LOG_LEVEL::TRACE, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigGlobalFilter");
+	logger->log(LOG_LEVEL::trace, "STM32_fdcan_tx::init", "HAL_FDCAN_ConfigGlobalFilter");
 	//uint32_t NonMatchingStd, uint32_t NonMatchingExt, uint32_t RejectRemoteStd, uint32_t RejectRemoteExt
 	ret = HAL_FDCAN_ConfigGlobalFilter(m_fdcan_handle, FDCAN_REJECT, FDCAN_REJECT, std_allow_rtr, ext_allow_rtr);
 	if(ret != HAL_OK)

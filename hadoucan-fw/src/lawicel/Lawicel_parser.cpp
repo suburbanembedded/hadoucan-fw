@@ -1253,14 +1253,14 @@ bool Lawicel_parser::parse_set_filter_mode(const char* in_str)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_filter_mode", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_set_filter_mode", "");
 
 	// Wx\r
 	const size_t in_str_len = strlen(in_str);
 
 	if(in_str_len < 3)
 	{
-		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str_len < 3");
+		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_set_accept_code", "in_str_len < 3");
 
 		write_bell();
 		return false;
@@ -1268,7 +1268,7 @@ bool Lawicel_parser::parse_set_filter_mode(const char* in_str)
 	
 	if(in_str[0] != 'W')
 	{
-		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str[0] != 'W'");
+		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_set_accept_code", "in_str[0] != 'W'");
 
 		write_bell();
 		return false;
@@ -1296,7 +1296,7 @@ bool Lawicel_parser::parse_set_accept_code(const char* in_str)
 
 	if(in_str_len < 10)
 	{
-		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str_len < 10");
+		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_set_accept_code", "in_str_len < 10");
 
 		write_bell();
 		return false;
@@ -1304,7 +1304,7 @@ bool Lawicel_parser::parse_set_accept_code(const char* in_str)
 	
 	if(in_str[0] != 'M')
 	{
-		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str[0] != 'M'");
+		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_set_accept_code", "in_str[0] != 'M'");
 
 		write_bell();
 		return false;
@@ -1340,7 +1340,7 @@ bool Lawicel_parser::parse_set_accept_mask(const char* in_str)
 
 	if(in_str_len < 10)
 	{
-		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str_len < 10");
+		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_set_accept_code", "in_str_len < 10");
 
 		write_bell();
 		return false;
@@ -1348,7 +1348,7 @@ bool Lawicel_parser::parse_set_accept_mask(const char* in_str)
 	
 	if(in_str[0] != 'm')
 	{
-		logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser::parse_set_accept_code", "in_str[0] != 'm'");
+		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_set_accept_code", "in_str[0] != 'm'");
 
 		write_bell();
 		return false;

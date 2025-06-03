@@ -385,7 +385,7 @@ bool Lawicel_parser_stm32::handle_set_filter_mode(const char mode)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 
-	logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_filter_mode", "");
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_set_filter_mode", "");
 
 	SJA1000_filter::FILTER_MODE filter_mode = SJA1000_filter::FILTER_MODE::DUAL;
 	bool ret = true;
@@ -393,7 +393,7 @@ bool Lawicel_parser_stm32::handle_set_filter_mode(const char mode)
 	{
 		case '0':
 		{
-			logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_filter_mode", "Setting filter to DUAL");
+			logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_set_filter_mode", "Setting filter to DUAL");
 
 			filter_mode = SJA1000_filter::FILTER_MODE::DUAL;
 			ret = true;
@@ -401,7 +401,7 @@ bool Lawicel_parser_stm32::handle_set_filter_mode(const char mode)
 		}
 		case '1':
 		{
-			logger->log(LOG_LEVEL::DEBUG, "Lawicel_parser_stm32::handle_set_filter_mode", "Setting filter to SINGLE");
+			logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_set_filter_mode", "Setting filter to SINGLE");
 
 			filter_mode = SJA1000_filter::FILTER_MODE::SINGLE;
 			ret = true;
@@ -409,7 +409,7 @@ bool Lawicel_parser_stm32::handle_set_filter_mode(const char mode)
 		}
 		default:
 		{
-			logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_set_filter_mode", "Invalid argument");
+			logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_set_filter_mode", "Invalid argument");
 
 			ret = false;
 			break;
@@ -427,7 +427,7 @@ bool Lawicel_parser_stm32::handle_set_filter_mode(const char mode)
 			
 			if(!can_usb_app.write_config(config))
 			{
-				logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_set_filter_mode", "config update failed");
+				logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_set_filter_mode", "config update failed");
 				return false;
 			}
 		}
@@ -451,7 +451,7 @@ bool Lawicel_parser_stm32::handle_set_accept_code(const uint32_t code)
 			
 			if(!can_usb_app.write_config(config))
 			{
-				logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_set_accept_code", "config update failed");
+				logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_set_accept_code", "config update failed");
 				return false;
 			}
 		}
@@ -475,7 +475,7 @@ bool Lawicel_parser_stm32::handle_set_accept_mask(const uint32_t mask)
 			
 			if(!can_usb_app.write_config(config))
 			{
-				logger->log(LOG_LEVEL::ERROR, "Lawicel_parser_stm32::handle_set_accept_mask", "config update failed");
+				logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_set_accept_mask", "config update failed");
 				return false;
 			}
 		}
