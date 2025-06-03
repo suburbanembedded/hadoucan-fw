@@ -55,6 +55,7 @@ jobs:
         provenance: false
         push: true
         pull: true
+        tags: ${{ env.DOCKER_REPO }}:${{ env.BRANCH_NAME }}
         cache-from: |
           type=registry,mode=max,ref=${{ env.DOCKER_REPO_CACHE }}:master
           type=registry,mode=max,ref=${{ env.DOCKER_REPO_CACHE }}:${{ env.BRANCH_NAME }}
