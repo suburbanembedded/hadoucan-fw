@@ -450,34 +450,3 @@ bool Main_task::load_config()
 
 	return true;
 }
-
-bool Main_task::handle_usb_set_config_thunk(void* ctx, const uint16_t config)
-{
-	return static_cast<Main_task*>(ctx)->handle_usb_set_config(config);
-}
-
-bool Main_task::handle_usb_set_config(const uint8_t config)
-{
-	bool ret = false;
-
-	switch(config)
-	{
-		case 0:
-		{
-			ret = true;
-			break;
-		}
-		case 1:
-		{
-			ret = true;
-			break;
-		}
-		default:
-		{
-			ret = false;
-			break;
-		}
-	}
-
-	return ret;
-}

@@ -15,12 +15,8 @@ public:
 
 	bool load_config();
 
-	static bool handle_usb_set_config_thunk(void* ctx, const uint16_t config);
-
 protected:
 	
-	bool handle_usb_set_config(const uint8_t config);
-
 	void get_unique_id(std::array<uint32_t, 3>* id);
 	void get_unique_id_str(std::array<char, 25>* id_str);
 
