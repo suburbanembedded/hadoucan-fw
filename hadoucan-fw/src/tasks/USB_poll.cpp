@@ -302,6 +302,9 @@ extern "C"
 		const Bootloader_key key = Bootloader_key::get_key_boot();
 		key.to_addr(reinterpret_cast<uint8_t*>(0x38800000));
 
+		// vTaskSuspendAll();
+		// vTaskDelay(pcMS_TO_TICKS(1000));
+
 		//Disable ISR, sync
 		asm volatile(
 			"cpsid i\n"
