@@ -1,5 +1,7 @@
 #include "tasks/USB_poll.hpp"
 
+#include "bootloader_util/Bootloader_key.hpp"
+
 #include "Task_instances.hpp"
 
 #include "freertos_cpp_util/logging/Global_logger.hpp"
@@ -59,16 +61,20 @@ extern "C"
 		tusb_int_handler(1, true);
 	}
 
-	#define USB_VID   0x6666
-	#define USB_PID   0x6666
+	#define USB_VID   0x0483
+	#define USB_PID   0x5740
 	#define USB_BCD   0x0200
 
 	#define ITF_NUM_CDC      0
 	#define ITF_NUM_CDC_DATA 1
+	#define ITF_NUM_DFU_RT   2
+	#define ITF_NUM_TOTAL    3
 
 	#define EPNUM_CDC_NOTIF   0x81
 	#define EPNUM_CDC_OUT     0x02
 	#define EPNUM_CDC_IN      0x82
+
+	#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_DFU_RT_DESC_LEN)
 
 	enum {
 		STRID_LANGID = 0,
@@ -79,14 +85,16 @@ extern "C"
 
 	uint8_t const desc_fs_configuration[] =
 	{
-		TUD_CONFIG_DESCRIPTOR(1, 2, 0, TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN, 0x00, 100),
+		TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 		TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
+		TUD_DFU_RT_DESCRIPTOR(ITF_NUM_DFU_RT, 5, 0x0d, 1000, 512),
 	};
 
 	uint8_t const desc_hs_configuration[] =
 	{
-		TUD_CONFIG_DESCRIPTOR(1, 2, 0, TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN, 0x00, 100),
+		TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 		TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 512),
+		TUD_DFU_RT_DESCRIPTOR(ITF_NUM_DFU_RT, 5, 0x0d, 1000, 512),
 	};
 
 	tusb_desc_device_t const desc_device = {
@@ -147,6 +155,7 @@ extern "C"
 		"HadouCAN",                    // 2: Product
 		NULL,                          // 3: SN
 		"HadouCAN CDC"                 // 4: CDC Interface
+		"HadouCAN DFU Runtime"         // 5: DFU RT Interface
 	};
 
 	void ascii_to_u16le(const size_t len, char const * const in, uint16_t* const out)
@@ -219,19 +228,19 @@ extern "C"
 		return (uint8_t const*) &desc_device_qualifier;
 	}
 
-	uint8_t desc_other_speed_config[TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN];
+	uint8_t desc_other_speed_config[CONFIG_TOTAL_LEN];
 	uint8_t const* tud_descriptor_other_speed_configuration_cb(uint8_t index)
 	{
 		switch(tud_speed_get())
 		{
 			case TUSB_SPEED_FULL:
 			{
-				memcpy(desc_other_speed_config, desc_hs_configuration, TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN);
+				memcpy(desc_other_speed_config, desc_hs_configuration, CONFIG_TOTAL_LEN);
 				break;
 			}
 			case TUSB_SPEED_HIGH:
 			{
-				memcpy(desc_other_speed_config, desc_fs_configuration, TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN);
+				memcpy(desc_other_speed_config, desc_fs_configuration, CONFIG_TOTAL_LEN);
 				break;
 			}
 			default:
@@ -286,5 +295,24 @@ extern "C"
 	void tud_cdc_tx_complete_cb(uint8_t itf)
 	{
 		usb_core_task.m_events.set_bits(USB_core_task::TX_COMPL_BIT);
+	}
+
+	void tud_dfu_runtime_reboot_to_dfu_cb(void)
+	{
+		const Bootloader_key key = Bootloader_key::get_key_boot();
+		key.to_addr(reinterpret_cast<uint8_t*>(0x38800000));
+
+		//Disable ISR, sync
+		asm volatile(
+			"cpsid i\n"
+			"isb sy\n"
+			"dsb sy\n"
+			: /* no out */
+			: /* no in */
+			: "memory"
+			);
+
+		//reboot
+		NVIC_SystemReset();
 	}
 }

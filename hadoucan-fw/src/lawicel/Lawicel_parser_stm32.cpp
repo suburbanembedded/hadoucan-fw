@@ -627,8 +627,8 @@ bool Lawicel_parser_stm32::handle_ext_bootloader()
 	//Disable ISR, sync
 	asm volatile(
 		"cpsid i\n"
-		"dsb 0xF\n"
-		"isb 0xF\n"
+		"isb sy\n"
+		"dsb sy\n"
 		: /* no out */
 		: /* no in */
 		: "memory"

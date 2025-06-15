@@ -18,8 +18,7 @@
 #define CFG_TUD_MAX_SPEED     OPT_MODE_HIGH_SPEED
 
 #ifndef CFG_TUSB_MEM_SECTION
-// #define CFG_TUSB_MEM_SECTION __attribute__ (( section(".ram_dtcm") ))
-#define CFG_TUSB_MEM_SECTION
+#define CFG_TUSB_MEM_SECTION __attribute__ (( section(".ram_dtcm_noload") ))
 #endif
 
 #ifndef CFG_TUSB_MEM_ALIGN
@@ -31,10 +30,7 @@
 #endif
 
 #define CFG_TUD_CDC              1
-#define CFG_TUD_MSC              0
-#define CFG_TUD_HID              0
-#define CFG_TUD_MIDI             0
-#define CFG_TUD_VENDOR           0
+#define CFG_TUD_DFU_RUNTIME      1
 
 #define CFG_TUD_CDC_RX_BUFSIZE   2048
 #define CFG_TUD_CDC_TX_BUFSIZE   2048
