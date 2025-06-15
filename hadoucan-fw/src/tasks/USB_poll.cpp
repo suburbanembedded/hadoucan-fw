@@ -254,21 +254,25 @@ extern "C"
 
 	void tud_suspend_cb(bool remote_wakeup_en)
 	{
-
+		usb_core_task.m_events.set_bits(USB_core_task::USB_SUSPEND_BIT);
+		// Turn off CAN
+		// Go to some low power mode
 	}
 
 	void tud_resume_cb(void)
 	{
-		
+		usb_core_task.m_events.clear_bits(USB_core_task::USB_SUSPEND_BIT);
+		// Restore CAN if configured
+		// Normal mode
 	}
 
 	void tud_mount_cb(void)
 	{
-
+		usb_core_task.m_events.set_bits(USB_core_task::USB_MOUNT_BIT);
 	}
 	void tud_umount_cb(void)
 	{
-
+		usb_core_task.m_events.clear_bits(USB_core_task::USB_MOUNT_BIT);
 	}
 
 	void tud_cdc_line_state_cb(uint8_t instance, bool dtr, bool rts)

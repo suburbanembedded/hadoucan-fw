@@ -43,7 +43,9 @@ public:
 	static void get_unique_id_str(std::array<char, 25>* const id_str);
 
 private:
-	const static EventBits_t RX_AVAIL_BIT = 0x0001U;
-	const static EventBits_t TX_COMPL_BIT = 0x0002U;
+	constexpr static EventBits_t RX_AVAIL_BIT    = 1U << 0;
+	constexpr static EventBits_t TX_COMPL_BIT    = 1U << 1;
+	constexpr static EventBits_t USB_MOUNT_BIT   = 1U << 2;
+	constexpr static EventBits_t USB_SUSPEND_BIT = 1U << 3;
 	Event_group_static m_events;
 };
