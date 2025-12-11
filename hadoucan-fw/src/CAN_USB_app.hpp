@@ -94,8 +94,8 @@ protected:
 	CAN_USB_app_config m_config;
 	CAN_USB_app_bitrate_table m_bitrate_tables;
 
-	static bool write_xml_file(spiffs* const fs, const char* name, const tinyxml2::XMLDocument& xml);
-	static bool load_xml_file(spiffs* const fs, const char* name, tinyxml2::XMLDocument* const out_xml);
+	static bool write_xml_file(lfs_t* const fs, const char* name, const tinyxml2::XMLDocument& xml);
+	static bool load_xml_file(lfs_t* const fs, const char* name, tinyxml2::XMLDocument* const out_xml);
 
 	W25Q16JV m_qspi;
 	W25Q16JV_conf_region m_fs;

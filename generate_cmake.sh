@@ -7,6 +7,7 @@ if [ -d build ]; then rm -rf build; fi
 BASE_PATH=$PWD
 
 RAM_TOOL="-DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_gcc_ram.cmake"
+RAM_SEMIHOSTING_TOOL="-DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_gcc_ram_semihosting.cmake"
 FLASH_TOOL="-DCMAKE_TOOLCHAIN_FILE=$BASE_PATH/Toolchain_stm32h750_gcc_flash.cmake"
 
 TINYXML2_OPTS="-DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DBUILD_TESTS=OFF"
@@ -26,6 +27,21 @@ popd
 mkdir -p build/ram/debug
 pushd build/ram/debug
 cmake -DCMAKE_BUILD_TYPE=Debug $TINYXML2_OPTS $MBEDTLS_OPTS $RAM_TOOL $BASE_PATH
+popd
+
+mkdir -p build/ram_semihosting/release
+pushd build/ram_semihosting/release
+cmake -DCMAKE_BUILD_TYPE=Release $TINYXML2_OPTS $MBEDTLS_OPTS $RAM_SEMIHOSTING_TOOL $BASE_PATH
+popd
+
+mkdir -p build/ram_semihosting/relwithdebinfo
+pushd build/ram_semihosting/relwithdebinfo
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo $TINYXML2_OPTS $MBEDTLS_OPTS $RAM_SEMIHOSTING_TOOL $BASE_PATH
+popd
+
+mkdir -p build/ram_semihosting/debug
+pushd build/ram_semihosting/debug
+cmake -DCMAKE_BUILD_TYPE=Debug $TINYXML2_OPTS $MBEDTLS_OPTS $RAM_SEMIHOSTING_TOOL $BASE_PATH
 popd
 
 #mkdir -p build/flash/release

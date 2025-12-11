@@ -32,14 +32,14 @@ bool set_can_clk(const uint32_t can_clk)
 		return false;
 	}
 
-	RCC_PeriphCLKInitTypeDef periph_config;
+	RCC_PeriphCLKInitTypeDef periph_config = { 0 };
+	periph_config.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
 	HAL_RCCEx_GetPeriphCLKConfig(&periph_config);
+	periph_config.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
+	periph_config.FdcanClockSelection  = RCC_FDCANCLKSOURCE_PLL2;
 
 	// HAL_RCCEx_GetPeriphCLKConfig enables all of the clocks...
 	// we need to fix the list to the clocks actually used
-	periph_config.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_FDCAN
-                              |RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_RNG
-                              |RCC_PERIPHCLK_QSPI;
 
 	bool ret = false;
 	switch(periph_config.FdcanClockSelection)
@@ -48,7 +48,7 @@ bool set_can_clk(const uint32_t can_clk)
 		{
 			logger->log(LOG_LEVEL::error, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection is HSE, requires PLL2");
 
-			ret = true;
+			ret = false;
 			break;
 		}
 		case RCC_FDCANCLKSOURCE_PLL:
@@ -64,6 +64,8 @@ bool set_can_clk(const uint32_t can_clk)
 			{
 				case 24000000U:
 				{
+					logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection PLL2 24 MHz");
+
 					periph_config.PLL2.PLL2M = 2;
 					periph_config.PLL2.PLL2N = 20;
 					periph_config.PLL2.PLL2Q = 10;
@@ -73,6 +75,8 @@ bool set_can_clk(const uint32_t can_clk)
 				}
 				case 60000000U:
 				{
+					logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection PLL2 60 MHz");
+
 					periph_config.PLL2.PLL2M = 2;
 					periph_config.PLL2.PLL2N = 20;
 					periph_config.PLL2.PLL2Q = 4;
@@ -82,6 +86,8 @@ bool set_can_clk(const uint32_t can_clk)
 				}
 				case 80000000U:
 				{
+					logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::set_can_clk", "FdcanClockSelection PLL2 80 MHz");
+
 					periph_config.PLL2.PLL2M = 2;
 					periph_config.PLL2.PLL2N = 20;
 					periph_config.PLL2.PLL2Q = 3;
@@ -98,6 +104,12 @@ bool set_can_clk(const uint32_t can_clk)
 				}
 			}
 
+			periph_config.PLL2.PLL2P = 128;
+			periph_config.PLL2.PLL2R = 128;
+			periph_config.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+			periph_config.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+			periph_config.PLL2.PLL2FRACN = 0;
+
 			break;
 		}
 		default:
@@ -111,18 +123,22 @@ bool set_can_clk(const uint32_t can_clk)
 
 	if(ret == true)
 	{
+	    __HAL_RCC_FDCAN_CLK_DISABLE();
+
 		if(HAL_RCCEx_PeriphCLKConfig(&periph_config) != HAL_OK)
 		{
 			logger->log(LOG_LEVEL::error, "STM32_fdcan_tx::set_can_clk", "HAL_RCCEx_PeriphCLKConfig failed");
 
 			ret = false;
 		}
+
+	    __HAL_RCC_FDCAN_CLK_ENABLE();
 	}
 
 	return ret;
 }
 
-bool get_can_clk(uint32_t* const can_clk)
+bool get_can_clk(uint32_t* const can_clk_hz, uint32_t* const can_clk_src)
 {
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
 	using freertos_util::logging::LOG_LEVEL;
@@ -132,12 +148,17 @@ bool get_can_clk(uint32_t* const can_clk)
 	RCC_PeriphCLKInitTypeDef periph_config;
 	HAL_RCCEx_GetPeriphCLKConfig(&periph_config);
 
+	if(can_clk_src)
+	{
+		*can_clk_src = periph_config.FdcanClockSelection;
+	}
+
 	bool ret = false;
 	switch(periph_config.FdcanClockSelection)
 	{
 		case RCC_FDCANCLKSOURCE_HSE:
 		{
-			*can_clk = hse_clk;
+			*can_clk_hz = hse_clk;
 			ret = true;
 			break;
 		}
@@ -150,7 +171,7 @@ bool get_can_clk(uint32_t* const can_clk)
 			const uint32_t n = pll_config.PLL.PLLN;
 			const uint32_t q = pll_config.PLL.PLLQ;
 
-			*can_clk = ((hse_clk / m) * n) / q;
+			*can_clk_hz = ((hse_clk / m) * n) / q;
 			ret = true;
 			break;
 		}
@@ -160,7 +181,7 @@ bool get_can_clk(uint32_t* const can_clk)
 			const uint32_t n = periph_config.PLL2.PLL2N;
 			const uint32_t q = periph_config.PLL2.PLL2Q;
 
-			*can_clk = ((hse_clk / m) * n) / q;
+			*can_clk_hz = ((hse_clk / m) * n) / q;
 			ret = true;
 			break;
 		}
@@ -171,7 +192,14 @@ bool get_can_clk(uint32_t* const can_clk)
 		}
 	}
 
-	logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::get_can_clk", "get_can_clk is %d", *can_clk);
+	if(ret)
+	{
+		logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::get_can_clk", "get_can_clk is %d", *can_clk_hz);	
+	}
+	else
+	{
+		logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::get_can_clk", "get_can_clk says clock is invalid");
+	}
 
 	return ret;
 }
@@ -215,10 +243,12 @@ bool STM32_fdcan_tx::init()
 		if(m_config.listen_only)
 		{
 			m_fdcan_handle->Init.Mode = FDCAN_MODE_BUS_MONITORING;
+			set_can_silent();
 		}
 		else
 		{
 			m_fdcan_handle->Init.Mode = FDCAN_MODE_NORMAL;
+			reset_can_silent();
 		}
 
 		m_fdcan_handle->Init.AutoRetransmission = ENABLE;
@@ -273,13 +303,37 @@ bool STM32_fdcan_tx::init()
 		}
 
 		logger->log(LOG_LEVEL::trace, "STM32_fdcan_tx::init", "set clock");
-		uint32_t current_can_clk = 0;
-		get_can_clk(&current_can_clk);
-		if(current_can_clk != m_config.can_clock)
+		uint32_t current_can_clk_hz  = 0;
+		uint32_t current_can_clk_src = 0;
+		if( ! get_can_clk(&current_can_clk_hz, &current_can_clk_src) )
+		{
+			logger->log(LOG_LEVEL::error, "STM32_fdcan_tx::init", "get_can_clk failed");
+			return false;			
+		}
+
+		if((current_can_clk_hz != m_config.can_clock) || (current_can_clk_src != RCC_FDCANCLKSOURCE_PLL2))
 		{
 			if(!set_can_clk(m_config.can_clock))
 			{
 				logger->log(LOG_LEVEL::error, "STM32_fdcan_tx::init", "set_can_clk failed");
+				return false;
+			}
+
+			if( ! get_can_clk(&current_can_clk_hz, &current_can_clk_src) )
+			{
+				logger->log(LOG_LEVEL::error, "STM32_fdcan_tx::init", "get_can_clk failed");
+				return false;
+			}
+
+			if(current_can_clk_hz != m_config.can_clock)
+			{
+				logger->log(LOG_LEVEL::error, "STM32_fdcan_tx::init", "Changing CAN clock hz failed");
+				return false;
+			}
+
+			if(current_can_clk_src != RCC_FDCANCLKSOURCE_PLL2)
+			{
+				logger->log(LOG_LEVEL::error, "STM32_fdcan_tx::init", "Changing CAN clock source failed");
 				return false;
 			}
 		}
@@ -635,6 +689,17 @@ bool STM32_fdcan_tx::open()
 		return false;	
 	}
 
+	if(0)
+	{
+		uint32_t ccr_init;
+		do
+		{
+			ccr_init = READ_BIT(m_fdcan_handle->Instance->CCCR, FDCAN_CCCR_INIT);
+		} while (ccr_init != 0);
+	}
+
+	STM32_fdcan_tx::reset_can_stdby();
+
 	logger->log(LOG_LEVEL::info, "STM32_fdcan_tx::open", "CAN is open");
 	m_is_open = true;
 
@@ -665,6 +730,17 @@ bool STM32_fdcan_tx::close()
 	{
 		return false;
 	}
+
+	if(0)
+	{
+		uint32_t ccr_init;
+		do
+		{
+			ccr_init = READ_BIT(m_fdcan_handle->Instance->CCCR, FDCAN_CCCR_INIT);
+		} while (ccr_init != 0);
+	}
+
+	STM32_fdcan_tx::set_can_stdby();
 
 	logger->log(LOG_LEVEL::info, "STM32_fdcan_tx::open", "CAN is closed");
 	m_is_open = false;
@@ -1005,9 +1081,8 @@ void STM32_fdcan_tx::set_can_slew_slow()
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-	HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
-
 	HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
 }
 void STM32_fdcan_tx::set_can_slew_high()
 {
@@ -1021,9 +1096,70 @@ void STM32_fdcan_tx::set_can_slew_high()
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-	HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
-
 	HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_SET);
+	HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
+}
+
+void STM32_fdcan_tx::set_can_stdby()
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+	
+	logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::set_can_stdby", "");
+
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = CAN_STDBY_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOB, CAN_STDBY_Pin, GPIO_PIN_SET);
+}
+void STM32_fdcan_tx::reset_can_stdby()
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+	
+	logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::reset_can_stdby", "");
+
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = CAN_STDBY_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOB, CAN_STDBY_Pin, GPIO_PIN_RESET);
+}
+
+void STM32_fdcan_tx::set_can_silent()
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+	
+	logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::set_can_silent", "");
+
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = CAN_SILENT_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin, GPIO_PIN_SET);
+}
+void STM32_fdcan_tx::reset_can_silent()
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	using freertos_util::logging::LOG_LEVEL;
+	
+	logger->log(LOG_LEVEL::debug, "STM32_fdcan_tx::reset_can_silent", "");
+
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = CAN_SILENT_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin, GPIO_PIN_RESET);
 }
 
 extern "C"

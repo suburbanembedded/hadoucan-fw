@@ -1,0 +1,13 @@
+#
+# HadouCAN udev rules
+#
+# Copy to /etc/udev/rules.d
+#	cp 99-hadoucan.rules /etc/udev/rules.d/
+# Reload rules with
+# 	sudo udevadm control --reload-rules
+
+# HadouCAN Bootoader
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="1454", MODE="0666", GROUP="plugdev"
+
+# HadouCAN
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="1455", MODE="0666", GROUP="plugdev"

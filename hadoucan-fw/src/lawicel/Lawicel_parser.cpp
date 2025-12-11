@@ -1499,6 +1499,13 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 	constexpr char bpsdata_str[] = "!bpsdata";
 	const size_t bpsdata_str_len = strlen(bpsdata_str);
 
+	const char wipe_config_str[] = "!wipeconfig";
+	const size_t wipe_config_str_len = strlen(wipe_config_str);
+
+	const char wipeflash_str[] = "!wipeflash";
+	const size_t wipeflash_str_len = strlen(wipeflash_str);
+
+
 	bool ret = false;
 
 	//TODO: this does not compare substrings as true
@@ -1581,6 +1588,17 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_extended_cmd", "Extended data bitrate");
 
 		ret = parse_ext_bitrate_data(in_str);
+	else if(strncmp(in_str, wipe_config_str, wipe_config_str_len) == 0)
+	{
+		logger->log(LOG_LEVEL::info, "Lawicel_parser::parse_extended_cmd", "Wipe config");
+
+		ret = handle_ext_wipe_config();
+	}
+	else if(strncmp(in_str, wipeflash_str, wipeflash_str_len) == 0)
+	{
+		logger->log(LOG_LEVEL::info, "Lawicel_parser::parse_extended_cmd", "Wipe all flash");
+
+		ret = handle_ext_wipe_flash();
 	}
 	else
 	{

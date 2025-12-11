@@ -53,10 +53,16 @@ public:
 	bool set_baud(const int std_baud);
 	bool set_baud(const int std_baud, const int fd_baud);
 
-protected:
-
 	static void set_can_slew_slow();
 	static void set_can_slew_high();
+
+	static void set_can_stdby();
+	static void reset_can_stdby();
+
+	static void set_can_silent();
+	static void reset_can_silent();
+
+protected:
 
 	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, FDCAN_HandleTypeDef* const handle);
 	static bool set_baud(const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& std_baud, const CAN_USB_app_bitrate_table::Bitrate_Table_Entry& fd_baud, FDCAN_HandleTypeDef* const handle);

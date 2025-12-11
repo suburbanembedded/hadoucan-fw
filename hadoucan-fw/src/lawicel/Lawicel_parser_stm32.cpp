@@ -7,6 +7,9 @@
 
 #include "common_util/Byte_util.hpp"
 #include "common_util/Comparison_util.hpp"
+#include "common_util/Stack_string.hpp"
+
+#include "sw_ver.hpp"
 
 #include "freertos_cpp_util/logging/Global_logger.hpp"
 
@@ -404,7 +407,7 @@ bool Lawicel_parser_stm32::handle_get_version(std::array<uint8_t, 4>* const ver)
 	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_get_version", "");
 
 	const std::array<char, 2> hw_ver = {'0', '1'};
-	const std::array<char, 2> sw_ver = {'0', 'C'};
+	const std::array<char, 2> sw_ver = {'0', 'D'};
 	
 	ver->data()[0] = static_cast<uint8_t>(hw_ver[0]);
 	ver->data()[1] = static_cast<uint8_t>(hw_ver[1]);
@@ -622,17 +625,40 @@ bool Lawicel_parser_stm32::handle_ext_bootloader()
 	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_bootloader", "");
 
 	const Bootloader_key key = Bootloader_key::get_key_boot();
-	key.to_addr(reinterpret_cast<uint8_t*>(0x38800000));
 
 	//Disable ISR, sync
 	asm volatile(
 		"cpsid i\n"
-		"dsb 0xF\n"
-		"isb 0xF\n"
+		"isb sy\n"
+		"dsb sy\n"
 		: /* no out */
 		: /* no in */
 		: "memory"
-		);
+	);
+
+	// Enable BBRAM write
+	HAL_PWR_EnableBkUpAccess();
+	asm volatile(
+		"isb sy\n"
+		"dsb sy\n"
+		: /* no out */
+		: /* no in */
+		: "memory"
+	);
+
+	// Write BBRAM
+	key.to_addr(reinterpret_cast<uint8_t*>(0x38800000));
+	ecc_flush_bbram_noisr_noenable(Bootloader_key::LENGTH_IN_BYTES);
+
+	// Disable BBRAM write
+	HAL_PWR_DisableBkUpAccess();
+	asm volatile(
+		"isb sy\n"
+		"dsb sy\n"
+		: /* no out */
+		: /* no in */
+		: "memory"
+	);
 
 	//reboot
 	NVIC_SystemReset();
@@ -668,13 +694,109 @@ bool Lawicel_parser_stm32::handle_ext_version()
 	std::array<uint8_t, 4> ver;
 	handle_get_version(&ver);
 
-	std::array<uint8_t, 7> resp;
-	resp[0] = 'V';
-	std::copy_n(ver.data(), 4, resp.data()+1);
-	resp[5] = '\r';
-	resp[6] = '\0';
+	Stack_string<96> str; //8+4+(3*10)+40+1
+	int ret = str.sprintf("release-%d.%d.%d:%s\r", SW_VER_MAJOR, SW_VER_MINOR, SW_VER_PATCH, GIT_SHA1);
 
-	write_string((char*)(resp.data()));
+	write_string(str.data());
+
+	return true;
+}
+
+bool Lawicel_parser_stm32::handle_ext_wipe_config()
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_wipe_config", "");
+
+	// TODO: how to stop other threads
+
+	W25Q16JV& m_qspi = can_usb_app.get_flash();
+	W25Q16JV_conf_region& m_fs = can_usb_app.get_fs();
+
+	int ret = m_fs.unmount();
+	if(ret != LFS_ERR_OK)
+	{
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_ext_wipe_config", "Error unmounting flash");
+	}
+
+	logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32::handle_ext_wipe_flash", "Starting config erase");
+
+	const size_t fs_start = m_fs.get_start_bytes();
+	const size_t fs_end = fs_start + m_fs.get_len_bytes();
+	for(size_t i = fs_start; i < fs_end; i += (64UL*1024UL) )
+	{
+		if( ! m_qspi.cmd_block64_erase(i) )
+		{
+			logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_ext_wipe_config", "Error erasing block %zu", i);
+		}
+	}
+
+	logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32::handle_ext_wipe_config", "Resetting");
+
+	// Disable ISR, sync
+	asm volatile(
+		"cpsid i\n"
+		"isb sy\n"
+		"dsb sy\n"
+		: /* no out */
+		: /* no in */
+		: "memory"
+	);
+
+	// Reset
+	NVIC_SystemReset();
+
+	for(;;)
+	{
+
+	}
+
+	return true;
+}
+
+bool Lawicel_parser_stm32::handle_ext_wipe_flash()
+{
+	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+	
+	logger->log(LOG_LEVEL::debug, "Lawicel_parser_stm32::handle_ext_wipe_flash", "");
+
+	// TODO: how to stop other threads
+
+	W25Q16JV& m_qspi = can_usb_app.get_flash();
+	W25Q16JV_conf_region& m_fs = can_usb_app.get_fs();
+
+	int ret = m_fs.unmount();
+	if(ret != LFS_ERR_OK)
+	{
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_ext_wipe_config", "Error unmounting flash");
+	}
+	
+	logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32::handle_ext_wipe_flash", "Starting chip erase");
+
+	if( ! m_qspi.cmd_chip_erase() )
+	{
+		logger->log(LOG_LEVEL::error, "Lawicel_parser_stm32::handle_ext_wipe_flash", "Error erasing flash");
+	}
+
+	logger->log(LOG_LEVEL::info, "Lawicel_parser_stm32::handle_ext_wipe_flash", "Resetting");
+
+	// Disable ISR, sync
+	asm volatile(
+		"cpsid i\n"
+		"isb sy\n"
+		"dsb sy\n"
+		: /* no out */
+		: /* no in */
+		: "memory"
+	);
+
+	// Reset
+	NVIC_SystemReset();
+
+	for(;;)
+	{
+		
+	}
 
 	return true;
 }

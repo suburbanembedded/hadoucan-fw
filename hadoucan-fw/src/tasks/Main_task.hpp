@@ -19,6 +19,8 @@ public:
 
 protected:
 	
+	void halt_on_error();
+
 	bool handle_usb_set_config(const uint8_t config);
 
 	void get_unique_id(std::array<uint32_t, 3>* id);

@@ -37,23 +37,26 @@ The first-in-class PPS timesync feature allows any number of Hadou-CAN to synchr
 ## Documentation
 
 User Guide
-https://docs.suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_User_Guide.pdf
+
+https://f000.backblazeb2.com/file/SM-PUB/hadoucan/Hadou-CAN+User+Guide.pdf
 
 Datasheet
-https://docs.suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_Datasheet.pdf
+
+https://f000.backblazeb2.com/file/SM-PUB/hadoucan/Hadou-CAN+Datasheet.pdf
 
 Quickstart Guide
-https://docs.suburbanmarine.io/public/hadoucan/doc/Hadou-CAN_Quickstart_Guide.pdf
+
+https://f000.backblazeb2.com/file/SM-PUB/hadoucan/Hadou-CAN+Quickstart+Guide.pdf
 
 ## Store
 
-https://www.tindie.com/products/suburbanembedded/hadou-can-usb-can-fd-adapter/
+https://luma360.io/product/hadou-can-usb-to-can-fd-adapter/
 
-https://www.digikey.com/product-detail/en/suburban-embedded/SM-1301-C01-ENC/2587-SM-1301-C01-ENC-ND/12149330
+https://www.tindie.com/products/suburbanembedded/hadou-can-usb-can-fd-adapter/
 
 ## Copyright
 
-Copyright (c) 2018-2020 Suburban Embedded
+Copyright (c) 2018-2025 Suburban Marine, Inc.
 
 ## License
 

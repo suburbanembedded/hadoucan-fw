@@ -23,6 +23,7 @@ public:
 	void set_mode_boot();
 	void set_mode_normal();
 	void set_mode_error();
+	void set_mode_suspend();
 
 protected:
 
@@ -30,13 +31,15 @@ protected:
 	{
 		BOOT,
 		NORMAL,
-		ERROR
+		ERROR,
+		SUSPEND
 	};
 	std::atomic<LED_MODE> m_mode;
 
-	void handle_boot_mode();
+	static void handle_boot_mode();
 	void handle_normal_mode();
 	void handle_error_mode();
+	static void handle_suspend_mode();
 
 	static void all_off();
 	static void all_on();
