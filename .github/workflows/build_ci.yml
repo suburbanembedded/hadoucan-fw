@@ -1,20 +1,21 @@
 name: Hadou-CAN CI
 
 on: 
-  create:
-    tags:
-      - '**'
   push:
+    tags:
+      - 'release-*'
     branches:
       - '**'
-  pull_request:
-    branches:
-      - '**'
+
 env:
   REGISTRY: ghcr.io
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
   DOCKER_REPO: ghcr.io/${{ github.repository }}/hadoucan-fw-ci
   DOCKER_REPO_CACHE: ghcr.io/${{ github.repository }}/hadoucan-fw-ci-cache
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -90,20 +91,20 @@ jobs:
     
     needs: build
 
-    if: github.event_name == 'create' && github.event.ref_type == 'tag'
+    if: github.event_name == 'push' && github.ref_type == 'tag'
     
     steps:
     - name: Get artifact
       uses: actions/download-artifact@v4
       with:
         name: hadoucan-fw-release
-        path: ${{ github.workspace }}/hadoucan-fw-release-${{ github.sha }}.tar.gz
+        path: ${{ github.workspace }}/hadoucan-fw-release
 
     - name: Mangle name
-      run: mv hadoucan-fw-release-${{ github.sha }}.tar.gz hadoucan-fw-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
+      run: mv ${{ github.workspace }}/hadoucan-fw-release/hadoucan-fw-release-${{ github.sha }}.tar.gz ${{ github.workspace }}/hadoucan-fw-release/hadoucan-fw-release-${{ github.sha }}-${{ env.BRANCH_NAME }}.tar.gz
 
     - name: Upload release artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: hadoucan-fw-release
-        path: ${{ github.workspace }}/hadoucan-fw-release-${{ github.sha }}-${{ github.event.ref }}.tar.gz
+        name: hadoucan-fw-release-${{ github.sha }}-${{ env.BRANCH_NAME }}
+        path: ${{ github.workspace }}/hadoucan-fw-release/hadoucan-fw-release-${{ github.sha }}-${{ env.BRANCH_NAME }}.tar.gz

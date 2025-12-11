@@ -18,6 +18,17 @@ bool UART1_sink::handle_log(freertos_util::logging::String_type* const log)
 	return uartret == HAL_OK;
 }
 
+bool Semihosting_sink::handle_log(freertos_util::logging::String_type* const log)
+{
+	size_t uartret;
+	{
+		std::lock_guard<Mutex_static> lock(m_uart1_mutex);
+		uartret = ::fwrite(log->c_str(), 1, log->size(), stdout);
+	}
+
+	return uartret == log->size();
+}
+
 void Logging_task::work()
 {
 	// freertos_util::logging::Logger* const log = freertos_util::logging::Global_logger::get_instance().get_log();

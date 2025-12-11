@@ -27,14 +27,33 @@ namespace
 	}
 }
 
+void Main_task::halt_on_error()
+{
+	// Halt all threads except led and blink
+
+	usb_rx_buffer_task.suspend();
+	usb_core_task.suspend();
+	usb_lawicel_task.suspend();
+	timesync_task.suspend();
+	logging_task.suspend();
+	system_mon_task.suspend();
+	stm32_fdcan_rx_task.suspend();
+
+	led_task.set_mode_error();
+
+	for(;;)
+	{
+		vTaskSuspend(nullptr);
+	}
+}
+
 void Main_task::work()
 {
-	{
-		freertos_util::logging::Global_logger::set(&logging_task.get_logger());
-		freertos_util::logging::Global_logger::get()->set_sev_mask_level(freertos_util::logging::LOG_LEVEL::info);
-	}
-
 	freertos_util::logging::Logger* const logger = freertos_util::logging::Global_logger::get();
+
+	//led blink/strobe
+	led_task.set_mode_boot();
+	led_task.launch("led", 15);
 
 	{
 		CAN_USB_app::get_unique_id_str(&usb_id_str);
@@ -81,7 +100,6 @@ void Main_task::work()
 			case 0x2003:
 			{
 				logger->log(LOG_LEVEL::info, "main", "Silicon rev V");
-				logger->log(LOG_LEVEL::warn, "main", "This silicon revision is not supported, but will be soon");
 				break;
 			}
 			default:
@@ -107,7 +125,7 @@ void Main_task::work()
 		freertos_util::logging::Global_logger::get()->set_sev_mask_level(config_struct.log_level);
 	}
 
-	if(!init_usb())
+	if( ! init_usb() )
 	{
 		logger->log(LOG_LEVEL::error, "main", "USB init failed");
 	}
@@ -115,9 +133,6 @@ void Main_task::work()
 	//timesync processing
 	//currently config then no-op
 	timesync_task.launch("timesync", 1);
-
-	//led blink/strobe
-	led_task.launch("led", 1);
 
 	//CPU load & stack info
 	system_mon_task.launch("SysMon", 1);
@@ -298,10 +313,7 @@ bool Main_task::mount_fs()
 		{
 			logger->log(LOG_LEVEL::error, "main", "m_qspi.init failed");
 
-			for(;;)
-			{
-				vTaskSuspend(nullptr);
-			}
+			halt_on_error();
 		}
 
 		m_fs.initialize();
@@ -333,35 +345,29 @@ bool Main_task::mount_fs()
 
 		logger->log(LOG_LEVEL::info, "main", "Mounting flash fs");
 		int mount_ret = m_fs.mount();
-		if(mount_ret != SPIFFS_OK)
+		if(mount_ret != LFS_ERR_OK)
 		{
 			logger->log(LOG_LEVEL::error, "main", "Flash mount failed: %d", mount_ret);
 			logger->log(LOG_LEVEL::error, "main", "You will need to reload the config");
 
 			logger->log(LOG_LEVEL::info, "main", "Format flash");
 			int format_ret = m_fs.format();
-			if(format_ret != SPIFFS_OK)
+			if(format_ret != LFS_ERR_OK)
 			{
 				logger->log(LOG_LEVEL::fatal, "main", "Flash format failed: %d", format_ret);
 				logger->log(LOG_LEVEL::fatal, "main", "Try a power cycle, your board may be broken");
 
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
+				halt_on_error();
 			}
 
 			logger->log(LOG_LEVEL::info, "main", "Mounting flash fs");
 			mount_ret = m_fs.mount();
-			if(mount_ret != SPIFFS_OK)
+			if(mount_ret != LFS_ERR_OK)
 			{
 				logger->log(LOG_LEVEL::fatal, "main", "Flash mount failed right after we formatted it: %d", mount_ret);
 				logger->log(LOG_LEVEL::fatal, "main", "Try a power cycle, your board may be broken");
 
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
+				halt_on_error();
 			}
 			else
 			{
@@ -373,19 +379,13 @@ bool Main_task::mount_fs()
 			{
 				logger->log(LOG_LEVEL::fatal, "main", "Writing default config failed");
 
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
+				halt_on_error();
 			}
 			if(!can_usb_app.write_default_bitrate_table())
 			{
 				logger->log(LOG_LEVEL::fatal, "main", "Writing default bitrate table failed");
 
-				for(;;)
-				{
-					vTaskSuspend(nullptr);
-				}
+				halt_on_error();
 			}
 		}
 		else
@@ -410,10 +410,7 @@ bool Main_task::load_config()
 		{
 			logger->log(LOG_LEVEL::fatal, "main", "Writing default config load failed");
 
-			for(;;)
-			{
-				vTaskSuspend(nullptr);
-			}
+			halt_on_error();
 		}
 		else
 		{
@@ -433,10 +430,7 @@ bool Main_task::load_config()
 		{
 			logger->log(LOG_LEVEL::fatal, "main", "Writing default bitrate table failed");
 
-			for(;;)
-			{
-				vTaskSuspend(nullptr);
-			}
+			halt_on_error();
 		}
 		else
 		{

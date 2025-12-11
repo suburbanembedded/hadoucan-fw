@@ -71,8 +71,10 @@ target_link_libraries(hadoucan-fw.elf
 	tinyxml2_util
 
 	spi_flash
-	spiffs_flash
-	spiffs_util
+	
+	lfs
+	lfs_util
+	lfs_flash
 
 	crc
 
@@ -84,6 +86,16 @@ target_link_libraries(hadoucan-fw.elf
 	mbedtls
 	mbedcrypto
 )
+
+if(SEMIHOSTING)
+	target_link_libraries(hadoucan-fw.elf
+		rdimon
+	)
+	target_compile_definitions(hadoucan-fw.elf
+		PRIVATE
+			-DSEMIHOSTING
+	)
+endif()
 
 # Generate intel hex image
 add_custom_command(

@@ -8,7 +8,7 @@
 LED_task::LED_task()
 {
 	set_mode_boot();
-	handle_boot_mode();
+	all_on();
 }
 
 void LED_task::set_mode_boot()
@@ -22,6 +22,10 @@ void LED_task::set_mode_normal()
 void LED_task::set_mode_error()
 {
 	m_mode = LED_MODE::ERROR;
+}
+void LED_task::set_mode_suspend()
+{
+	m_mode = LED_MODE::SUSPEND;
 }
 
 void LED_task::all_off()
@@ -73,6 +77,11 @@ void LED_task::work()
 				handle_error_mode();
 				break;
 			}
+			case LED_MODE::SUSPEND:
+			{
+				handle_suspend_mode();
+				break;			
+			}
 			default:
 			{
 				m_mode = LED_MODE::ERROR;
@@ -86,16 +95,18 @@ void LED_task::work()
 void LED_task::handle_boot_mode()
 {
 	all_on();
+	vTaskDelay(pdMS_TO_TICKS(50));
+	all_off();
 }
 void LED_task::handle_normal_mode()
 {
 	HAL_GPIO_WritePin(GPIOD, GREEN1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOD, RED1_Pin,   GPIO_PIN_SET);
 
-	if(m_can_tx_activity)
-	{
-		m_can_tx_activity = false;
+	m_usb_activity.exchange(false);
 
+	if(m_can_tx_activity.exchange(false))
+	{
 		if(HAL_GPIO_ReadPin(GPIOD, RED2_Pin) == GPIO_PIN_RESET)
 		{
 			HAL_GPIO_WritePin(GPIOD, RED2_Pin, GPIO_PIN_SET);
@@ -113,10 +124,8 @@ void LED_task::handle_normal_mode()
 		}
 	}
 
-	if(m_can_rx_activity)
-	{
-		m_can_rx_activity = false;
-		
+	if(m_can_rx_activity.exchange(false))
+	{	
 		if(HAL_GPIO_ReadPin(GPIOD, GREEN2_Pin) == GPIO_PIN_RESET)
 		{
 			HAL_GPIO_WritePin(GPIOD, GREEN2_Pin, GPIO_PIN_SET);
@@ -136,7 +145,10 @@ void LED_task::handle_normal_mode()
 }
 void LED_task::handle_error_mode()
 {
+	HAL_GPIO_WritePin(GPIOD, GREEN1_Pin | GREEN2_Pin | RED2_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, RED1_Pin, GPIO_PIN_RESET);
+}
+void LED_task::handle_suspend_mode()
+{
 	all_off();
-
-	HAL_GPIO_WritePin(GPIOD, RED1_Pin,   GPIO_PIN_RESET);
 }

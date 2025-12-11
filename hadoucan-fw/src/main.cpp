@@ -195,8 +195,134 @@ void set_all_gpio_low_power()
 	__HAL_RCC_GPIOK_CLK_DISABLE();
 }
 
+void halt_cpu()
+{
+	// Disable ISR and sync
+	__asm__ volatile (
+		"cpsid i\n"
+		"isb\n"
+		"dsb\n"
+		: 
+		: 
+		: "memory"
+	);
+
+	// Only enabled ISR or events cause wake
+	// Clear deep sleep register, sleep normal
+	// Do not sleep on return to thread mode
+	CLEAR_BIT (SCB->SCR, SCB_SCR_SEVONPEND_Msk | SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk);
+
+	// sync SCB write
+	__asm__ volatile (
+		"dsb\n"
+		: 
+		: 
+		: "memory"
+	);
+
+	for(;;)
+	{
+		// sync SCB write, WFI, sync/reload pipeline, enable ISR, sync/reload pipeline
+		// certain platforms can crash on complex wfi return if no isb after wfi (arm core bug? - https://cliffle.com/blog/stm32-wfi-bug/)
+		__asm__ volatile (
+			"wfi\n"
+			"isb\n"
+			"cpsie i\n"
+			"isb\n"
+			: 
+			: 
+			: "memory"
+		);
+	}
+}
+
+#ifdef SEMIHOSTING
+extern "C"
+{
+	extern void initialise_monitor_handles();
+}
+#endif
+
 int main(void)
 {
+	// If JTAG is attached, keep clocks on during sleep
+	{
+		if( (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) != 0)
+		{
+			const uint32_t DBGMCU_CR = DBGMCU->CR;
+
+			DBGMCU->CR = DBGMCU_CR
+			  | DBGMCU_CR_DBG_SLEEPD1
+			  | DBGMCU_CR_DBG_STOPD1
+			  | DBGMCU_CR_DBG_STANDBYD1
+			  // | DBGMCU_CR_DBG_TRACECKEN
+			  | DBGMCU_CR_DBG_CKD1EN
+			  | DBGMCU_CR_DBG_CKD3EN
+			;
+
+			__asm__ volatile (
+				"dsb\n"
+				: 
+				: 
+				: "memory"
+			);
+		}
+	}
+	
+	// Handle errata
+	{
+		const uint32_t idcode = DBGMCU->IDCODE;
+		const uint16_t rev_id = (idcode & 0xFFFF0000) >> 16;
+		const uint16_t dev_id = (idcode & 0x000007FF);
+
+		if(dev_id != 0x450)
+		{
+			// Only Dev ID STM32H7xx (42, 43/53, 50) is known
+			halt_cpu();
+		}
+
+		switch(rev_id)
+		{
+			case 0x1003: // Rev Y
+			{
+				//errata 2.2.9
+				uint32_t volatile * const AXI_TARG7_FN_MOD = 
+				reinterpret_cast<uint32_t*>(
+					0x51000000UL + // AXI Base
+					0x1108UL +     // TARGx offset
+					0x1000UL*7U    // Port 7, SRAM
+				);
+
+				const uint32_t AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE  = 0x00000001;
+				const uint32_t AXI_TARGx_FN_MOD_WRITE_ISS_OVERRIDE = 0x00000002;
+
+				SET_BIT(*AXI_TARG7_FN_MOD, AXI_TARGx_FN_MOD_READ_ISS_OVERRIDE);
+				__DSB();
+			}
+			case 0x2003: // Rev V
+			{
+				break;
+			}
+			case 0x1001: // Rev Z
+			case 0x2001: // Rev X
+			default:
+			{
+				halt_cpu();
+				break;
+			}
+		}
+	}
+
+	// Enable semihosting if requested
+	{
+		#ifdef SEMIHOSTING
+			initialise_monitor_handles();
+		#endif
+	}
+
+	SCB_InvalidateDCache();
+	SCB_InvalidateICache();
+
 	//confg mpu
 	if(1)
 	{
@@ -455,9 +581,9 @@ int main(void)
 	HAL_PWREx_EnableBkUpReg();
 
 	MX_GPIO_Init();
-	MX_CRC_Init();
-	MX_HASH_Init();
-	MX_RNG_Init();
+	// MX_CRC_Init();
+	// MX_HASH_Init();
+	// MX_RNG_Init();
 	// MX_TIM3_Init();
 	MX_USART1_UART_Init();
 	// MX_FDCAN1_Init();
@@ -478,6 +604,13 @@ int main(void)
 		HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
 	}
 
+	// If the global logger is not set up, we cannot call STM32_fdcan_tx::set_can_slew_slow et all
+	if(1)
+	{
+		freertos_util::logging::Global_logger::set(&logging_task.get_logger());
+		freertos_util::logging::Global_logger::get()->set_sev_mask_level(freertos_util::logging::LOG_LEVEL::info);
+	}
+
 	//enable high speed for now
 	//TODO: make this config
 	if(1)
@@ -485,20 +618,9 @@ int main(void)
 		__HAL_RCC_GPIOA_CLK_ENABLE();
 		__HAL_RCC_GPIOB_CLK_ENABLE();
 
-		GPIO_InitTypeDef GPIO_InitStruct = {0};
-		GPIO_InitStruct.Pin = CAN_SLOPE_Pin;
-		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-		GPIO_InitStruct.Pull = GPIO_NOPULL;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-		HAL_GPIO_WritePin(CAN_SLOPE_GPIO_Port, CAN_SLOPE_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_Init(CAN_SLOPE_GPIO_Port, &GPIO_InitStruct);
-
-		GPIO_InitStruct.Pin = CAN_SILENT_Pin|CAN_STDBY_Pin;
-		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-		GPIO_InitStruct.Pull = GPIO_NOPULL;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-		HAL_GPIO_WritePin(GPIOB, CAN_SILENT_Pin|CAN_STDBY_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+		STM32_fdcan_tx::set_can_slew_slow();
+		STM32_fdcan_tx::set_can_stdby();
+		STM32_fdcan_tx::set_can_silent();
 	}
 
 	main_task.launch("main_task", 15);
