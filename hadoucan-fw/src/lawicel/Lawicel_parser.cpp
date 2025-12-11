@@ -1588,6 +1588,7 @@ bool Lawicel_parser::parse_extended_cmd(const char* in_str)
 		logger->log(LOG_LEVEL::debug, "Lawicel_parser::parse_extended_cmd", "Extended data bitrate");
 
 		ret = parse_ext_bitrate_data(in_str);
+	}
 	else if(strncmp(in_str, wipe_config_str, wipe_config_str_len) == 0)
 	{
 		logger->log(LOG_LEVEL::info, "Lawicel_parser::parse_extended_cmd", "Wipe config");
