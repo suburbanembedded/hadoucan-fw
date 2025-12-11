@@ -37,12 +37,15 @@ The first-in-class PPS timesync feature allows any number of Hadou-CAN to synchr
 ## Documentation
 
 User Guide
+
 https://f000.backblazeb2.com/file/SM-PUB/hadoucan/Hadou-CAN+User+Guide.pdf
 
 Datasheet
+
 https://f000.backblazeb2.com/file/SM-PUB/hadoucan/Hadou-CAN+Datasheet.pdf
 
 Quickstart Guide
+
 https://f000.backblazeb2.com/file/SM-PUB/hadoucan/Hadou-CAN+Quickstart+Guide.pdf
 
 ## Store
