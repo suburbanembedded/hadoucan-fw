@@ -20,7 +20,7 @@ public:
 		m_last_fifo_msg_lost_check = 0;
 
 		//technically in C++11 if using the non-default constructor
-		//we haveto use these init functions
+		//we have to use these init functions
 		std::atomic_init(&m_can_fifo0_full, false);
 		std::atomic_init(&m_can_fifo0_msg_lost, 0U);
 

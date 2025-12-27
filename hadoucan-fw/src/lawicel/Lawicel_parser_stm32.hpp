@@ -39,6 +39,7 @@ class Lawicel_parser_stm32 : public Lawicel_parser
 	bool handle_tx_fd_ext_brs(const uint32_t id, const uint8_t data_len, const uint8_t* data) override;
 
 	bool handle_get_flags() override;
+	bool handle_set_filter_mode(const char mode) override;
 	bool handle_set_accept_code(const uint32_t code) override;
 	bool handle_set_accept_mask(const uint32_t mask) override;
 	bool handle_get_version(std::array<uint8_t, 4>* const ver) override;
